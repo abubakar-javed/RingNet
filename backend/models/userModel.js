@@ -1,30 +1,59 @@
-const knex = require("../config/db/db");
 const { encrypt } = require("../config/encryption"); // Import the encrypt function
+const mongoose = require('mongoose');
 
-class User {
-  static async findByEmail(email) {
-    return knex("User").where({ email }).first();
+const locationSchema = new mongoose.Schema({
+  latitude: {
+    type: Number,
+    required: true,
+  },
+  longitude: {
+    type: Number,
+    required: true,
   }
+});
 
-  static async findById(id) {
-    return knex("User").where({ userid: id }).first();
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  location: {
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+});
 
-  static async create(userData) {
-    const { email, name } = userData;
-    const randomPassword = Math.random().toString(36).slice(-8);
-    const encryptedPassword = encrypt(randomPassword); // Encrypt the random password
-    const [newUser] = await knex("User")
-      .insert({
-        email,
-        name,
-        password: encryptedPassword, // Store the encrypted password
-        createdat: new Date(),
-        updatedat: new Date(),
-      })
-      .returning("*");
-    return newUser;
+// Pre-save hook to hash the password before saving the user
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    this.password = encrypt(this.password);
+    next();
+  } catch (err) {
+    next(err);
   }
-}
+});
+
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;

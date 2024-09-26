@@ -1,11 +1,24 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import axios from "axios";
 
 function App() {
   const [count, setCount] = useState(0)
+  console.log("hereee")
+  const fetchEarthquakes = async () => {
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/earthquake`);
+      console.log(data)
+    } catch (err) {
+    } 
+  };
 
+  useEffect(() => {
+    fetchEarthquakes();
+  }, []);
   return (
     <>
       <div>
