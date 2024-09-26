@@ -1,7 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 require("express-async-errors");
-const checkDatabaseConnection = require("./startup/checkDatabaseConnection");
+const mongoConnection = require("./startup/connectToDB");
 const errorHandler = require("./middlewares/errorMiddleware");
 const session = require("express-session");
 const passport = require("./config/passport");
@@ -11,7 +11,6 @@ const bodyParser = require("body-parser");
 const logger = require("morgan");
 
 
-require("./worker/reportWorker"); // Ensure the worker is required to start processing jobs
 
 // Import routes
 
@@ -38,12 +37,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(testMiddleware);
-app.use(traceIdMiddleware);
+
 
 // Routes
-app.use("/", indexRouter);
-
 app.use("/api/auth", authRoutes);
 
 
@@ -51,12 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use(errorHandler);
 
 const startServer = async () => {
-  const dbConnected = await checkDatabaseConnection();
-
-  if (!dbConnected) {
-    logger.error("Failed to connect to the database. Exiting...");
-    process.exit(1); // Exit the application with failure
-  }
+  const dbConnected = await mongoConnection();
 };
 
 startServer();
