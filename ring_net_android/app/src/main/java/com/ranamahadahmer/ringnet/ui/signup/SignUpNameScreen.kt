@@ -15,14 +15,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.AddCard
+import androidx.compose.material.icons.outlined.ContactEmergency
+import androidx.compose.material.icons.outlined.ContactPhone
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,7 +39,7 @@ import com.ranamahadahmer.ringnet.ui.shared_components.TextFieldType
 
 
 @Composable
-fun SignUpEmailScreen(modifier: Modifier = Modifier) {
+fun SignUpNameScreen(modifier: Modifier = Modifier) {
     val scroll = rememberScrollState(0)
     Scaffold(modifier = modifier
             .fillMaxSize()
@@ -64,25 +67,33 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier) {
                     textAlign = TextAlign.Center,
                     fontSize = 32.sp)
             }
-            Column(modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Create Your Account",
-                    color = Color.Black,
-                    fontWeight = FontWeight.W500,
-                    textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
-                Image(painterResource(R.drawable.signup_email),
-                    contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxWidth()
-                )
 
+            Text("Create Your Account",
+                color = Color.Black,
+                fontWeight = FontWeight.W500,
+                textAlign = TextAlign.Center,
+                fontSize = 32.sp)
+
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.ContactEmergency, "First Name", type = TextFieldType.Name)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email, "Enter your Email",type = TextFieldType.Email)
+                Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.ContactEmergency, "Last Name", type = TextFieldType.Name)
             }
-
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.Lock,
+                    "Enter Password",
+                    type = TextFieldType.Password)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.Lock,
+                    "Confirm Password",
+                    type = TextFieldType.Password)
+            }
             CustomButton(
                 modifier = Modifier
                         .fillMaxWidth()
@@ -97,6 +108,6 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewLoginFormScreen() {
-    SignUpEmailScreen()
+fun PreviewSignUpNameScreen() {
+    SignUpNameScreen()
 }

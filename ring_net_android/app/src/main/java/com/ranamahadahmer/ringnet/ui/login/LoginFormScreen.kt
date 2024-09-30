@@ -32,7 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.components.CustomTextField
+import com.ranamahadahmer.ringnet.ui.shared_components.CustomTextField
+import com.ranamahadahmer.ringnet.ui.shared_components.TextFieldType
 
 
 @Composable
@@ -65,11 +66,11 @@ fun LoginFormScreen(modifier: Modifier = Modifier) {
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email, "Enter your Email")
+                CustomTextField(Icons.Outlined.Email, "Enter your Email",type = TextFieldType.Email)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock, "Enter your password")
+                CustomTextField(Icons.Outlined.Lock, "Enter your password",type = TextFieldType.Password)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Text("Forget Password", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold)

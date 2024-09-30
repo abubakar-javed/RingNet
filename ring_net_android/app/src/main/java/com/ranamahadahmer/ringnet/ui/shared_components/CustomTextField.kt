@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.components
+package com.ranamahadahmer.ringnet.ui.shared_components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,12 +19,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
+enum class TextFieldType {
+    Name,
+    Email,
+    Password
+}
+
 @Composable
-fun CustomTextField(icon: ImageVector, placeHolder: String) {
+fun CustomTextField(icon: ImageVector,
+                    placeHolder: String,
+                    trailing: @Composable (() -> Unit)? = null,
+                    type: TextFieldType) {
 
     var value by remember { mutableStateOf("") }
     var returnValue by remember { mutableStateOf("") }
-    var hidden by remember { mutableStateOf(placeHolder == "Enter your password") }
+    var hidden by remember { mutableStateOf(type == TextFieldType.Password) }
     TextField(
         if (hidden) value else returnValue,
         colors = TextFieldDefaults.colors().copy(
@@ -43,7 +52,7 @@ fun CustomTextField(icon: ImageVector, placeHolder: String) {
             cursorColor = Color.Black,
         ),
         trailingIcon = {
-            if (placeHolder == "Enter your password")
+            if (type == TextFieldType.Password) {
                 Icon(Icons.Outlined.RemoveRedEye,
                     contentDescription = null,
                     modifier = Modifier.clickable {
@@ -53,6 +62,9 @@ fun CustomTextField(icon: ImageVector, placeHolder: String) {
                         println(returnValue)
                         println(value)
                     })
+            } else {
+                trailing?.invoke()
+            }
         },
         singleLine = true,
         leadingIcon = {
