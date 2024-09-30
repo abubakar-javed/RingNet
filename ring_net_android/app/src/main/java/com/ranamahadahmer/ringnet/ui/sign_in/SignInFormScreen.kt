@@ -1,7 +1,8 @@
-package com.ranamahadahmer.ringnet.ui.login
+package com.ranamahadahmer.ringnet.ui.sign_in
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,12 +33,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.shared_components.CustomTextField
-import com.ranamahadahmer.ringnet.ui.shared_components.TextFieldType
+import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
 
 
 @Composable
-fun LoginFormScreen(modifier: Modifier = Modifier) {
+fun SignInFormScreen(modifier: Modifier = Modifier,
+                     navigateToSuccessScreen: () -> Unit,
+                     navigateToSignUpScreen: () -> Unit,
+                     navigateToForgotPasswordScreen: () -> Unit = {}
+                     ) {
     val scroll = rememberScrollState(0)
     Scaffold(modifier = modifier
             .fillMaxSize()
@@ -66,20 +71,24 @@ fun LoginFormScreen(modifier: Modifier = Modifier) {
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email, "Enter your Email",type = TextFieldType.Email)
+                CustomTextField(Icons.Outlined.Email,
+                    "Enter your Email",
+                    type = TextFieldType.Email)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock, "Enter your password",type = TextFieldType.Password)
+                CustomTextField(Icons.Outlined.Lock,
+                    "Enter your password",
+                    type = TextFieldType.Password)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Text("Forget Password", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold)
+                Text("Forget Password", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold,modifier = Modifier.clickable { navigateToForgotPasswordScreen() })
             }
 
             Button(modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                onClick = {},
+                onClick = navigateToSuccessScreen,
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
             ) { Text("Login", fontSize = 18.sp) }
@@ -114,7 +123,8 @@ fun LoginFormScreen(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.spacedBy(4.dp,
                     alignment = Alignment.CenterHorizontally)) {
                 Text("Don't have an account?", color = Color.Gray, fontWeight = FontWeight.W500)
-                Text("Sign Up", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold)
+                Text("Sign Up", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { navigateToSignUpScreen() })
             }
 
 
@@ -124,6 +134,6 @@ fun LoginFormScreen(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewLoginFormScreen() {
-    LoginFormScreen()
+fun PreviewSignInFormScreen() {
+    SignInFormScreen(navigateToSuccessScreen = {}, navigateToSignUpScreen = {}){}
 }

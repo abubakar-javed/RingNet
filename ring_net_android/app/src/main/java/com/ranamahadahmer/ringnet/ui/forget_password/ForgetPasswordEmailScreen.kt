@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.signup
+package com.ranamahadahmer.ringnet.ui.forget_password
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,13 +30,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.shared_components.CustomButton
-import com.ranamahadahmer.ringnet.ui.shared_components.CustomTextField
-import com.ranamahadahmer.ringnet.ui.shared_components.TextFieldType
+import com.ranamahadahmer.ringnet.ui.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
 
 
 @Composable
-fun SignUpEmailScreen(modifier: Modifier = Modifier) {
+fun ForgetPasswordEmailScreen(modifier: Modifier = Modifier,
+                              navigateToConfirmationScreen: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
     Scaffold(modifier = modifier
             .fillMaxSize()
@@ -53,7 +54,9 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier) {
                 alignment = Alignment.Top)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
                 Image(painterResource(R.drawable.icon),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
@@ -66,28 +69,36 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier) {
             }
             Column(modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Create Your Account",
-                    color = Color.Black,
-                    fontWeight = FontWeight.W500,
-                    textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
-                Image(painterResource(R.drawable.signup_email),
+                Image(painterResource(R.drawable.forget_password_email),
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Text("Reset Your Password",
+                    color = Color.Black,
+                    fontWeight = FontWeight.W500,
+                    textAlign = TextAlign.Center,
+                    fontSize = 32.sp)
+                Text("Enter your email address below \n" +
+                        "and we’ll send you a link with instructions",
+                    fontSize = 16.sp,
+                    color = Color.Gray, fontWeight = FontWeight.W500,
+                    textAlign = TextAlign.Center
+                )
 
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email, "Enter your Email",type = TextFieldType.Email)
+                Text("Email", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.Email,
+                    "Enter your Email",
+                    type = TextFieldType.Email)
             }
 
             CustomButton(
                 modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
-                onClick = {},
+                onClick = navigateToConfirmationScreen,
             ) { Text("Continue", fontSize = 18.sp) }
 
 
@@ -97,6 +108,6 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewLoginFormScreen() {
-    SignUpEmailScreen()
+fun PreviewForgetPasswordEmailScreen() {
+    ForgetPasswordEmailScreen {}
 }

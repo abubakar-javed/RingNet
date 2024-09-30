@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.login
+package com.ranamahadahmer.ringnet.ui.shared_elements
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -6,13 +6,17 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AttachEmail
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -32,7 +36,7 @@ import com.ranamahadahmer.ringnet.R
 
 
 @Composable
-fun LoginSuccessScreen(modifier: Modifier = Modifier) {
+fun ConfirmationScreen(modifier: Modifier = Modifier,navToNext: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
     Scaffold(modifier = modifier
             .fillMaxSize()
@@ -47,34 +51,60 @@ fun LoginSuccessScreen(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(28.dp, Alignment.Top)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Image(painterResource(R.drawable.loginsucess),
-                contentDescription = "Icon",
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
+                Image(painterResource(R.drawable.icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp)
+                )
+                Text("RingNet",
+                    color = Color.Black,
+                    fontWeight = FontWeight.W500,
+                    textAlign = TextAlign.Center,
+                    fontSize = 32.sp)
+            }
+            Image(painterResource(R.drawable.signup_email_confirm),
+                contentDescription = null,
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.size(240.dp)
             )
-            Text("Yeh! Login Successful",
+            Text("Confirm your Email",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.W600,
                 textAlign = TextAlign.Center
             )
-            Text("You will be moved to home screen right now. Enjoy the features!",
+            Text("We’ve sent 5 digits verification code\n" +
+                    "to Hello@tyler.com",
                 fontSize = 16.sp,
+                color = Color.Gray, fontWeight = FontWeight.W500,
                 textAlign = TextAlign.Center
             )
+
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Enter Verification Code", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.AttachEmail,
+                    "OTP",
+                    type = TextFieldType.Name,
+                    trailing = { Text("Optional", color = Color.Gray) })
+            }
             Button(modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                onClick = {},
+                onClick = navToNext,
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text("Let's Explore", fontSize = 18.sp) }
+            ) {
+//                TODO: Get the following text from NavHost to reuse this screen in multiple paths
+                Text("Verify and Create Account", fontSize = 18.sp)
+            }
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewLoginSuccessScreen() {
-    LoginSuccessScreen()
+fun PreviewConfirmationScreen() {
+    ConfirmationScreen()
 }
