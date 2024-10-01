@@ -36,7 +36,7 @@ import com.ranamahadahmer.ringnet.R
 
 
 @Composable
-fun ConfirmationScreen(modifier: Modifier = Modifier,navToNext: () -> Unit = {}) {
+fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
     Scaffold(modifier = modifier
             .fillMaxSize()
@@ -96,8 +96,8 @@ fun ConfirmationScreen(modifier: Modifier = Modifier,navToNext: () -> Unit = {})
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-//                TODO: Get the following text from NavHost to reuse this screen in multiple paths
-                Text("Verify and Create Account", fontSize = 18.sp)
+
+                Text(msg, fontSize = 18.sp)
             }
         }
     }
@@ -106,5 +106,5 @@ fun ConfirmationScreen(modifier: Modifier = Modifier,navToNext: () -> Unit = {})
 @Preview(showBackground = true)
 @Composable
 fun PreviewConfirmationScreen() {
-    ConfirmationScreen()
+    ConfirmationScreen(msg=""){}
 }

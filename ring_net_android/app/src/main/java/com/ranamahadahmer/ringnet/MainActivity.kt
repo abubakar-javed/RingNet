@@ -35,23 +35,32 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RingNetApp() {
     val navController = rememberNavController()
+
     NavHost(navController = navController, startDestination = "splash_screen") {
         composable("splash_screen") {
             SplashScreen {
-                navController.navigate("sign_in_form")
+                navController.navigate("sign_in_form") {
+                    popUpTo("splash_screen") { inclusive = true }
+                }
             }
         }
         composable("sign_in_form") {
             SignInFormScreen(
-                navigateToSuccessScreen = { navController.navigate("sign_in_success") },
-                navigateToSignUpScreen = { navController.navigate("sign_up_email") },
+                navigateToSuccessScreen = {
+                    navController.navigate("sign_in_success") {
+                        popUpTo("splash_screen") { inclusive = true }
+                    }
+                },
+                navigateToSignUpScreen = {
+                    navController.navigate("sign_up_email") {
+                        popUpTo("sign_in_form") { inclusive = false }
+                    }
+                },
                 navigateToForgotPasswordScreen = { navController.navigate("forgot_password_email") }
             )
         }
         composable("sign_in_success") {
-            SignInSuccessScreen {
-
-            }
+            SignInSuccessScreen {}
         }
         composable("sign_up_email") {
             SignUpEmailScreen {
@@ -60,25 +69,34 @@ fun RingNetApp() {
         }
         composable("sign_up_name") {
             SignUpNameScreen {
-                navController.navigate("confirmation_screen")
+                val msg = "Verify and Create your account"
+                val nextPath = "sign_in_form"
+                navController.navigate("confirmation_screen/$msg/$nextPath")
             }
         }
-        composable("confirmation_screen") {
-            ConfirmationScreen {
-                navController.navigate("forgot_password_password")
+        composable("confirmation_screen/{msg}/{path}") {
+            val msg = it.arguments?.getString("msg") ?: ""
+            val nextPath = it.arguments?.getString("path") ?: ""
+            ConfirmationScreen(msg = msg) {
+                navController.navigate(nextPath) {
+                    popUpTo("sign_in_form") { inclusive = true }
+                }
             }
+
         }
         composable("forgot_password_email") {
+            val msg = "Verify and Set New Password"
+            val nextPath = "forgot_password_password"
             ForgetPasswordEmailScreen {
-                navController.navigate("confirmation_screen")
+                navController.navigate("confirmation_screen/$msg/$nextPath")
             }
         }
         composable("forgot_password_password") {
             ForgetPasswordPasswordScreen {
+                navController.popBackStack()
                 navController.navigate("sign_in_form")
             }
         }
-
     }
 }
 
