@@ -15,7 +15,7 @@ const logger = require("morgan");
 // Import routes
 
 const authRoutes = require("./routes/auth");
-
+const earthquakeRoutes = require("./routes/earthquakeRoutes");
 const app = express();
 
 app.use(logger("dev"));
@@ -41,7 +41,7 @@ app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoutes);
-
+app.use("/api/earthquake", earthquakeRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
