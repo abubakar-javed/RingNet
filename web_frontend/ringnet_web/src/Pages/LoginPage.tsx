@@ -97,14 +97,14 @@ function LoginPage() {
   // Login function
   const login = async (values: FormValues, onSubmitProps: FormikHelpers<FormValues>) => {
     try {
-      //const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, values);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, values);
       console.log("here", values)
-      // const { token, userId } = response.data;
-      // dispatch(setToken(token));
-      // dispatch(setUserId(userId));
-      // localStorage.setItem("token", token);
-      // localStorage.setItem("userId", userId);
-      // navigate("/");
+      const { token, userId } = response.data;
+      dispatch(setToken(token));
+      dispatch(setUserId(userId));
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      navigate("/");
     } catch (error) {
       setError("Login failed");
     }
@@ -113,10 +113,14 @@ function LoginPage() {
   // Register function
   const register = async (values: FormValues, onSubmitProps: FormikHelpers<FormValues>) => {
     try {
-      //const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, values);
-      console.log("here", values)
-      // toast.success("Registration successful! Please login.");
-      // setShowRegister(false); // Switch back to login after registration
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, values);
+      console.log(response)
+      const { token, userId } = response.data;
+      dispatch(setToken(token));
+      dispatch(setUserId(userId));
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      navigate("/");
     } catch (error) {
       setError("Registration failed");
     }

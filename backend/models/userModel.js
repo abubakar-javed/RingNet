@@ -30,8 +30,8 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   location: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    latitude: { type: Number, default: 33.6844 }, 
+    longitude: { type: Number, default: 73.0479 },
   },
   createdAt: {
     type: Date,
@@ -43,16 +43,6 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Pre-save hook to hash the password before saving the user
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  try {
-    this.password = encrypt(this.password);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
 
 const User = mongoose.model('User', userSchema);
 
