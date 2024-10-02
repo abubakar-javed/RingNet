@@ -3,8 +3,6 @@ package com.ranamahadahmer.ringnet.ui.sign_in
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
@@ -35,24 +34,27 @@ import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
 import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
 import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.view_models.SignInViewModel
 
 
 @Composable
 fun SignInFormScreen(modifier: Modifier = Modifier,
                      navigateToSuccessScreen: () -> Unit,
                      navigateToSignUpScreen: () -> Unit,
-                     navigateToForgotPasswordScreen: () -> Unit = {}
-                     ) {
+                     navigateToForgotPasswordScreen: () -> Unit = {},
+                     viewModel: SignInViewModel
+) {
     val scroll = rememberScrollState(0)
     Scaffold(modifier = modifier
             .fillMaxSize()
-            .scrollable(scroll, orientation = Orientation.Vertical)
+
     ) {
         Column(
             modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White)
                     .padding(it)
+                    .verticalScroll(scroll)
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(28.dp,
@@ -70,6 +72,7 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                     fontSize = 40.sp)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
@@ -77,12 +80,16 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
+                CustomTextField(
+                    Icons.Outlined.Lock,
                     "Enter your password",
                     type = TextFieldType.Password)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Text("Forget Password", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold,modifier = Modifier.clickable { navigateToForgotPasswordScreen() })
+                Text("Forget Password",
+                    color = Color(0xFFAF1616),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { navigateToForgotPasswordScreen() })
             }
 
             Button(modifier = Modifier
@@ -126,8 +133,6 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                 Text("Sign Up", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { navigateToSignUpScreen() })
             }
-
-
         }
     }
 }
@@ -135,5 +140,8 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
 @Preview(showBackground = true)
 @Composable
 fun PreviewSignInFormScreen() {
-    SignInFormScreen(navigateToSuccessScreen = {}, navigateToSignUpScreen = {}){}
+    SignInFormScreen(navigateToSuccessScreen = {},
+        navigateToSignUpScreen = {},
+        navigateToForgotPasswordScreen = {},
+        viewModel = SignInViewModel())
 }
