@@ -84,6 +84,7 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier, navigateToSignUpNameScreen:
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
+                    onChange = {},
                     type = TextFieldType.Email)
             }
 

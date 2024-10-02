@@ -87,6 +87,7 @@ fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: ()
                 CustomTextField(Icons.Outlined.AttachEmail,
                     "OTP",
                     type = TextFieldType.Name,
+                    onChange = {},
                     trailing = { Text("Optional", color = Color.Gray) })
             }
             Button(modifier = Modifier

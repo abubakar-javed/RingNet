@@ -87,12 +87,14 @@ fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Enter Password",
+                    onChange = {},
                     type = TextFieldType.Password)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Confirm Password",
+                    onChange = {},
                     type = TextFieldType.Password)
             }
 

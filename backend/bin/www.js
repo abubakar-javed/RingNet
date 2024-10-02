@@ -16,21 +16,21 @@ server.listen(port);
 server.on("listening", onListening);
 
 function normalizePort(val) {
-  const port = parseInt(val, 10);
+    const port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    return val;
-  }
+    if (isNaN(port)) {
+        return val;
+    }
 
-  if (port >= 0) {
-    return port;
-  }
+    if (port >= 0) {
+        return port;
+    }
 
-  return false;
+    return false;
 }
 
 function onListening() {
-  const addr = server.address();
-  const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  debug("Listening on " + bind);
+    const addr = server.address();
+    const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+    debug("Listening on " + bind);
 }

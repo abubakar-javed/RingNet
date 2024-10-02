@@ -91,6 +91,7 @@ fun ForgetPasswordEmailScreen(modifier: Modifier = Modifier,
                 Text("Email", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
+                    onChange = {},
                     type = TextFieldType.Email)
             }
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -17,6 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 enum class TextFieldType {
@@ -28,14 +32,15 @@ enum class TextFieldType {
 @Composable
 fun CustomTextField(icon: ImageVector,
                     placeHolder: String,
+                    onChange: (String) -> Unit,
                     trailing: @Composable (() -> Unit)? = null,
                     type: TextFieldType) {
 
     var value by remember { mutableStateOf("") }
-    var returnValue by remember { mutableStateOf("") }
     var hidden by remember { mutableStateOf(type == TextFieldType.Password) }
     TextField(
-        if (hidden) value else returnValue,
+        value,
+        visualTransformation = if (hidden) PasswordVisualTransformation(mask = '*') else VisualTransformation.None,
         colors = TextFieldDefaults.colors().copy(
             unfocusedTextColor = Color.Black,
             focusedTextColor = Color.Black,
@@ -56,11 +61,7 @@ fun CustomTextField(icon: ImageVector,
                 Icon(Icons.Outlined.RemoveRedEye,
                     contentDescription = null,
                     modifier = Modifier.clickable {
-                        println(hidden)
                         hidden = !hidden
-                        println(hidden)
-                        println(returnValue)
-                        println(value)
                     })
             } else {
                 trailing?.invoke()
@@ -71,11 +72,20 @@ fun CustomTextField(icon: ImageVector,
             Icon(icon, contentDescription = null)
         },
         onValueChange = {
-            returnValue = it
-            value = it.map { '*' }.joinToString("")
+            value = it
+            onChange(it)
         },
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth(),
         placeholder = { Text(placeHolder) }
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewCustomTextField() {
+    CustomTextField(Icons.Outlined.Lock,
+        "Enter your password",
+        type = TextFieldType.Password,
+        onChange = {})
 }

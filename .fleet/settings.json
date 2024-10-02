@@ -1,0 +1,9 @@
+{
+    "prettier.mode": "Enabled",
+    "plugins": [
+        {
+            "type": "add",
+            "pluginName": "com.github.catppuccin.fleet"
+        }
+    ]
+}

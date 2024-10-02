@@ -77,24 +77,29 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,navigateToConfirmationScreen:
                 Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.ContactEmergency,
                     "First Name",
+                    onChange = {},
                     type = TextFieldType.Name)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.ContactEmergency,
                     "Last Name",
+                    onChange = {},
+
                     type = TextFieldType.Name)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Enter Password",
+                    onChange = {},
                     type = TextFieldType.Password)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Confirm Password",
+                    onChange = {},
                     type = TextFieldType.Password)
             }
             CustomButton(
