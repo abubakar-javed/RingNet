@@ -1,5 +1,6 @@
 package com.ranamahadahmer.ringnet.ui.sign_in
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,15 +20,18 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
 import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
 import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.view_models.SignInResponse
 import com.ranamahadahmer.ringnet.view_models.SignInViewModel
 
 
@@ -48,6 +53,13 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
 ) {
     val response by viewModel.response.collectAsState()
     val scroll = rememberScrollState(0)
+    val context = LocalContext.current
+
+    LaunchedEffect(response) {
+        if (response is SignInResponse.Success) {
+            navigateToSuccessScreen()
+        }
+    }
     Scaffold(modifier = modifier
             .fillMaxSize()
 
@@ -103,16 +115,42 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                 onClick = {
                     viewModel.signIn()
                     println(response)
-
-//                    if (response is SignInResponse.Success) {
-//                        navigateToSuccessScreen()
-//                    }
-
-
                 },
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text("Login", fontSize = 18.sp) }
+            ) {
+                when (response) {
+                    is SignInResponse.Loading -> {
+
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    }
+
+                    is SignInResponse.Success -> {
+
+                    }
+
+
+                    is SignInResponse.Error -> {
+
+                        Toast.makeText(
+                            context,
+                            "Error Occurred",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        val errorMessage = (response as SignInResponse.Error).message
+                        print(errorMessage)
+                    }
+
+                    SignInResponse.Initial -> {
+                        Text("Login", fontSize = 18.sp, color = Color.White)
+                    }
+                }
+
+            }
 
             Row(modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp,

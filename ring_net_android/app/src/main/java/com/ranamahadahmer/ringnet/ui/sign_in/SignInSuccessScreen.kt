@@ -55,6 +55,7 @@ fun SignInSuccessScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit = 
             )
             Text("Yeh! Login Successful",
                 fontSize = 24.sp,
+                color = Color.Black,
                 fontWeight = FontWeight.W600,
                 textAlign = TextAlign.Center
             )
@@ -69,7 +70,7 @@ fun SignInSuccessScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit = 
                 onClick = {},
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text("Let's Explore", fontSize = 18.sp) }
+            ) { Text("Let's Explore", fontSize = 18.sp,color = Color.White) }
         }
     }
 }

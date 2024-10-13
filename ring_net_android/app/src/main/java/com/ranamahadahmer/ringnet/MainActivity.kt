@@ -53,6 +53,7 @@ fun RingNetApp() {
                     viewModel = signInViewModel,
                     navigateToSuccessScreen = {
                         navController.popBackStack()
+                        println("I was called")
                         navController.navigate("success")
                     },
                     navigateToSignUpScreen = {
@@ -101,7 +102,7 @@ fun RingNetApp() {
             val nextPath = it.arguments?.getString("path") ?: ""
             ConfirmationScreen(msg = msg) {
                 navController.navigate(nextPath) {
-//                    popUpTo("sign_in") { inclusive = true }
+                    popUpTo("sign_in") { inclusive = true }
                 }
             }
         }
