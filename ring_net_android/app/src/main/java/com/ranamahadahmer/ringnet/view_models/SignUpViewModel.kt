@@ -4,33 +4,31 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.annotations.SerializedName
 import com.ranamahadahmer.ringnet.api.AuthBackendApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.POST
 
 @Serializable
-data class SignInRequestBody(
+data class SignUpRequestBody(
     val email: String,
     val password: String
 )
 
-interface SignInService {
-    @POST("auth/login")
-    suspend fun signIn(
-        @Body request: SignInRequestBody
-    ): SignInResponse.Success
+interface SignUpService {
+    @POST("auth/signup")
+    suspend fun signUp(
+        @Body request: SignUpRequestBody
+    ): SignUpResponse.Success
 }
 
 
-sealed class SignInResponse {
+sealed class SignUpResponse {
 
-    data object Initial : SignInResponse()
-    data object Loading : SignInResponse()
+    data object Initial : SignUpResponse()
+    data object Loading : SignUpResponse()
 
     @Serializable
     data class Success(
@@ -40,21 +38,21 @@ sealed class SignInResponse {
         val token: String,
         @SerializedName("userId")
         val userId: String
-    ) : SignInResponse()
+    ) : SignUpResponse()
 
     data class Error(
         val message: String
-    ) : SignInResponse()
+    ) : SignUpResponse()
 }
 
 
-class SignInViewModel : ViewModel() {
-    private var apiService: SignInService =
-        AuthBackendApi.retrofit.create(SignInService::class.java)
+class SignUpViewModel : ViewModel() {
+    private var apiService: SignUpService =
+        AuthBackendApi.retrofit.create(SignUpService::class.java)
 
-    private val _response: MutableStateFlow<SignInResponse> =
-        MutableStateFlow(SignInResponse.Initial)
-    val response: StateFlow<SignInResponse> get() = _response
+    private val _response: MutableStateFlow<SignUpResponse> =
+        MutableStateFlow(SignUpResponse.Initial)
+    val response: StateFlow<SignUpResponse> get() = _response
 
     private val email: MutableStateFlow<String> = MutableStateFlow("")
     private val password: MutableStateFlow<String> = MutableStateFlow("")
@@ -63,16 +61,11 @@ class SignInViewModel : ViewModel() {
 
 
         viewModelScope.launch {
-            _response.value = SignInResponse.Loading
+            _response.value = SignUpResponse.Loading
             try {
-                val request = SignInRequestBody(email.value, password.value)
-                val result = withContext(Dispatchers.IO) { apiService.signIn(request) }
-                _response.value =
-                    SignInResponse.Success(result.message, result.token, result.userId)
 
             } catch (e: Exception) {
-                _response.value = SignInResponse.Error(e.message ?: "An error occurred")
-
+                _response.value = SignUpResponse.Error(e.message ?: "An error occurred")
             }
         }
     }

@@ -148,6 +148,8 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                     SignInResponse.Initial -> {
                         Text("Login", fontSize = 18.sp, color = Color.White)
                     }
+
+
                 }
 
             }
