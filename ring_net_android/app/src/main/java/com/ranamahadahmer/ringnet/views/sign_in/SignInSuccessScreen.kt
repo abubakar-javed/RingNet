@@ -67,7 +67,7 @@ fun SignInSuccessScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit = 
             Button(modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                onClick = {},
+                onClick = onNavigate,
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
             ) { Text("Let's Explore", fontSize = 18.sp, color = Color.White) }

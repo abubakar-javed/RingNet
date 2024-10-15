@@ -12,6 +12,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.SplashScreen
+import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
 import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordEmailScreen
 import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordPasswordScreen
 import com.ranamahadahmer.ringnet.views.shared_elements.ConfirmationScreen
@@ -63,7 +64,10 @@ fun RingNetApp() {
                 )
             }
             composable("success") {
-                SignInSuccessScreen {}
+                SignInSuccessScreen {
+                    navController.popBackStack()
+                    navController.navigate("dashboard")
+                }
             }
         }
         navigation(startDestination = "email_info", route = "sign_up") {
@@ -75,9 +79,11 @@ fun RingNetApp() {
             }
             composable("name_password") {
                 SignUpNameScreen(viewModel = authViewModel, navigateToConfirmationScreen = {
-                    val msg = "Verify and Create your account"
-                    val nextPath = "sign_in"
-                    navController.navigate("confirmation_screen/$msg/$nextPath")
+//                    val msg = "Verify and Create your account"
+//                    val nextPath = "sign_in"
+//                    navController.navigate("confirmation_screen/$msg/$nextPath")
+                    navController.popBackStack()
+                    navController.navigate("dashboard")
                 })
             }
         }
@@ -106,6 +112,9 @@ fun RingNetApp() {
                     popUpTo("sign_in") { inclusive = true }
                 }
             }
+        }
+        composable("dashboard") {
+            DashboardScreen()
         }
 
     }
