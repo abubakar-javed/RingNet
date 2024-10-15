@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.shared_elements
+package com.ranamahadahmer.ringnet.views.shared_elements
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button

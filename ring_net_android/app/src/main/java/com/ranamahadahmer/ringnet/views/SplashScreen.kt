@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui
+package com.ranamahadahmer.ringnet.views
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

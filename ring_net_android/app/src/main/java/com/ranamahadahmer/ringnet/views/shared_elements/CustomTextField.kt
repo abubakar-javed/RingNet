@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.shared_elements
+package com.ranamahadahmer.ringnet.views.shared_elements
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth

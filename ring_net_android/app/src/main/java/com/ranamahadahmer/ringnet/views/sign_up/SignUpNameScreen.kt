@@ -1,5 +1,6 @@
-package com.ranamahadahmer.ringnet.ui.forget_password
+package com.ranamahadahmer.ringnet.views.sign_up
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContactEmergency
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,22 +24,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.view_models.AuthViewModel
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
 
 
 @Composable
-fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
-                                 navigateToSignInScreen: () -> Unit = {}) {
+fun SignUpNameScreen(modifier: Modifier = Modifier,
+                     navigateToConfirmationScreen: () -> Unit,
+                     viewModel: AuthViewModel) {
     val scroll = rememberScrollState(0)
+    val context = LocalContext.current
     Scaffold(modifier = modifier
             .fillMaxSize()
             .scrollable(scroll, orientation = Orientation.Vertical)
@@ -66,52 +71,56 @@ fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
                     textAlign = TextAlign.Center,
                     fontSize = 32.sp)
             }
-            Column(modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(painterResource(R.drawable.forget_password_password),
-                    contentDescription = null,
-                    modifier = Modifier.size(240.dp)
-                )
-                Text("Enter New Password",
-                    color = Color.Black,
-                    fontWeight = FontWeight.W500,
-                    textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
 
+            Text("Create Your Account",
+                color = Color.Black,
+                fontWeight = FontWeight.W500,
+                textAlign = TextAlign.Center,
+                fontSize = 32.sp)
+
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.ContactEmergency,
+                    "First Name",
+                    onChange = viewModel::changeFirstName,
+                    type = TextFieldType.Name)
             }
-            Text("Set Complex passwords to protect your account",
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.ContactEmergency,
+                    "Last Name",
+                    onChange = viewModel::changeLastName,
+                    type = TextFieldType.Name)
+            }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Enter Password",
-                    onChange = {},
+                    onChange = viewModel::changePasswordOne,
                     type = TextFieldType.Password)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Confirm Password",
-                    onChange = {},
+                    onChange = viewModel::changePasswordTwo,
                     type = TextFieldType.Password)
             }
-
             CustomButton(
                 modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
-                onClick = navigateToSignInScreen,
+                onClick = {
+                    if (viewModel.firstName.value.isEmpty() || viewModel.lastName.value.isEmpty() || viewModel.passwordOne.value.isEmpty() || viewModel.passwordTwo.value.isEmpty()) {
+                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                        return@CustomButton
+                    }
+                    viewModel.signUp()
+                    navigateToConfirmationScreen()
+                },
             ) { Text("Continue", fontSize = 18.sp) }
 
 
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewForgetPasswordPasswordScreen() {
-    ForgetPasswordPasswordScreen()
 }

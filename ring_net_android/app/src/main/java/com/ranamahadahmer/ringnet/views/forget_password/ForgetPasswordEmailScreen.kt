@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.forget_password
+package com.ranamahadahmer.ringnet.views.forget_password
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,9 +30,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
 
 
 @Composable

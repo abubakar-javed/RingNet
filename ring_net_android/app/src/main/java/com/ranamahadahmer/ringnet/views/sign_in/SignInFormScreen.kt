@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.sign_in
+package com.ranamahadahmer.ringnet.views.sign_in
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -38,10 +38,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
-import com.ranamahadahmer.ringnet.view_models.SignInResponse
-import com.ranamahadahmer.ringnet.view_models.SignInViewModel
+import com.ranamahadahmer.ringnet.models.AuthResponse
+
+import com.ranamahadahmer.ringnet.view_models.AuthViewModel
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
 
 
 @Composable
@@ -49,14 +50,14 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                      navigateToSuccessScreen: () -> Unit,
                      navigateToSignUpScreen: () -> Unit,
                      navigateToForgotPasswordScreen: () -> Unit = {},
-                     viewModel: SignInViewModel
+                     viewModel: AuthViewModel
 ) {
-    val response by viewModel.response.collectAsState()
+    val response by viewModel.signInResponse.collectAsState()
     val scroll = rememberScrollState(0)
     val context = LocalContext.current
 
     LaunchedEffect(response) {
-        if (response is SignInResponse.Success) {
+        if (response is AuthResponse.Success) {
             navigateToSuccessScreen()
         }
     }
@@ -91,7 +92,7 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
-                    onChange = { viewModel.changeEmail(it) },
+                    onChange = viewModel::changeEmail,
                     type = TextFieldType.Email)
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -99,7 +100,7 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                 CustomTextField(
                     icon = Icons.Outlined.Lock,
                     placeHolder = "Enter your password",
-                    onChange = { viewModel.changePassword(it) },
+                    onChange = viewModel::changePasswordOne,
                     type = TextFieldType.Password)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -113,14 +114,18 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                     .fillMaxWidth()
                     .height(54.dp),
                 onClick = {
+                    if (viewModel.email.value.isEmpty() || viewModel.passwordOne.value.isEmpty()) {
+                        Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT)
+                                .show()
+                        return@Button
+                    }
                     viewModel.signIn()
-                    println(response)
                 },
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 when (response) {
-                    is SignInResponse.Loading -> {
+                    is AuthResponse.Loading -> {
 
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
@@ -128,12 +133,11 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                         )
                     }
 
-                    is SignInResponse.Success -> {
+                    is AuthResponse.Success -> {
 
                     }
 
-
-                    is SignInResponse.Error -> {
+                    is AuthResponse.Error -> {
 
                         Toast.makeText(
                             context,
@@ -141,11 +145,11 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        val errorMessage = (response as SignInResponse.Error).message
+                        val errorMessage = (response as AuthResponse.Error).message
                         print(errorMessage)
                     }
 
-                    SignInResponse.Initial -> {
+                    AuthResponse.Initial -> {
                         Text("Login", fontSize = 18.sp, color = Color.White)
                     }
 
@@ -197,5 +201,5 @@ fun PreviewSignInFormScreen() {
     SignInFormScreen(navigateToSuccessScreen = {},
         navigateToSignUpScreen = {},
         navigateToForgotPasswordScreen = {},
-        viewModel = SignInViewModel())
+        viewModel = AuthViewModel())
 }

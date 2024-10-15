@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.sign_in
+package com.ranamahadahmer.ringnet.views.sign_in
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -61,7 +61,7 @@ fun SignInSuccessScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit = 
             )
             Text("You will be moved to home screen right now. Enjoy the features!",
                 fontSize = 16.sp,
-                 color = Color.Gray, fontWeight = FontWeight.W500,
+                color = Color.Gray, fontWeight = FontWeight.W500,
                 textAlign = TextAlign.Center
             )
             Button(modifier = Modifier
@@ -70,7 +70,7 @@ fun SignInSuccessScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit = 
                 onClick = {},
                 colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
                 shape = RoundedCornerShape(12.dp)
-            ) { Text("Let's Explore", fontSize = 18.sp,color = Color.White) }
+            ) { Text("Let's Explore", fontSize = 18.sp, color = Color.White) }
         }
     }
 }
@@ -78,5 +78,5 @@ fun SignInSuccessScreen(modifier: Modifier = Modifier, onNavigate: () -> Unit = 
 @Preview(showBackground = true)
 @Composable
 fun PreviewSignInSuccessScreen() {
-    SignInSuccessScreen{}
+    SignInSuccessScreen {}
 }

@@ -1,5 +1,6 @@
-package com.ranamahadahmer.ringnet.ui.sign_up
+package com.ranamahadahmer.ringnet.views.sign_up
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -15,33 +16,38 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContactEmergency
-import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.ui.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.ui.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.view_models.AuthViewModel
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
 
 
 @Composable
-fun SignUpNameScreen(modifier: Modifier = Modifier,navigateToConfirmationScreen: () -> Unit) {
+fun SignUpEmailScreen(modifier: Modifier = Modifier,
+                      navigateToSignUpNameScreen: () -> Unit,
+                      viewModel: AuthViewModel) {
     val scroll = rememberScrollState(0)
+    val context = LocalContext.current
     Scaffold(modifier = modifier
             .fillMaxSize()
             .scrollable(scroll, orientation = Orientation.Vertical)
     ) {
+
         Column(
             modifier = Modifier
                     .fillMaxSize()
@@ -66,56 +72,42 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,navigateToConfirmationScreen:
                     textAlign = TextAlign.Center,
                     fontSize = 32.sp)
             }
+            Column(modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Create Your Account",
+                    color = Color.Black,
+                    fontWeight = FontWeight.W500,
+                    textAlign = TextAlign.Center,
+                    fontSize = 32.sp)
+                Image(painterResource(R.drawable.signup_email),
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Text("Create Your Account",
-                color = Color.Black,
-                fontWeight = FontWeight.W500,
-                textAlign = TextAlign.Center,
-                fontSize = 32.sp)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
+                CustomTextField(Icons.Outlined.Email,
+                    "Enter your Email",
+                    onChange = viewModel::changeEmail,
+                    type = TextFieldType.Email)
+            }
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.ContactEmergency,
-                    "First Name",
-                    onChange = {},
-                    type = TextFieldType.Name)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.ContactEmergency,
-                    "Last Name",
-                    onChange = {},
-
-                    type = TextFieldType.Name)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
-                    "Enter Password",
-                    onChange = {},
-                    type = TextFieldType.Password)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
-                    "Confirm Password",
-                    onChange = {},
-                    type = TextFieldType.Password)
-            }
             CustomButton(
                 modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
-                onClick = navigateToConfirmationScreen,
+                onClick = {
+                    if (viewModel.email.value.isEmpty()) {
+                        Toast.makeText(context, "Email Empty", Toast.LENGTH_SHORT)
+                                .show()
+                        return@CustomButton
+                    }
+                    navigateToSignUpNameScreen()
+                },
             ) { Text("Continue", fontSize = 18.sp) }
-
-
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewSignUpNameScreen() {
-    SignUpNameScreen {}
-}
