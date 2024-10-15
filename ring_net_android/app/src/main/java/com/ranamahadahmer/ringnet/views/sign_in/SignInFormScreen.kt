@@ -7,11 +7,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
 import com.ranamahadahmer.ringnet.models.AuthResponse
-
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
 import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
@@ -63,13 +65,14 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
     }
     Scaffold(modifier = modifier
             .fillMaxSize()
-
-    ) { padding ->
+            .windowInsetsPadding(WindowInsets.ime)
+    ) {
         Column(
             modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White)
-                    .padding(padding)
+                    .padding(it)
+
                     .verticalScroll(scroll)
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start,
@@ -126,19 +129,14 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
             ) {
                 when (response) {
                     is AuthResponse.Loading -> {
-
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = Color.White
                         )
                     }
 
-                    is AuthResponse.Success -> {
-
-                    }
-
+                    is AuthResponse.Success -> {}
                     is AuthResponse.Error -> {
-
                         Toast.makeText(
                             context,
                             "Error Occurred",
