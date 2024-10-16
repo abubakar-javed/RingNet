@@ -95,6 +95,7 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
+                    valueState = viewModel.email,
                     onChange = viewModel::changeEmail,
                     type = TextFieldType.Email)
             }
@@ -103,6 +104,7 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                 CustomTextField(
                     icon = Icons.Outlined.Lock,
                     placeHolder = "Enter your password",
+                    valueState = viewModel.passwordOne,
                     onChange = viewModel::changePasswordOne,
                     type = TextFieldType.Password)
             }
@@ -117,8 +119,20 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                     .fillMaxWidth()
                     .height(54.dp),
                 onClick = {
-                    if (viewModel.email.value.isEmpty() || viewModel.passwordOne.value.isEmpty()) {
-                        Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT)
+                    if (viewModel.emailEmpty()) {
+                        Toast.makeText(context, "Please enter Email !", Toast.LENGTH_SHORT)
+                                .show()
+                        return@Button
+                    }
+                    if (viewModel.emailValid()) {
+                        Toast.makeText(context, "Please enter Valid Email !", Toast.LENGTH_SHORT)
+                                .show()
+                        return@Button
+                    }
+                    if (viewModel.passwordValid()) {
+                        Toast.makeText(context,
+                            "Password must be at least 6 characters long !",
+                            Toast.LENGTH_SHORT)
                                 .show()
                         return@Button
                     }

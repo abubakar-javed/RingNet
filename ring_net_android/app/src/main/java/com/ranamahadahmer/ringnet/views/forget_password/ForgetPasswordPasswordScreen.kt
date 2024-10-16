@@ -34,12 +34,16 @@ import com.ranamahadahmer.ringnet.R
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
 import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
 fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
                                  navigateToSignInScreen: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
+    val value1 = MutableStateFlow("")
+    val value2 = MutableStateFlow("")
+
     Scaffold(modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
@@ -91,6 +95,7 @@ fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Enter Password",
+                    valueState = value1,
                     onChange = {},
                     type = TextFieldType.Password)
             }
@@ -98,6 +103,7 @@ fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Confirm Password",
+                    valueState = value2,
                     onChange = {},
                     type = TextFieldType.Password)
             }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -25,6 +24,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,11 +37,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
 fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
+    val value = MutableStateFlow("")
     Scaffold(modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
@@ -51,7 +54,7 @@ fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: ()
                     .background(Color.White)
                     .padding(it)
                     .verticalScroll(scroll)
-                    
+
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(28.dp, Alignment.Top)
@@ -91,6 +94,7 @@ fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: ()
                 Text("Enter Verification Code", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.AttachEmail,
                     "OTP",
+                    valueState = value,
                     type = TextFieldType.Name,
                     onChange = {},
                     trailing = { Text("Optional", color = Color.Gray) })

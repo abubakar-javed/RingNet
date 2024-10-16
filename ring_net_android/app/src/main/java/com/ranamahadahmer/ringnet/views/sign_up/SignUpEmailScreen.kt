@@ -48,7 +48,6 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier,
     Scaffold(modifier = modifier
             .fillMaxSize()
 
-            .windowInsetsPadding(WindowInsets.ime)
     ) {
 
         Column(
@@ -56,7 +55,7 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier,
                     .fillMaxSize()
                     .background(Color.White)
                     .padding(it)
-
+                    .windowInsetsPadding(WindowInsets.ime)
                     .verticalScroll(scroll)
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -95,6 +94,7 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier,
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
+                    valueState = viewModel.email,
                     onChange = viewModel::changeEmail,
                     type = TextFieldType.Email)
             }
@@ -104,8 +104,13 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier,
                         .fillMaxWidth()
                         .height(54.dp),
                 onClick = {
-                    if (viewModel.email.value.isEmpty()) {
-                        Toast.makeText(context, "Email Empty", Toast.LENGTH_SHORT)
+                    if (viewModel.emailEmpty()) {
+                        Toast.makeText(context, "Enter Email !", Toast.LENGTH_SHORT)
+                                .show()
+                        return@CustomButton
+                    }
+                    if (viewModel.emailValid().not()) {
+                        Toast.makeText(context, "Incorrect Email !", Toast.LENGTH_SHORT)
                                 .show()
                         return@CustomButton
                     }

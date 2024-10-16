@@ -35,12 +35,14 @@ import com.ranamahadahmer.ringnet.R
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
 import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
 fun ForgetPasswordEmailScreen(modifier: Modifier = Modifier,
                               navigateToConfirmationScreen: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
+    val value = MutableStateFlow("")
     Scaffold(modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
@@ -94,6 +96,7 @@ fun ForgetPasswordEmailScreen(modifier: Modifier = Modifier,
                 Text("Email", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Email,
                     "Enter your Email",
+                    valueState = value,
                     onChange = {},
                     type = TextFieldType.Email)
             }

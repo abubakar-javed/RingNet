@@ -55,7 +55,7 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                     .fillMaxSize()
                     .background(Color.White)
                     .padding(it)
-                    
+
                     .verticalScroll(scroll)
                     .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -87,6 +87,7 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                 Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.ContactEmergency,
                     "First Name",
+                    valueState = viewModel.firstName,
                     onChange = viewModel::changeFirstName,
                     type = TextFieldType.Name)
             }
@@ -94,6 +95,7 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                 Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.ContactEmergency,
                     "Last Name",
+                    valueState = viewModel.lastName,
                     onChange = viewModel::changeLastName,
                     type = TextFieldType.Name)
             }
@@ -101,6 +103,7 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Enter Password",
+                    valueState = viewModel.passwordOne,
                     onChange = viewModel::changePasswordOne,
                     type = TextFieldType.Password)
             }
@@ -108,6 +111,7 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(Icons.Outlined.Lock,
                     "Confirm Password",
+                    valueState = viewModel.passwordTwo,
                     onChange = viewModel::changePasswordTwo,
                     type = TextFieldType.Password)
             }
@@ -116,8 +120,20 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                         .fillMaxWidth()
                         .height(54.dp),
                 onClick = {
-                    if (viewModel.firstName.value.isEmpty() || viewModel.lastName.value.isEmpty() || viewModel.passwordOne.value.isEmpty() || viewModel.passwordTwo.value.isEmpty()) {
-                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    if (viewModel.signUpValid().not()) {
+                        Toast.makeText(context, "Please fill all fields !", Toast.LENGTH_SHORT)
+                                .show()
+                        return@CustomButton
+                    }
+                    if (viewModel.passwordsMatch().not()) {
+                        Toast.makeText(context, "Passwords do not match !", Toast.LENGTH_SHORT)
+                                .show()
+                        return@CustomButton
+                    }
+                    if (viewModel.passwordValid().not()) {
+                        Toast.makeText(context,
+                            "Password must be at least 6 characters long !",
+                            Toast.LENGTH_SHORT).show()
                         return@CustomButton
                     }
                     viewModel.signUp()

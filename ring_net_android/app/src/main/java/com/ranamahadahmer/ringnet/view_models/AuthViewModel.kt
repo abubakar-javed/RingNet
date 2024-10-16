@@ -1,5 +1,6 @@
 package com.ranamahadahmer.ringnet.view_models
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ranamahadahmer.ringnet.api.AuthBackendApi
@@ -36,25 +37,47 @@ class AuthViewModel : ViewModel() {
     val passwordOne: StateFlow<String> get() = _passwordOne
     private val _passwordTwo: MutableStateFlow<String> = MutableStateFlow("")
     val passwordTwo: StateFlow<String> get() = _passwordTwo
+
     fun changeFirstName(value: String) {
-        _firstName.value = value
+        _firstName.value = value.trim()
     }
 
     fun changeLastName(value: String) {
-        _lastName.value = value
+        _lastName.value = value.trim()
     }
 
     fun changeEmail(value: String) {
-        _email.value = value
-        println(_email.value)
+        _email.value = value.trim()
+
     }
 
     fun changePasswordOne(value: String) {
-        _passwordOne.value = value
+        _passwordOne.value = value.trim()
     }
 
     fun changePasswordTwo(value: String) {
-        _passwordTwo.value = value
+        _passwordTwo.value = value.trim()
+    }
+
+    fun passwordsMatch(): Boolean {
+        return _passwordOne.value == _passwordTwo.value
+    }
+
+
+    fun emailValid(): Boolean {
+        return Patterns.EMAIL_ADDRESS.matcher(_email.value).matches()
+    }
+
+    fun emailEmpty(): Boolean {
+        return _email.value.isEmpty()
+    }
+
+    fun passwordValid(): Boolean {
+        return _passwordOne.value.length >= 6
+    }
+
+    fun signUpValid(): Boolean {
+        return _firstName.value.isNotEmpty() && _lastName.value.isNotEmpty() && _email.value.isNotEmpty() && _passwordOne.value.isNotEmpty() && _passwordTwo.value.isNotEmpty()
     }
 
     fun signIn() {

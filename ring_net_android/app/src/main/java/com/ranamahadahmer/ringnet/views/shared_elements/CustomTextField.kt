@@ -4,13 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.StateFlow
 
 enum class TextFieldType {
     Name,
@@ -33,10 +33,10 @@ enum class TextFieldType {
 fun CustomTextField(icon: ImageVector,
                     placeHolder: String,
                     onChange: (String) -> Unit,
+                    valueState: StateFlow<String>,
                     trailing: @Composable (() -> Unit)? = null,
                     type: TextFieldType) {
-
-    var value by remember { mutableStateOf("") }
+    val value by valueState.collectAsState()
     var hidden by remember { mutableStateOf(type == TextFieldType.Password) }
     TextField(
         value,
@@ -72,20 +72,10 @@ fun CustomTextField(icon: ImageVector,
             Icon(icon, contentDescription = null)
         },
         onValueChange = {
-            value = it
             onChange(it)
         },
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth(),
         placeholder = { Text(placeHolder) }
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewCustomTextField() {
-    CustomTextField(Icons.Outlined.Lock,
-        "Enter your password",
-        type = TextFieldType.Password,
-        onChange = {})
 }
