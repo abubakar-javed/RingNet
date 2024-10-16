@@ -20,9 +20,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContactEmergency
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
+import com.ranamahadahmer.ringnet.models.AuthResponse
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
 import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
@@ -45,6 +50,17 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                      viewModel: AuthViewModel) {
     val scroll = rememberScrollState(0)
     val context = LocalContext.current
+    val response by viewModel.signUpResponse.collectAsState()
+
+    LaunchedEffect(response) {
+        if (response is AuthResponse.Success) {
+
+            navigateToConfirmationScreen()
+        }
+
+    }
+
+
     Scaffold(modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
@@ -137,11 +153,32 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
                         return@CustomButton
                     }
                     viewModel.signUp()
-                    navigateToConfirmationScreen()
                 },
-            ) { Text("Continue", fontSize = 18.sp) }
+            ) {
 
+                when (response) {
+                    is AuthResponse.Loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    }
 
+                    is AuthResponse.Success -> {}
+                    is AuthResponse.Error -> {
+                        Toast.makeText(
+                            context,
+                            "Error Occurred",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    AuthResponse.Initial -> {
+                        Text("Sign Up", fontSize = 18.sp, color = Color.White)
+                    }
+                }
+
+            }
         }
     }
 }

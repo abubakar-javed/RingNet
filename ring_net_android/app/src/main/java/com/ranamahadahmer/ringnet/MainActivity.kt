@@ -6,10 +6,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.ranamahadahmer.ringnet.models.AuthResponse
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.SplashScreen
 import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
@@ -21,6 +25,7 @@ import com.ranamahadahmer.ringnet.views.sign_in.SignInSuccessScreen
 import com.ranamahadahmer.ringnet.views.sign_up.SignUpEmailScreen
 import com.ranamahadahmer.ringnet.views.sign_up.SignUpNameScreen
 import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,9 +43,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RingNetApp() {
     val navController = rememberNavController()
-    val authViewModel = AuthViewModel()
+    val authViewModel = AuthViewModel(LocalContext.current)
+    val token by authViewModel.token.collectAsState()
+    val userId by authViewModel.userId.collectAsState()
+
+
+    if (token != null && userId != null && token.toString().isNotEmpty() && userId.toString()
+                .isNotEmpty()) {
+        navController.navigate("dashboard/${authViewModel.userId.collectAsState().value}")
+    }
 
     NavHost(navController = navController, startDestination = "splash_screen") {
+
         composable("splash_screen") {
             SplashScreen {
                 navController.popBackStack()
@@ -66,8 +80,9 @@ fun RingNetApp() {
             composable("success") {
                 SignInSuccessScreen {
                     navController.popBackStack()
-                    navController.navigate("dashboard")
+                    navController.navigate("dashboard/${(authViewModel.signInResponse.value as AuthResponse.Success).message}")
                 }
+
             }
         }
         navigation(startDestination = "email_info", route = "sign_up") {
@@ -83,7 +98,7 @@ fun RingNetApp() {
 //                    val nextPath = "sign_in"
 //                    navController.navigate("confirmation_screen/$msg/$nextPath")
                     navController.popBackStack()
-                    navController.navigate("dashboard")
+                    navController.navigate("dashboard/${(authViewModel.signUpResponse.value as AuthResponse.Success).message}")
                 })
             }
         }
@@ -113,8 +128,9 @@ fun RingNetApp() {
                 }
             }
         }
-        composable("dashboard") {
-            DashboardScreen()
+        composable("dashboard/{message}") {
+            val message = it.arguments?.getString("message") ?: ""
+            DashboardScreen(message = message)
         }
 
     }

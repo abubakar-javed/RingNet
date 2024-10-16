@@ -37,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
@@ -124,12 +123,12 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                                 .show()
                         return@Button
                     }
-                    if (viewModel.emailValid()) {
+                    if (viewModel.emailValid().not()) {
                         Toast.makeText(context, "Please enter Valid Email !", Toast.LENGTH_SHORT)
                                 .show()
                         return@Button
                     }
-                    if (viewModel.passwordValid()) {
+                    if (viewModel.passwordValid().not()) {
                         Toast.makeText(context,
                             "Password must be at least 6 characters long !",
                             Toast.LENGTH_SHORT)
@@ -156,16 +155,11 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                             "Error Occurred",
                             Toast.LENGTH_SHORT
                         ).show()
-
-                        val errorMessage = (response as AuthResponse.Error).message
-                        print(errorMessage)
                     }
 
                     AuthResponse.Initial -> {
                         Text("Login", fontSize = 18.sp, color = Color.White)
                     }
-
-
                 }
 
             }
@@ -207,11 +201,3 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewSignInFormScreen() {
-    SignInFormScreen(navigateToSuccessScreen = {},
-        navigateToSignUpScreen = {},
-        navigateToForgotPasswordScreen = {},
-        viewModel = AuthViewModel())
-}

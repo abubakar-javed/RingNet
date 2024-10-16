@@ -14,19 +14,15 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun DashboardScreen(modifier: Modifier = Modifier) {
+fun DashboardScreen(modifier: Modifier = Modifier,message:String) {
     Scaffold(modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(it),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(32.dp,
                 alignment = Alignment.CenterVertically)) {
             Text(text = "Dashboard")
+            Text(text = "Message: $message")
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenPreview() {
-    DashboardScreen()
-}
