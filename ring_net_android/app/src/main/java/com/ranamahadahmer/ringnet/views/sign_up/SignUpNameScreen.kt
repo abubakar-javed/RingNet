@@ -46,7 +46,7 @@ import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
 
 @Composable
 fun SignUpNameScreen(modifier: Modifier = Modifier,
-                     navigateToConfirmationScreen: () -> Unit,
+                     navigate: () -> Unit,
                      viewModel: AuthViewModel) {
     val scroll = rememberScrollState(0)
     val context = LocalContext.current
@@ -54,10 +54,8 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
 
     LaunchedEffect(response) {
         if (response is AuthResponse.Success) {
-
-            navigateToConfirmationScreen()
+            navigate()
         }
-
     }
 
 

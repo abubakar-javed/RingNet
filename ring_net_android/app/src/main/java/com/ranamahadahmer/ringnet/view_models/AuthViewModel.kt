@@ -45,10 +45,15 @@ class AuthViewModel(context: Context) : ViewModel() {
     val passwordOne: StateFlow<String> get() = _passwordOne
     private val _passwordTwo: MutableStateFlow<String> = MutableStateFlow("")
     val passwordTwo: StateFlow<String> get() = _passwordTwo
-    private val _token: MutableStateFlow<String?> = MutableStateFlow(null)
+
+    private val _token: MutableStateFlow<String> = MutableStateFlow("")
     val token: StateFlow<String?> get() = _token
-    private val _userId: MutableStateFlow<String?> = MutableStateFlow(null)
+    private val _userId: MutableStateFlow<String> = MutableStateFlow("")
     val userId: StateFlow<String?> get() = _userId
+
+    private val _isUserLoggedIn: MutableStateFlow<Boolean> =
+        MutableStateFlow(_token.value != "" && _userId.value != "")
+    val isUserLoggedIn: StateFlow<Boolean> get() = _isUserLoggedIn
 
 
     fun changeFirstName(value: String) {
@@ -95,12 +100,25 @@ class AuthViewModel(context: Context) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            dataStoreManager.token.collect { _token.value = it.orEmpty() }
+            dataStoreManager.token.collect {
+                _token.value = it.orEmpty()
+            }
         }
         viewModelScope.launch {
             dataStoreManager.userId.collect { _userId.value = it.orEmpty() }
         }
     }
+
+
+    fun saveUser() {
+        viewModelScope.launch {
+            if (_signInResponse.value is AuthResponse.Success) {
+                dataStoreManager.insertData(mapOf("token" to (_signInResponse.value as AuthResponse.Success).token,
+                    "userId" to (_signInResponse.value as AuthResponse.Success).userId))
+            }
+        }
+    }
+
 
     fun signIn() {
 
@@ -112,9 +130,7 @@ class AuthViewModel(context: Context) : ViewModel() {
                 val result = withContext(Dispatchers.IO) { _signInApiService.signIn(request) }
                 _signInResponse.value =
                     AuthResponse.Success(result.message, result.token, result.userId)
-                dataStoreManager.insertData(mapOf("token" to result.token,
-                    "userId" to result.userId))
-                print("I GUESS DATA WAS WRITTEN")
+
 
             } catch (e: Exception) {
                 _signInResponse.value = AuthResponse.Error(e.message ?: "An error occurred")
@@ -125,9 +141,7 @@ class AuthViewModel(context: Context) : ViewModel() {
 
 
     fun signUp() {
-        println("Name = ${_firstName.value} ${_lastName.value}")
-        println("Email = ${_email.value}")
-        println("Passwords = ${_passwordOne.value} == ${_passwordTwo.value}")
+
         viewModelScope.launch {
             _signUpResponse.value = AuthResponse.Loading
             try {
@@ -137,9 +151,8 @@ class AuthViewModel(context: Context) : ViewModel() {
                 val result = withContext(Dispatchers.IO) { _signUpApiService.signUp(request) }
                 _signUpResponse.value =
                     AuthResponse.Success(result.message, result.token, result.userId)
-                println("Response = $result")
-                dataStoreManager.insertData(mapOf("token" to result.token,
-                    "userId" to result.userId))
+                dataStoreManager.insertData(mapOf("token" to (_signUpResponse.value as AuthResponse.Success).token,
+                    "userId" to (_signUpResponse.value as AuthResponse.Success).userId))
             } catch (e: Exception) {
                 _signUpResponse.value = AuthResponse.Error(e.message ?: "An error occurred")
             }

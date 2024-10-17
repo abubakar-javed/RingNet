@@ -13,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.ranamahadahmer.ringnet.models.AuthResponse
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.SplashScreen
 import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
@@ -44,14 +43,22 @@ class MainActivity : ComponentActivity() {
 fun RingNetApp() {
     val navController = rememberNavController()
     val authViewModel = AuthViewModel(LocalContext.current)
-    val token by authViewModel.token.collectAsState()
+    val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
     val userId by authViewModel.userId.collectAsState()
+    val token by authViewModel.token.collectAsState()
 
 
-    if (token != null && userId != null && token.toString().isNotEmpty() && userId.toString()
-                .isNotEmpty()) {
-        navController.navigate("dashboard/${authViewModel.userId.collectAsState().value}")
+    println("User ID $userId")
+    println("Token $token")
+
+//    TODO: Is User Logged In is not working
+    println("Is User Logged In $isUserLoggedIn")
+    println("Manual ${userId != ""} && ${token != ""}")
+
+    if (isUserLoggedIn) {
+        navController.navigate("dashboard/$userId")
     }
+
 
     NavHost(navController = navController, startDestination = "splash_screen") {
 
@@ -68,7 +75,6 @@ fun RingNetApp() {
                     viewModel = authViewModel,
                     navigateToSuccessScreen = {
                         navController.popBackStack()
-                        println("I was called")
                         navController.navigate("success")
                     },
                     navigateToSignUpScreen = {
@@ -80,25 +86,20 @@ fun RingNetApp() {
             composable("success") {
                 SignInSuccessScreen {
                     navController.popBackStack()
-                    navController.navigate("dashboard/${(authViewModel.signInResponse.value as AuthResponse.Success).message}")
+                    authViewModel.saveUser()
                 }
-
             }
         }
         navigation(startDestination = "email_info", route = "sign_up") {
-
             composable("email_info") {
                 SignUpEmailScreen(viewModel = authViewModel, navigateToSignUpNameScreen = {
                     navController.navigate("name_password")
                 })
             }
             composable("name_password") {
-                SignUpNameScreen(viewModel = authViewModel, navigateToConfirmationScreen = {
-//                    val msg = "Verify and Create your account"
-//                    val nextPath = "sign_in"
-//                    navController.navigate("confirmation_screen/$msg/$nextPath")
+                SignUpNameScreen(viewModel = authViewModel, navigate = {
                     navController.popBackStack()
-                    navController.navigate("dashboard/${(authViewModel.signUpResponse.value as AuthResponse.Success).message}")
+                    navController.navigate("sign_in/success")
                 })
             }
         }
