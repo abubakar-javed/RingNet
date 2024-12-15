@@ -1,10 +1,11 @@
 const express = require("express");
 const passport = require("../config/passport");
-const { login, authenticate } = require("../controller/authController");
+const { login,register, authenticate } = require("../controllers/authController");
 
 const router = express.Router();
 
 router.post("/login", login);
+router.post("/register", register);
 
 router.get(
   "/google",

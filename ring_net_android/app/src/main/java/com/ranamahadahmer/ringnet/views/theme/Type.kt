@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.ui.theme
+package com.ranamahadahmer.ringnet.views.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

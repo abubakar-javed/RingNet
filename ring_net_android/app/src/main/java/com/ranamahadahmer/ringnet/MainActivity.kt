@@ -5,42 +5,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ranamahadahmer.ringnet.ui.theme.RingNetTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
+import androidx.navigation.compose.rememberNavController
+import com.ranamahadahmer.ringnet.view_models.AuthViewModel
+import com.ranamahadahmer.ringnet.views.SplashScreen
+import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
+import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordEmailScreen
+import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordPasswordScreen
+import com.ranamahadahmer.ringnet.views.shared_elements.ConfirmationScreen
+import com.ranamahadahmer.ringnet.views.sign_in.SignInFormScreen
+import com.ranamahadahmer.ringnet.views.sign_in.SignInSuccessScreen
+import com.ranamahadahmer.ringnet.views.sign_up.SignUpEmailScreen
+import com.ranamahadahmer.ringnet.views.sign_up.SignUpNameScreen
+import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,84 +32,109 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RingNetTheme {
-                Greeting()
+                RingNetApp()
             }
         }
     }
 }
 
-@Composable
-fun Greeting(modifier: Modifier = Modifier) {
-    Scaffold(modifier = modifier.fillMaxSize()) {
-        val brush = Brush.verticalGradient(
-            colorStops = arrayOf(
-                0.4f to Color(0xFFFFFFFF),
-                0.4f to Color(0xFF4A1616)
-            ),
-        )
-        Column(
-            modifier = Modifier
-                    .padding(it)
-                    .background(brush)
-                    .fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceAround,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
 
-            Card(modifier = Modifier
-                    .height(400.dp)
-                    .width(300.dp),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Image(
-                    painterResource(R.drawable.earthquake),
-                    null,
-                    modifier = Modifier.fillMaxSize(),
-                    alignment = Alignment.Center,
-                    contentScale = ContentScale.FillBounds
+@Composable
+fun RingNetApp() {
+    val navController = rememberNavController()
+    val authViewModel = AuthViewModel(LocalContext.current)
+    val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
+    val userId by authViewModel.userId.collectAsState()
+    val token by authViewModel.token.collectAsState()
+
+
+    println("User ID $userId")
+    println("Token $token")
+
+//    TODO: Is User Logged In is not working
+    println("Is User Logged In $isUserLoggedIn")
+    println("Manual ${userId != ""} && ${token != ""}")
+
+    if (isUserLoggedIn) {
+        navController.navigate("dashboard/$userId")
+    }
+
+
+    NavHost(navController = navController, startDestination = "splash_screen") {
+
+        composable("splash_screen") {
+            SplashScreen {
+                navController.popBackStack()
+                navController.navigate("sign_in")
+            }
+        }
+
+        navigation(startDestination = "form", route = "sign_in") {
+            composable("form") {
+                SignInFormScreen(
+                    viewModel = authViewModel,
+                    navigateToSuccessScreen = {
+                        navController.popBackStack()
+                        navController.navigate("success")
+                    },
+                    navigateToSignUpScreen = {
+                        navController.navigate("sign_up")
+                    },
+                    navigateToForgotPasswordScreen = { navController.navigate("forgot_password") }
                 )
             }
-
-            Text(stringResource(R.string.grow_your_insights_with_latest_alerts),
-                modifier = Modifier.padding(horizontal = 54.dp),
-                fontSize = 32.sp,
-                lineHeight = 40.sp,
-                textAlign = TextAlign.Center)
-            Text(stringResource(R.string.explore_the_world_of_analyzing_news_and_sports_where_you_will_be_submerged_to_games),
-                modifier = Modifier.padding(horizontal = 54.dp),
-                textAlign = TextAlign.Center)
-            Card(
-                modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 64.dp)
-                        .clickable { println("move_to_next_page") },
-
-                ) {
-                Row(
-                    modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 20.dp, horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text("GET STARTED")
-                    Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
-                        contentDescription = null)
+            composable("success") {
+                SignInSuccessScreen {
+                    navController.popBackStack()
+                    authViewModel.saveUser()
                 }
             }
+        }
+        navigation(startDestination = "email_info", route = "sign_up") {
+            composable("email_info") {
+                SignUpEmailScreen(viewModel = authViewModel, navigateToSignUpNameScreen = {
+                    navController.navigate("name_password")
+                })
+            }
+            composable("name_password") {
+                SignUpNameScreen(viewModel = authViewModel, navigate = {
+                    navController.popBackStack()
+                    navController.navigate("sign_in/success")
+                })
+            }
+        }
+        navigation(startDestination = "email", route = "forgot_password") {
+            composable("email") {
+                val msg = "Verify and Set New Password"
+                val nextPath = "new_password"
+                ForgetPasswordEmailScreen {
+                    navController.navigate("confirmation_screen/$msg/$nextPath")
+                }
+            }
+            composable("new_password") {
+                ForgetPasswordPasswordScreen {
+                    navController.navigate("sign_in")
+                }
+            }
+        }
 
 
+
+        composable("confirmation_screen/{msg}/{path}") {
+            val msg = it.arguments?.getString("msg") ?: ""
+            val nextPath = it.arguments?.getString("path") ?: ""
+            ConfirmationScreen(msg = msg) {
+                navController.navigate(nextPath) {
+                    popUpTo("sign_in") { inclusive = true }
+                }
+            }
+        }
+        composable("dashboard/{message}") {
+            val message = it.arguments?.getString("message") ?: ""
+            DashboardScreen(message = message)
         }
 
     }
 }
-
-@Composable
-@Preview
-fun GreetingPreview() {
-    RingNetTheme {
-        Greeting()
-    }
-}
-
 
 
