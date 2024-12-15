@@ -30,8 +30,8 @@
   }
   
   .logo {
-    width: 100px; 
-    height: 35px; 
+    width: 130px; 
+    height: 70px; 
     margin-right: 0.5rem;
     object-fit: contain; 
   }
@@ -39,6 +39,7 @@
   .navbarRight {
     display: flex;
     align-items: center;
+    justify-content: space-between;
   }
   
   .iconButton {
@@ -54,5 +55,29 @@
     background: none;
     border: none;
     cursor: pointer;
+    display: flex;
+    align-items: center;
   }
   
+
+.dropdownButton,.homeLink,.navLink{
+  cursor: pointer;
+  background: none;
+  text-decoration: none;
+  color: #bc1a1a;
+  margin-left: 4rem;
+  font-weight:500;
+}
+.navItemsLeft{
+  display: flex;
+  justify-content:space-between;
+  align-items: center;
+}
+.searchInput{
+  border: 1px solid #bc1a1a;
+  border-radius: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-right: -3rem;
+  padding-right: -3rem;
+}
