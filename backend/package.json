@@ -8,6 +8,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
+    "child_process": "^1.0.2",
     "config": "^3.3.12",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -27,6 +28,7 @@
     "passport-google-oauth20": "^2.0.0",
     "path": "^0.12.7",
     "pg": "^8.13.0",
+    "python-shell": "^5.0.0",
     "winston": "^3.14.2",
     "zod": "^3.23.8"
   }
