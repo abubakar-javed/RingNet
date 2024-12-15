@@ -7,24 +7,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import java.util.Timer
-import kotlin.concurrent.schedule
+import kotlinx.coroutines.delay
 
 @Composable
 fun Loading(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit) {
-    Timer().schedule(1000) {
-        println("HELLO")
+    LaunchedEffect(true) {
+        delay(200)
         navigateToNextScreen()
     }
     Scaffold(modifier = modifier.fillMaxSize()) {
-
-
         Column(
             modifier = Modifier
                     .padding(it)
-
                     .fillMaxSize(),
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally

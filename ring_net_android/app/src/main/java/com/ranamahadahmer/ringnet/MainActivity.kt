@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
+import com.ranamahadahmer.ringnet.views.Loading
 import com.ranamahadahmer.ringnet.views.SplashScreen
 import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
 import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordEmailScreen
@@ -43,26 +44,26 @@ class MainActivity : ComponentActivity() {
 fun RingNetApp() {
     val navController = rememberNavController()
     val authViewModel = AuthViewModel(LocalContext.current)
-    val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
+
     val userId by authViewModel.userId.collectAsState()
-    val token by authViewModel.token.collectAsState()
 
 
-    println("User ID $userId")
-    println("Token $token")
-
-//    TODO: Is User Logged In is not working
-    println("Is User Logged In $isUserLoggedIn")
-    println("Manual ${userId != ""} && ${token != ""}")
-
-    if (isUserLoggedIn) {
-        navController.navigate("dashboard/$userId")
-    }
+    val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
 
 
-    NavHost(navController = navController, startDestination = "splash_screen") {
 
+
+
+    NavHost(navController = navController, startDestination = "loading_screen") {
+        composable("loading_screen") {
+            Loading {
+                val nextDestination = if (isUserLoggedIn) "dashboard/$userId" else "splash_screen"
+                navController.popBackStack()
+                navController.navigate(nextDestination)
+            }
+        }
         composable("splash_screen") {
+
             SplashScreen {
                 navController.popBackStack()
                 navController.navigate("sign_in")
@@ -87,6 +88,7 @@ fun RingNetApp() {
                 SignInSuccessScreen {
                     navController.popBackStack()
                     authViewModel.saveUser()
+                    navController.navigate("dashboard/$userId")
                 }
             }
         }
@@ -129,6 +131,7 @@ fun RingNetApp() {
                 }
             }
         }
+
         composable("dashboard/{message}") {
             val message = it.arguments?.getString("message") ?: ""
             DashboardScreen(message = message)

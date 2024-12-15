@@ -14,11 +14,13 @@ import com.ranamahadahmer.ringnet.models.SignUpRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
 class AuthViewModel(context: Context) : ViewModel() {
+
     private val _signInApiService: SignInService =
         AuthBackendApi.retrofit.create(SignInService::class.java)
     private val _signUpApiService: SignUpService =
@@ -47,12 +49,11 @@ class AuthViewModel(context: Context) : ViewModel() {
     val passwordTwo: StateFlow<String> get() = _passwordTwo
 
     private val _token: MutableStateFlow<String> = MutableStateFlow("")
-    val token: StateFlow<String?> get() = _token
+    val token: StateFlow<String> get() = _token
     private val _userId: MutableStateFlow<String> = MutableStateFlow("")
-    val userId: StateFlow<String?> get() = _userId
+    val userId: StateFlow<String> get() = _userId
 
-    private val _isUserLoggedIn: MutableStateFlow<Boolean> =
-        MutableStateFlow(_token.value != "" && _userId.value != "")
+    private val _isUserLoggedIn: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isUserLoggedIn: StateFlow<Boolean> get() = _isUserLoggedIn
 
 
@@ -99,14 +100,17 @@ class AuthViewModel(context: Context) : ViewModel() {
     }
 
     init {
+
         viewModelScope.launch {
-            dataStoreManager.token.collect {
-                _token.value = it.orEmpty()
+            combine(dataStoreManager.token, dataStoreManager.userId) { token, userId ->
+                _token.value = token.orEmpty()
+                _userId.value = userId.orEmpty()
+                !token.isNullOrEmpty() && !userId.isNullOrEmpty()
+            }.collect {
+                _isUserLoggedIn.value = it
             }
         }
-        viewModelScope.launch {
-            dataStoreManager.userId.collect { _userId.value = it.orEmpty() }
-        }
+
     }
 
 
