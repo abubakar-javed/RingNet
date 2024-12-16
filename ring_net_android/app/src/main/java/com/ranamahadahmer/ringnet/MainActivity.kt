@@ -49,9 +49,7 @@ fun RingNetApp() {
 
 
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
-
-
-
+    
 
 
     NavHost(navController = navController, startDestination = "loading_screen") {

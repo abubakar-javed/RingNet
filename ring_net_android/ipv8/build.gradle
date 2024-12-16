@@ -1,0 +1,96 @@
+apply plugin: 'kotlin'
+apply plugin: 'java-library'
+apply plugin: 'jacoco'
+apply plugin: 'org.jetbrains.dokka'
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
+apply plugin: 'app.cash.sqldelight'
+
+tasks.dokkaHtml {
+    outputDirectory.set(file("$buildDir/dokka"))
+}
+
+sqldelight {
+    databases {
+        Database {
+            packageName = "nl.tudelft.ipv8.sqldelight"
+            srcDirs = files(["src/main/sqldelight"])
+            schemaOutputDirectory = file("src/main/sqldelight/databases")
+        }
+    }
+}
+
+ktlint {
+    version = "12.1.2"
+    android = true
+    outputToConsole = true
+    ignoreFailures = false
+    verbose = true
+
+    filter {
+        // https://github.com/JLLeitschuh/ktlint-gradle/issues/97
+        exclude { "**/generated/**" }
+        // https://github.com/JLLeitschuh/ktlint-gradle/issues/266
+        exclude { element -> element.file.path.contains("generated/") }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = true
+        html.required = true
+    }
+
+    // TODO: exclude generated files
+    afterEvaluate {
+        getClassDirectories().setFrom(files(classDirectories.files.collect {
+            fileTree(
+                    dir: it,
+                    exclude: ["**/sqldelight/**"]
+            )
+        }))
+    }
+}
+
+dependencies {
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:2.1.0"
+
+    // Network utils
+    implementation 'commons-net:commons-net:3.11.1'
+
+    // Crypto
+    implementation "com.goterl:lazysodium-java:5.1.4"
+
+    // Logging
+    implementation 'io.github.microutils:kotlin-logging:3.0.5'
+
+    // JSON
+    implementation 'org.json:json:20240303'
+
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation "io.mockk:mockk:1.13.13"
+    testImplementation "app.cash.sqldelight:sqlite-driver:2.0.2"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0"
+
+
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15to18', version: '1.79'
+
+
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-opt-in=kotlin.ExperimentalUnsignedTypes",
+            "-Werror" // Set Kotlin compiler warnings as errors
+    ]
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
