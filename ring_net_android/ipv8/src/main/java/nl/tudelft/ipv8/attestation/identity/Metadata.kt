@@ -22,7 +22,7 @@ class Metadata(
         return arrayOf(this.tokenPointer, this.signature, this.serializedJSONObject)
     }
 
-    @ExperimentalStdlibApi
+//    @ExperimentalStdlibApi
     override fun toString(): String {
         return "Metadata(${this.tokenPointer.toHex()},\n${this.serializedJSONObject.toString(Charsets.UTF_8)}"
     }

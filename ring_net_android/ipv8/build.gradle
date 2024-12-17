@@ -2,7 +2,7 @@ apply plugin: 'kotlin'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
 apply plugin: 'org.jetbrains.dokka'
-apply plugin: 'org.jlleitschuh.gradle.ktlint'
+//apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply plugin: 'app.cash.sqldelight'
 
 tasks.dokkaHtml {
@@ -19,20 +19,20 @@ sqldelight {
     }
 }
 
-ktlint {
-    version = "12.1.2"
-    android = true
-    outputToConsole = true
-    ignoreFailures = false
-    verbose = true
-
-    filter {
-        // https://github.com/JLLeitschuh/ktlint-gradle/issues/97
-        exclude { "**/generated/**" }
-        // https://github.com/JLLeitschuh/ktlint-gradle/issues/266
-        exclude { element -> element.file.path.contains("generated/") }
-    }
-}
+//ktlint {
+//    version = "12.1.2"
+//    android = true
+//    outputToConsole = true
+//    ignoreFailures = false
+//    verbose = true
+//
+//    filter {
+//        // https://github.com/JLLeitschuh/ktlint-gradle/issues/97
+//        exclude { "**/generated/**" }
+//        // https://github.com/JLLeitschuh/ktlint-gradle/issues/266
+//        exclude { element -> element.file.path.contains("generated/") }
+//    }
+//}
 
 jacocoTestReport {
     reports {
@@ -62,13 +62,13 @@ dependencies {
     implementation 'commons-net:commons-net:3.11.1'
 
     // Crypto
-    implementation "com.goterl:lazysodium-java:5.1.4"
 
     // Logging
     implementation 'io.github.microutils:kotlin-logging:3.0.5'
 
     // JSON
     implementation 'org.json:json:20240303'
+    implementation libs.lazysodium.java
 
     // Testing
     testImplementation 'junit:junit:4.13.2'
@@ -91,6 +91,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }

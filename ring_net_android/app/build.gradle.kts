@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -28,11 +29,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "21"
     }
     buildFeatures {
         compose = true
@@ -65,7 +66,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.dagger)
     implementation(libs.androidx.datastore.preferences)
-    implementation(project(":ipv8"))
     implementation(project(":ipv8-android"))
 
     testImplementation(libs.junit)
