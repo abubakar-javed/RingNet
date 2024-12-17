@@ -107,7 +107,7 @@ abstract class Community : Overlay {
         var address = fromPeer?.address
 
         if (address == null) {
-            val available = getPeers()
+            val available = getPeerss()
             address = if (available.isNotEmpty()) {
                 // With a small chance, try to remedy any disconnected network phenomena.
                 if (Random.nextFloat() < 0.5f && endpoint.udpEndpoint != null) {
@@ -126,7 +126,7 @@ abstract class Community : Overlay {
     }
 
     override fun getPeerForIntroduction(exclude: Peer?): Peer? {
-        val available = getPeers() - exclude
+        val available = getPeerss() - exclude
         return if (available.isNotEmpty()) {
             available.random()
         } else {
@@ -138,7 +138,7 @@ abstract class Community : Overlay {
         return network.getWalkableAddresses(serviceId)
     }
 
-    override fun getPeers(): List<Peer> {
+    override fun getPeerss(): List<Peer> {
         return network.getPeersForService(serviceId)
     }
 
@@ -454,7 +454,7 @@ abstract class Community : Overlay {
     ) {
         logger.debug("<- $payload")
 
-        if (maxPeers >= 0 && getPeers().size >= maxPeers) {
+        if (maxPeers >= 0 && getPeerss().size >= maxPeers) {
             logger.info("Dropping introduction request from $peer, too many peers!")
             return
         }

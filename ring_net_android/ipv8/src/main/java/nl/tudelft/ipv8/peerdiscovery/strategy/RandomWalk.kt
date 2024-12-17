@@ -31,7 +31,7 @@ class RandomWalk(
         logger.debug("takeStep")
 
         synchronized(walkLock) {
-            if (peers >= 0 && overlay.getPeers().size >= peers) return
+            if (peers >= 0 && overlay.getPeerss().size >= peers) return
 
             // Sanitize unreachable nodes
             val toRemove = mutableListOf<IPv4Address>()

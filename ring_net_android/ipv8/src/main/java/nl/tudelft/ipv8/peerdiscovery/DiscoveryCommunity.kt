@@ -141,7 +141,7 @@ class DiscoveryCommunity : Community(), PingOverlay {
     ) {
         logger.debug("<- $payload")
 
-        if (maxPeers >= 0 && getPeers().size >= maxPeers && !network.verifiedPeers.contains(peer)) {
+        if (maxPeers >= 0 && getPeerss().size >= maxPeers && !network.verifiedPeers.contains(peer)) {
             logger.info("Dropping similarity response from $peer, too many peers!")
             return
         }

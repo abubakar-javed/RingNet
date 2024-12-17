@@ -243,7 +243,7 @@ class EVAProtocolTest : BaseCommunityTest() {
         every { mockPublicKey.encrypt(any()) } returns byteArrayOf()
         every { mockPeer.publicKey } returns mockPublicKey
         every { mockPeer.key } returns mockk()
-        every { community.getPeers() } returns listOf(mockPeer)
+        every { community.getPeerss() } returns listOf(mockPeer)
         community.load()
 
         val scheduled = community.getScheduled()
@@ -315,14 +315,14 @@ class EVAProtocolTest : BaseCommunityTest() {
         val community = getCommunity()
         community.load()
 
-        assertEquals(0, community.getPeers().size)
+        assertEquals(0, community.getPeerss().size)
 
         val address = IPv4Address("1.2.3.4", 1234)
         val peer = Peer(defaultCryptoProvider.generateKey(), address)
         community.network.addVerifiedPeer(peer)
         community.network.discoverServices(peer, listOf(community.serviceId))
 
-        assertEquals(1, community.getPeers().size)
+        assertEquals(1, community.getPeerss().size)
 
         community.evaProtocol?.let { evaProtocol ->
             evaProtocol.javaClass.declaredMethods.first {
@@ -358,7 +358,7 @@ class EVAProtocolTest : BaseCommunityTest() {
         val community = spyk(getCommunity())
         community.load()
 
-        assertEquals(0, community.getPeers().size)
+        assertEquals(0, community.getPeerss().size)
 
         val address = IPv4Address("1.2.3.4", 1234)
         val peer = Peer(defaultCryptoProvider.generateKey(), address)
@@ -369,7 +369,7 @@ class EVAProtocolTest : BaseCommunityTest() {
         community.network.addVerifiedPeer(peer)
         community.network.discoverServices(peer, listOf(community.serviceId))
 
-        assertEquals(1, community.getPeers().size)
+        assertEquals(1, community.getPeerss().size)
 
         val scope = TestScope()
         community.evaProtocol = EVAProtocol(community, scope, timeoutInterval = 30000)
@@ -434,7 +434,7 @@ class EVAProtocolTest : BaseCommunityTest() {
         val community = spyk(getCommunity())
         community.load()
 
-        assertEquals(0, community.getPeers().size)
+        assertEquals(0, community.getPeerss().size)
 
         val address = IPv4Address("1.2.3.4", 1234)
         val peer = Peer(defaultCryptoProvider.generateKey(), address)
@@ -445,7 +445,7 @@ class EVAProtocolTest : BaseCommunityTest() {
         community.network.addVerifiedPeer(peer)
         community.network.discoverServices(peer, listOf(community.serviceId))
 
-        assertEquals(1, community.getPeers().size)
+        assertEquals(1, community.getPeerss().size)
 
         val scope = TestScope()
 
@@ -503,14 +503,14 @@ class EVAProtocolTest : BaseCommunityTest() {
             error = exception.m
         }
 
-        assertEquals(0, community.getPeers().size)
+        assertEquals(0, community.getPeerss().size)
 
         val address = IPv4Address("1.2.3.4", 1234)
         val peer = Peer(defaultCryptoProvider.generateKey(), address)
         community.network.addVerifiedPeer(peer)
         community.network.discoverServices(peer, listOf(community.serviceId))
 
-        assertEquals(1, community.getPeers().size)
+        assertEquals(1, community.getPeerss().size)
 
         community.evaProtocol?.let { evaProtocol ->
             evaProtocol.javaClass.declaredMethods.first {
@@ -1046,14 +1046,14 @@ class EVAProtocolTest : BaseCommunityTest() {
         val community = getCommunity()
         community.load()
 
-        assertEquals(0, community.getPeers().size)
+        assertEquals(0, community.getPeerss().size)
 
         val address = IPv4Address("1.2.3.4", 1234)
         val peer = Peer(defaultCryptoProvider.generateKey(), address)
         community.network.addVerifiedPeer(peer)
         community.network.discoverServices(peer, listOf(community.serviceId))
 
-        assertEquals(1, community.getPeers().size)
+        assertEquals(1, community.getPeerss().size)
 
         val scheduledTransfer = createScheduledTransfer()
 
@@ -1086,14 +1086,14 @@ class EVAProtocolTest : BaseCommunityTest() {
         val community = getCommunity()
         community.load()
 
-        assertEquals(0, community.getPeers().size)
+        assertEquals(0, community.getPeerss().size)
 
         val address = IPv4Address("1.2.3.4", 1234)
         val peer = Peer(defaultCryptoProvider.generateKey(), address)
         community.network.addVerifiedPeer(peer)
         community.network.discoverServices(peer, listOf(community.serviceId))
 
-        assertEquals(1, community.getPeers().size)
+        assertEquals(1, community.getPeerss().size)
 
         val scheduledTransfer = createScheduledTransfer()
 

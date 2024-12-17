@@ -102,7 +102,7 @@ open class EVAProtocol(
      * @return the requested peer or null if not connected
      */
     private fun getConnectedPeer(key: Key): Peer? {
-        return community.getPeers().firstOrNull {
+        return community.getPeerss().firstOrNull {
             it.key == key
         }
     }

@@ -9,7 +9,6 @@ import nl.tudelft.ipv8.messaging.Packet
 import nl.tudelft.ipv8.util.random
 import nl.tudelft.ipv8.attestation.trustchain.payload.*
 import nl.tudelft.ipv8.attestation.trustchain.store.TrustChainStore
-import nl.tudelft.ipv8.attestation.trustchain.validation.ValidationErrors
 import nl.tudelft.ipv8.keyvault.defaultCryptoProvider
 import nl.tudelft.ipv8.messaging.Address
 import nl.tudelft.ipv8.util.toHex
@@ -142,7 +141,7 @@ open class TrustChainCommunity(
             val payload = HalfBlockBroadcastPayload.fromHalfBlock(block, ttl.toUInt())
             logger.debug("-> $payload")
             val packet = serializePacket(MessageId.HALF_BLOCK_BROADCAST, payload, false)
-            val randomPeers = getPeers().random(settings.broadcastFanout)
+            val randomPeers = getPeerss().random(settings.broadcastFanout)
             for (randomPeer in randomPeers) {
                 send(randomPeer, packet)
             }

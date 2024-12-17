@@ -50,16 +50,11 @@ configurations.implementation {
     exclude group: "com.goterl", module: "lazysodium"
 }
 dependencies {
-    implementation(project(':ipv8'))
-
-
-    configurations.configureEach {
-        resolutionStrategy {
-            // Force only one version of lazysodium
-            force 'com.goterl:lazysodium-android:5.1.0'
-            exclude group: 'com.goterl', module: 'lazysodium-java'
-        }
+    implementation(project(':ipv8')){
+        exclude group: "com.goterl", module: "lazysodium-java"
     }
+
+
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.0"
@@ -73,7 +68,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-common-java8:2.2.0"
 
     // Crypto
-    implementation 'com.goterl:lazysodium-android:5.1.0@aar'
+    implementation(libs.lazysodium.android)
     implementation 'net.java.dev.jna:jna:5.5.0@aar'
 
     // BLE
@@ -89,5 +84,6 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
-}
 
+
+}

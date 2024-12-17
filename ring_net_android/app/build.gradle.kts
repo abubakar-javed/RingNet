@@ -66,7 +66,12 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.dagger)
     implementation(libs.androidx.datastore.preferences)
-    implementation(project(":ipv8-android"))
+    implementation(project(":ipv8-android")){
+        exclude( "com.goterl" ,"lazysodium-android")
+    }
+    implementation(project(":ipv8")) {
+        exclude( "com.goterl" ,"lazysodium-java")
+    }
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

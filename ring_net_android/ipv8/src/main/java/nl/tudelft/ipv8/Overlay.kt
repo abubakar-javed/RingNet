@@ -74,7 +74,7 @@ interface Overlay : EndpointListener {
     /**
      * Get peers in the network that use this overlay.
      */
-    fun getPeers(): List<Peer>
+    fun getPeerss(): List<Peer>
 
     /**
      * Get the list of addresses we can walk to on this overlay.

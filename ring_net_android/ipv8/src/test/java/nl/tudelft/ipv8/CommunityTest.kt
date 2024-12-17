@@ -9,8 +9,6 @@ import io.mockk.verify
 import nl.tudelft.ipv8.keyvault.*
 import nl.tudelft.ipv8.messaging.Address
 import nl.tudelft.ipv8.messaging.Packet
-import nl.tudelft.ipv8.messaging.payload.BinMemberAuthenticationPayload
-import nl.tudelft.ipv8.messaging.payload.GlobalTimeDistributionPayload
 import nl.tudelft.ipv8.messaging.payload.PunctureRequestPayload
 import nl.tudelft.ipv8.peerdiscovery.Network
 import nl.tudelft.ipv8.util.hexToBytes
@@ -81,7 +79,7 @@ class CommunityTest : BaseCommunityTest() {
 
         community.myEstimatedLan = IPv4Address("2.2.3.4", 2234)
         every { community.myEstimatedWan } returns IPv4Address("3.2.3.4", 3234)
-        every { community.getPeers() } returns listOf(Peer(JavaCryptoProvider.generateKey(), IPv4Address("5.2.3.4", 5234)))
+        every { community.getPeerss() } returns listOf(Peer(JavaCryptoProvider.generateKey(), IPv4Address("5.2.3.4", 5234)))
         val peer = Peer(
             defaultCryptoProvider.generateKey().pub(),
             IPv4Address("1.2.3.4", 1234),
@@ -102,7 +100,7 @@ class CommunityTest : BaseCommunityTest() {
 
         community.myEstimatedLan = IPv4Address("2.2.3.4", 2234)
         every { community.myEstimatedWan } returns IPv4Address("3.2.3.4", 3234)
-        every { community.getPeers() } returns listOf(Peer(JavaCryptoProvider.generateKey(), IPv4Address("5.2.3.4", 5234)))
+        every { community.getPeerss() } returns listOf(Peer(JavaCryptoProvider.generateKey(), IPv4Address("5.2.3.4", 5234)))
         val peer = Peer(
             defaultCryptoProvider.generateKey().pub(),
             IPv4Address("1.2.3.4", 1234),
