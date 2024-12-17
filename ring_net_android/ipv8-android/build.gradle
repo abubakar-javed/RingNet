@@ -46,9 +46,19 @@ android {
 
 }
 
+configurations.implementation {
+    exclude group: "com.goterl", module: "lazysodium"
+}
 dependencies {
-    implementation(project(':ipv8')){
-                exclude group: 'com.goterl', module: 'lazysodium'
+    implementation(project(':ipv8'))
+
+
+    configurations.configureEach {
+        resolutionStrategy {
+            // Force only one version of lazysodium
+            force 'com.goterl:lazysodium-android:5.1.0'
+            exclude group: 'com.goterl', module: 'lazysodium-java'
+        }
     }
 
     // Kotlin
