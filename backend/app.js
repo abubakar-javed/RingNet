@@ -20,7 +20,8 @@ const authRoutes = require("./routes/auth");
 const earthquakeRoutes = require("./routes/earthquakeRoutes");
 const tsunamiRoutes = require("./routes/tsunamiRoutes");
 const generalHazardRoutes = require("./routes/generalHazardRoutes");
-
+const floodRoutes = require("./routes/floodRoutes");    
+const heatwaveRoutes = require("./routes/heatwaveRoutes");
 // Create Express app
 const app = express();
 
