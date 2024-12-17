@@ -12,8 +12,7 @@ const earthquakeSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   fatalities: { type: Number, default: 0 },
   injuries: { type: Number, default: 0 },
-  damageEstimate: { type: Number, default: 0 }, // Damage cost estimate
-  tsunamiWarning: { type: Boolean, default: false }, // If a tsunami warning was issued
+  damageEstimate: { type: Number, default: 0 }, 
 });
 
 const Earthquake = mongoose.model('Earthquake', earthquakeSchema);
