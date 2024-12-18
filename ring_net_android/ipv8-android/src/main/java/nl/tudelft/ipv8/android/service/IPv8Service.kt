@@ -76,6 +76,7 @@ open class IPv8Service : Service(), LifecycleObserver {
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel =
                 NotificationChannel(
+
                     NOTIFICATION_CHANNEL_CONNECTION,
                     getString(R.string.notification_channel_connection_title),
                     importance,
@@ -116,8 +117,9 @@ open class IPv8Service : Service(), LifecycleObserver {
      */
     protected open fun createNotification(): NotificationCompat.Builder {
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_CONNECTION)
-            .setContentTitle("IPv8")
-            .setContentText("Running")
+                .setSmallIcon(R.drawable.icon) // Use a valid drawable resource
+                .setContentTitle("RingNet")
+                .setContentText("Running")
     }
 
     /**

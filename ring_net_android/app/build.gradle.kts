@@ -66,12 +66,25 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.dagger)
     implementation(libs.androidx.datastore.preferences)
-    implementation(project(":ipv8-android")){
-        exclude( "com.goterl" ,"lazysodium-android")
-    }
+
+
+//    implementation(project(":ipv8-android")){
+////        exclude( "net.java.dev.jna" ,"jna")
+//
+//    }
+//    implementation(project(":ipv8")) {
+//        exclude( "com.goterl" ,"lazysodium-java")
+//    }
+
+
+
     implementation(project(":ipv8")) {
-        exclude( "com.goterl" ,"lazysodium-java")
+        exclude("com.goterl","lazysodium-java")
     }
+    implementation(project(":ipv8-android")){
+        exclude( "net.java.dev.jna" ,"jna")
+    }
+    implementation("net.java.dev.jna:jna:5.12.1@aar")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -81,3 +94,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+
+
+
+
+

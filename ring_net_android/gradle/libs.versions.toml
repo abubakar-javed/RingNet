@@ -20,7 +20,7 @@ datastorePreferences = "1.1.1"
 allModulesPagePlugin = "2.0.0-Beta"
 dokkaGradlePlugin = "2.0.0-Beta"
 lazysodiumJava = "5.1.4"
-lazysodiumAndroid = "5.1.0"
+
 
 
 [libraries]
@@ -51,7 +51,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 all-modules-page-plugin = { group = "org.jetbrains.dokka", name = "all-modules-page-plugin", version.ref = "allModulesPagePlugin" }
 dokka-gradle-plugin = { group = "org.jetbrains.dokka", name = "dokka-gradle-plugin", version.ref = "dokkaGradlePlugin" }
 lazysodium-java = { group = "com.goterl", name = "lazysodium-java", version.ref = "lazysodiumJava"}
-lazysodium-android = { group = "com.goterl", name = "lazysodium-android", version.ref = "lazysodiumAndroid" }
+
 
 
 [plugins]

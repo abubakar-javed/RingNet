@@ -1,6 +1,7 @@
 package com.ranamahadahmer.ringnet
 
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
+import com.ranamahadahmer.ringnet.view_models.P2pModel
 import com.ranamahadahmer.ringnet.views.Loading
 import com.ranamahadahmer.ringnet.views.SplashScreen
 import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
@@ -42,70 +44,11 @@ import nl.tudelft.ipv8.messaging.Serializable
 import nl.tudelft.ipv8.peerdiscovery.strategy.RandomWalk
 
 
-class DemoCommunity : Community() {
-    override val serviceId = "02313685c1912a141279f8248fc8db5899c5df5a"
-    private val community = IPv8Android.getInstance().getOverlay<DemoCommunity>()!!
-    val peers = community.getPeerss()
-    private val MESSAGE_ID = 1
-
-    private fun getPrivateKey(): PrivateKey {
-        return AndroidCryptoProvider.generateKey()
-    }
-
-    private val demoCommunity = OverlayConfiguration(
-        Overlay.Factory(DemoCommunity::class.java),
-        listOf(RandomWalk.Factory())
-    )
-    val config = IPv8Configuration(overlays = listOf(
-        demoCommunity
-    ))
-
-    class MyMessage(val message: String) : Serializable {
-        override fun serialize(): ByteArray {
-            return message.toByteArray()
-        }
-
-        companion object Deserializer : Deserializable<MyMessage> {
-            override fun deserialize(buffer: ByteArray, offset: Int): Pair<MyMessage, Int> {
-                return Pair(MyMessage(buffer.toString(Charsets.UTF_8)), buffer.size)
-            }
-        }
-    }
-
-    fun broadcastGreeting() {
-        for (peer in getPeerss()) {
-            val packet = MyMessage("Hello!").serialize()
-            send(peer.address, packet)
-        }
-    }
-
-    init {
-        messageHandlers[MESSAGE_ID] = ::onMessage
-    }
-
-    private fun onMessage(packet: Packet) {
-        val (peer, payload) = packet.getAuthPayload(MyMessage.Deserializer)
-        println("DemoCommunity ${peer.mid} ${payload.message}")
-    }
-
-
-}
+// TODO: Request permissions
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-//        val community = IPv8Android.getInstance().getOverlay<DemoCommunity>()!!
-//        val peers = community.getPeerss()
-//        for (peer in peers) {
-//            println("DemoApplication ${peer.mid}")
-//        }
-//        lifecycleScope.launch {
-//            while (isActive) {
-//                community.broadcastGreeting()
-//                delay(1000)
-//            }
-//        }
 
         enableEdgeToEdge()
         setContent {
@@ -121,10 +64,11 @@ class MainActivity : ComponentActivity() {
 fun RingNetApp() {
     val navController = rememberNavController()
     val authViewModel = AuthViewModel(LocalContext.current)
+    val application = LocalContext.current.applicationContext as Application
+    val model = P2pModel(application)
+
 
     val userId by authViewModel.userId.collectAsState()
-
-
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
     
 
@@ -209,7 +153,9 @@ fun RingNetApp() {
 
         composable("dashboard/{message}") {
             val message = it.arguments?.getString("message") ?: ""
-            DashboardScreen(message = message)
+            DashboardScreen(message = message
+                , model = model
+            )
         }
 
     }
