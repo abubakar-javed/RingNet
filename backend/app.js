@@ -18,7 +18,10 @@ const config = require("config");
 // Import routes
 const authRoutes = require("./routes/auth");
 const earthquakeRoutes = require("./routes/earthquakeRoutes");
-
+const tsunamiRoutes = require("./routes/tsunamiRoutes");
+const generalHazardRoutes = require("./routes/generalHazardRoutes");
+const floodRoutes = require("./routes/floodRoutes");    
+const heatwaveRoutes = require("./routes/heatwaveRoutes");
 // Create Express app
 const app = express();
 
@@ -50,6 +53,10 @@ app.get('/api/welcome', (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/earthquake", earthquakeRoutes);
+app.use("/api/flood", floodRoutes);
+app.use("/api/heatwave", heatwaveRoutes);
+app.use("/api/tsunami", tsunamiRoutes);
+app.use("/api/hazards", generalHazardRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

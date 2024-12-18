@@ -20,6 +20,9 @@ def estimate_distance(magnitude: float) -> float:
     else:
         return 100
 
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to my FastAPI app!"}
 @app.post("/predict")
 async def predict(request: PredictionRequest):
     if len(request.parameters) != 12:
