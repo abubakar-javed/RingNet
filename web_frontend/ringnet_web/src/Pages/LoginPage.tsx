@@ -137,7 +137,7 @@ function LoginPage() {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <div className={styles.parentContainer}>
         <Box
           display="flex"
@@ -321,7 +321,7 @@ function LoginPage() {
                     </Button>
                   </Box>
                 </Box>
-                <Typography variant="body2" sx={{ cursor: "pointer" }} onClick={() => changeShowRegister(resetForm)}>
+                <Typography variant="body2" sx={{ cursor: "pointer",padding:"2rem" }} onClick={() => changeShowRegister(resetForm)}>
                   {showRegister ? "Already have an account? Login" : "Don't have an account? Register"}
                 </Typography>
               </form>
