@@ -8,8 +8,7 @@ import {
   Person as PersonIcon,
   Warning as HazardIcon,
   Settings as SettingsIcon,
-  Map as MapIcon,
-  Assessment as ReportsIcon
+  Map as MapIcon
 } from '@mui/icons-material';
 
 interface LayoutProps {
@@ -22,7 +21,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navigationItems = [
     {
       title: 'Dashboard',
-      path: '/dashboard',
+      path: '/',
       icon: <DashboardIcon />
     },
     {
@@ -31,22 +30,14 @@ const Layout = ({ children }: LayoutProps) => {
       icon: <HazardIcon />,
       children: [
         { title: 'Active Alerts', path: '/hazards/alerts' },
-        { title: 'Historical Data', path: '/hazards/history' }
+        { title: 'Historical Data', path: '/hazards/history' },
+        { title: 'Export Data', path: '/reports/export' }
       ]
     },
     {
       title: 'Map View',
       path: '/map',
       icon: <MapIcon />
-    },
-    {
-      title: 'Reports',
-      path: '/reports',
-      icon: <ReportsIcon />,
-      children: [
-        { title: 'Analytics', path: '/reports/analytics' },
-        { title: 'Export Data', path: '/reports/export' }
-      ]
     },
     {
       title: 'Notifications',

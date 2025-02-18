@@ -10,6 +10,11 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ProfilePage from './Pages/ProfilePage.js';
 import SettingsPage from './Pages/SettingsPage.js';
+import NotificationsPage from './Pages/NotificationsPage.js';
+import MapPage from './Pages/MapPage.js';
+import ActiveAlertsPage from './Pages/ActiveAlertsPage.js';
+import HistoricalDataPage from './Pages/HistoricalDataPage.js';
+import ExportDataPage from './Pages/ExportDataPage.js';
 
 function App() {
   const dispatch = useDispatch();
@@ -30,6 +35,11 @@ function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/hazards/alerts" element={<ActiveAlertsPage />} />
+          <Route path="/hazards/history" element={<HistoricalDataPage />} />
+          <Route path="/reports/export" element={<ExportDataPage />} />
         </Route>
       </Routes>
       <ToastContainer />
