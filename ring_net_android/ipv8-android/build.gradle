@@ -68,8 +68,11 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-common-java8:2.2.0"
 
     // Crypto
-    implementation(libs.lazysodium.android)
-    implementation 'net.java.dev.jna:jna:5.5.0@aar'
+    implementation 'com.goterl:lazysodium-android:5.1.0'
+    implementation 'net.java.dev.jna:jna:5.12.1'
+
+
+
 
     // BLE
     implementation 'no.nordicsemi.android:ble:2.2.0-alpha06'

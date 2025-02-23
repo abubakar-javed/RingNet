@@ -19,6 +19,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
+
+
+
+
+
 class AuthViewModel(context: Context) : ViewModel() {
 
     private val _signInApiService: SignInService =
@@ -99,8 +104,8 @@ class AuthViewModel(context: Context) : ViewModel() {
         return _firstName.value.isNotEmpty() && _lastName.value.isNotEmpty() && _email.value.isNotEmpty() && _passwordOne.value.isNotEmpty() && _passwordTwo.value.isNotEmpty()
     }
 
-    init {
 
+    init {
         viewModelScope.launch {
             combine(dataStoreManager.token, dataStoreManager.userId) { token, userId ->
                 _token.value = token.orEmpty()
@@ -110,7 +115,6 @@ class AuthViewModel(context: Context) : ViewModel() {
                 _isUserLoggedIn.value = it
             }
         }
-
     }
 
 
@@ -145,7 +149,6 @@ class AuthViewModel(context: Context) : ViewModel() {
 
 
     fun signUp() {
-
         viewModelScope.launch {
             _signUpResponse.value = AuthResponse.Loading
             try {
@@ -163,4 +166,6 @@ class AuthViewModel(context: Context) : ViewModel() {
         }
     }
 }
+
+
 

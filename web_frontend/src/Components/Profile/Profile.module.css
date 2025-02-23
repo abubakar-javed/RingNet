@@ -1,0 +1,53 @@
+.container {
+    padding: 1.5rem;
+    margin: 0 auto;
+}
+
+.pageTitle {
+    margin-bottom: 1.5rem !important;
+    color: #1f2937;
+    font-weight: 600 !important;
+}
+
+.profileContainer {
+    padding: 2rem !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+}
+
+.profileHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.avatarSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.formSection {
+    max-width: 800px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .profileContainer {
+        padding: 1.5rem !important;
+    }
+
+    .profileHeader {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        text-align: center;
+    }
+}

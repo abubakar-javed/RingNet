@@ -11,10 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ranamahadahmer.ringnet.view_models.P2pModel
 
 
 @Composable
-fun DashboardScreen(modifier: Modifier = Modifier,message:String) {
+fun DashboardScreen(modifier: Modifier = Modifier,message:String
+                    ,model: P2pModel
+) {
+    model.startWorking()
     Scaffold(modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(it),
             horizontalAlignment = Alignment.CenterHorizontally,
