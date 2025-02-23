@@ -1,6 +1,5 @@
-import Navbar from "../Components/Navbar/Navbar";
 import { useState, useEffect } from "react";
-import { Formik, FormikHelpers } from "formik";
+import { Formik } from "formik";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -65,14 +64,6 @@ function LoginPage() {
       navigate({ search: urlParams.toString() }, { replace: true });
     }
   }, []);
-  const enableRegister = () => {
-    setShowRegister(true)
-  }
-
-
-  const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
-  };
 
 
 
@@ -95,10 +86,9 @@ function LoginPage() {
   }, []);
 
   // Login function
-  const login = async (values: FormValues, onSubmitProps: FormikHelpers<FormValues>) => {
+  const login = async (values: FormValues) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, values);
-      console.log("here", values)
       const { token, userId } = response.data;
       dispatch(setToken(token));
       dispatch(setUserId(userId));
@@ -111,10 +101,9 @@ function LoginPage() {
   };
 
   // Register function
-  const register = async (values: FormValues, onSubmitProps: FormikHelpers<FormValues>) => {
+  const register = async (values: FormValues) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, values);
-      console.log(response)
       const { token, userId } = response.data;
       dispatch(setToken(token));
       dispatch(setUserId(userId));
@@ -127,11 +116,11 @@ function LoginPage() {
   };
 
   // Handle form submission
-  const handleFormSubmit = async (values: FormValues, onSubmitProps: FormikHelpers<any>) => {
+  const handleFormSubmit = async (values: FormValues) => {
     if (showRegister) {
-      await register(values as FormValues, onSubmitProps);
+      await register(values);
     } else {
-      await login(values as FormValues, onSubmitProps);
+      await login(values);
     }
   };
 
