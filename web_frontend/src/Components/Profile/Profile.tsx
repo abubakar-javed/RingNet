@@ -32,6 +32,13 @@ const Profile = () => {
     responsibleRegions: ['South Asia', 'Southeast Asia', 'Pacific Region']
   });
 
+  const handleInputChange = (field: keyof typeof profile) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProfile(prev => ({
+      ...prev,
+      [field]: event.target.value
+    }));
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     // API call simulation
@@ -130,16 +137,22 @@ const Profile = () => {
               <TextField
                 label="First Name"
                 value={profile.firstName}
+                onChange={handleInputChange('firstName')}
+                disabled={!isEditing}
                 fullWidth
               />
               <TextField
                 label="Last Name"
                 value={profile.lastName}
+                onChange={handleInputChange('lastName')}
+                disabled={!isEditing}
                 fullWidth
               />
               <TextField
                 label="Email"
                 value={profile.email}
+                onChange={handleInputChange('email')}
+                disabled={!isEditing}
                 fullWidth
                 InputProps={{
                   startAdornment: <EmailIcon sx={{ mr: 1, color: '#bc1a1a' }} />
@@ -148,6 +161,8 @@ const Profile = () => {
               <TextField
                 label="Phone"
                 value={profile.phone}
+                onChange={handleInputChange('phone')}
+                disabled={!isEditing}
                 fullWidth
                 InputProps={{
                   startAdornment: <PhoneIcon sx={{ mr: 1, color: '#bc1a1a' }} />
@@ -156,6 +171,8 @@ const Profile = () => {
               <TextField
                 label="Location"
                 value={profile.location}
+                onChange={handleInputChange('location')}
+                disabled={!isEditing}
                 fullWidth
                 InputProps={{
                   startAdornment: <LocationIcon sx={{ mr: 1, color: '#bc1a1a' }} />
