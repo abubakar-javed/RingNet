@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
@@ -29,20 +28,6 @@ import com.ranamahadahmer.ringnet.views.sign_in.SignInSuccessScreen
 import com.ranamahadahmer.ringnet.views.sign_up.SignUpEmailScreen
 import com.ranamahadahmer.ringnet.views.sign_up.SignUpNameScreen
 import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import nl.tudelft.ipv8.Community
-import nl.tudelft.ipv8.IPv8Configuration
-import nl.tudelft.ipv8.Overlay
-import nl.tudelft.ipv8.OverlayConfiguration
-import nl.tudelft.ipv8.android.IPv8Android
-import nl.tudelft.ipv8.android.keyvault.AndroidCryptoProvider
-import nl.tudelft.ipv8.keyvault.PrivateKey
-import nl.tudelft.ipv8.messaging.Deserializable
-import nl.tudelft.ipv8.messaging.Packet
-import nl.tudelft.ipv8.messaging.Serializable
-import nl.tudelft.ipv8.peerdiscovery.strategy.RandomWalk
 
 
 // TODO: Request permissions
@@ -71,7 +56,7 @@ fun RingNetApp() {
 
     val userId by authViewModel.userId.collectAsState()
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
-    
+
 
 
     NavHost(navController = navController, startDestination = "loading_screen") {
@@ -154,8 +139,8 @@ fun RingNetApp() {
 
         composable("dashboard/{message}") {
             val message = it.arguments?.getString("message") ?: ""
-            DashboardScreen(userId = message
-                , model = model
+            DashboardScreen(
+                userId = message, model = model
             )
         }
         composable("landing_screen") {
