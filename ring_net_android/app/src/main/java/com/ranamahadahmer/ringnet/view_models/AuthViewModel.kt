@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+//import com.ranamahadahmer.ringnet.User
+//import com.ranamahadahmer.ringnet.User.key
 import com.ranamahadahmer.ringnet.api.AuthBackendApi
 import com.ranamahadahmer.ringnet.api.SignInService
 import com.ranamahadahmer.ringnet.api.SignUpService
@@ -12,16 +14,12 @@ import com.ranamahadahmer.ringnet.models.AuthResponse
 import com.ranamahadahmer.ringnet.models.SignInRequestBody
 import com.ranamahadahmer.ringnet.models.SignUpRequestBody
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-
-
-
-
 
 
 class AuthViewModel(context: Context) : ViewModel() {
@@ -39,7 +37,7 @@ class AuthViewModel(context: Context) : ViewModel() {
         MutableStateFlow(AuthResponse.Initial)
     val signUpResponse: StateFlow<AuthResponse> get() = _signUpResponse
 
-    val dataStoreManager = DataStoreManager(context = context)
+    private val dataStoreManager = DataStoreManager(context = context)
 
 
     private val _email: MutableStateFlow<String> = MutableStateFlow("")
@@ -107,6 +105,8 @@ class AuthViewModel(context: Context) : ViewModel() {
 
     init {
         viewModelScope.launch {
+
+
             combine(dataStoreManager.token, dataStoreManager.userId) { token, userId ->
                 _token.value = token.orEmpty()
                 _userId.value = userId.orEmpty()
@@ -114,6 +114,8 @@ class AuthViewModel(context: Context) : ViewModel() {
             }.collect {
                 _isUserLoggedIn.value = it
             }
+
+
         }
     }
 
@@ -121,8 +123,12 @@ class AuthViewModel(context: Context) : ViewModel() {
     fun saveUser() {
         viewModelScope.launch {
             if (_signInResponse.value is AuthResponse.Success) {
-                dataStoreManager.insertData(mapOf("token" to (_signInResponse.value as AuthResponse.Success).token,
-                    "userId" to (_signInResponse.value as AuthResponse.Success).userId))
+                dataStoreManager.insertData(
+                    mapOf(
+                        "token" to (_signInResponse.value as AuthResponse.Success).token,
+                        "userId" to (_signInResponse.value as AuthResponse.Success).userId
+                    )
+                )
             }
         }
     }
@@ -152,14 +158,20 @@ class AuthViewModel(context: Context) : ViewModel() {
         viewModelScope.launch {
             _signUpResponse.value = AuthResponse.Loading
             try {
-                val request = SignUpRequestBody(name = "$firstName $lastName",
+                val request = SignUpRequestBody(
+                    name = "$firstName $lastName",
                     email = email.value,
-                    password = passwordOne.value)
+                    password = passwordOne.value
+                )
                 val result = withContext(Dispatchers.IO) { _signUpApiService.signUp(request) }
                 _signUpResponse.value =
                     AuthResponse.Success(result.message, result.token, result.userId)
-                dataStoreManager.insertData(mapOf("token" to (_signUpResponse.value as AuthResponse.Success).token,
-                    "userId" to (_signUpResponse.value as AuthResponse.Success).userId))
+                dataStoreManager.insertData(
+                    mapOf(
+                        "token" to (_signUpResponse.value as AuthResponse.Success).token,
+                        "userId" to (_signUpResponse.value as AuthResponse.Success).userId
+                    )
+                )
             } catch (e: Exception) {
                 _signUpResponse.value = AuthResponse.Error(e.message ?: "An error occurred")
             }

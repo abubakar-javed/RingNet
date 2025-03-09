@@ -15,14 +15,14 @@ import kotlinx.coroutines.delay
 @Composable
 fun Loading(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit) {
     LaunchedEffect(true) {
-        delay(200)
+        delay(2000)
         navigateToNextScreen()
     }
     Scaffold(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                    .padding(it)
-                    .fillMaxSize(),
+                .padding(it)
+                .fillMaxSize(),
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

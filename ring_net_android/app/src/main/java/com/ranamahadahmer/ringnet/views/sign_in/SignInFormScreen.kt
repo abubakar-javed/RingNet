@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
@@ -201,3 +202,15 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
     }
 }
 
+
+
+@Composable
+@Preview
+fun SignInFormScreenPreview() {
+    SignInFormScreen(navigateToSuccessScreen = {},
+        navigateToSignUpScreen = {},
+        modifier = Modifier,
+        navigateToForgotPasswordScreen = {  },
+        viewModel = AuthViewModel(LocalContext.current)
+    )
+}

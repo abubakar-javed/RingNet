@@ -20,6 +20,7 @@ import com.ranamahadahmer.ringnet.view_models.P2pModel
 import com.ranamahadahmer.ringnet.views.Loading
 import com.ranamahadahmer.ringnet.views.SplashScreen
 import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
+import com.ranamahadahmer.ringnet.views.dashboard.LandingScreen
 import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordEmailScreen
 import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordPasswordScreen
 import com.ranamahadahmer.ringnet.views.shared_elements.ConfirmationScreen
@@ -153,9 +154,12 @@ fun RingNetApp() {
 
         composable("dashboard/{message}") {
             val message = it.arguments?.getString("message") ?: ""
-            DashboardScreen(message = message
+            DashboardScreen(userId = message
                 , model = model
             )
+        }
+        composable("landing_screen") {
+            LandingScreen()
         }
 
     }

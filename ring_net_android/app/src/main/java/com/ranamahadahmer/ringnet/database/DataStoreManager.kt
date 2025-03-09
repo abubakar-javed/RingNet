@@ -18,6 +18,7 @@ class DataStoreManager(private val context: Context) {
 
     companion object {
         val TOKEN = stringPreferencesKey("token")
+        val KEY = stringPreferencesKey("key")
         val USER_ID = stringPreferencesKey("userId")
     }
 
@@ -27,7 +28,16 @@ class DataStoreManager(private val context: Context) {
             it[USER_ID] = data["userId"]!!
         }
     }
+    suspend fun insertKey(key:  String) {
+        context.dataStore.edit {
+            it[TOKEN] = key
+        }
 
+    }
+    val key: Flow<String?> = context.dataStore.data
+            .map { preferences ->
+                preferences[KEY]
+            }
     val token: Flow<String?> = context.dataStore.data
             .map { preferences ->
                 preferences[TOKEN]
