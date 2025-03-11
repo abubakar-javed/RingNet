@@ -47,6 +47,17 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Add this where you initialize your services
+const { initialize: initializeFloodService } = require('./services/floodService');
+
+// Initialize flood service when the server starts
+initializeFloodService()
+  .then(() => {
+    console.log('Flood service initialized successfully');
+  })
+  .catch(err => {
+    console.error('Failed to initialize flood service:', err);
+  });
 
 app.get('/api/welcome', (req, res) => {
     res.send('Hello, World!');

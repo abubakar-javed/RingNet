@@ -26,8 +26,7 @@ const Profile = () => {
     email: 'john.doe@example.com',
     phone: '+1 234 567 8900',
     location: 'New York, USA',
-    role: 'Emergency Response Coordinator',
-    department: 'Disaster Management',
+    description: 'Software Engineer',
     alertPreferences: ['Earthquakes', 'Tsunamis', 'Floods'],
     responsibleRegions: ['South Asia', 'Southeast Asia', 'Pacific Region']
   });
@@ -93,7 +92,7 @@ const Profile = () => {
               {`${profile.firstName} ${profile.lastName}`}
             </Typography>
             <Typography variant="body2" sx={{ color: '#4b5563', mb: 2 }}>
-              {profile.role} - {profile.department}
+              {profile.description} 
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {profile.responsibleRegions.map((region) => (

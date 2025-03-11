@@ -12,6 +12,7 @@ import WeatherWarnings from "../Components/Dashboard/WeatherWarnings/WeatherWarn
 import RegionalStats from "../Components/Dashboard/RegionalStats/RegionalStats";
 import { fetchCurrentWeather } from "../services/weatherService";
 import WeatherCard from '../Components/Dashboard/WeatherCard/WeatherCard';
+import FloodCard from '../Components/Dashboard/FloodCard/FloodCard';
 
 
 
@@ -110,9 +111,9 @@ const DashboardPage = () => {
         
         // Update hazard stats based on user's local weather
         setHazardStats({
-          earthquakes: 0,
+          earthquakes: 1,
           tsunamis: 0,
-          floods: 0,
+          floods: 2,
           heatwaves: weatherData.temperature > 35 ? 1 : 0,
           recentAlerts: weatherData.alerts?.map((alert: WeatherAlert) => ({
             type: 'Weather',
@@ -159,7 +160,8 @@ const DashboardPage = () => {
     <Layout>
       <Box sx={{ width: '100%', p: 3 }}>
         <StatsCards hazardStats={hazardStats} />
-        {weatherData && <WeatherCard weatherData={weatherData} />}
+            {weatherData && <WeatherCard weatherData={weatherData} />}
+            <FloodCard />
         <HazardForecast />
         <RecentAlerts alerts={hazardStats?.recentAlerts || []} />
         <WeatherWarnings />
