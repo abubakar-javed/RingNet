@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.models
+package com.ranamahadahmer.ringnet.models.auth
 
 data class SignInRequestBody(
     val email: String,

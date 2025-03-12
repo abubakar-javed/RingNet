@@ -38,7 +38,7 @@ import com.ranamahadahmer.ringnet.view_models.P2pModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(
+fun P2PDemo(
     modifier: Modifier = Modifier,
     userId: String,
     model: P2pModel

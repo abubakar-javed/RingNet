@@ -1,7 +1,7 @@
-package com.ranamahadahmer.ringnet.api
+package com.ranamahadahmer.ringnet.api.auth
 
-import com.ranamahadahmer.ringnet.models.AuthResponse
-import com.ranamahadahmer.ringnet.models.SignInRequestBody
+import com.ranamahadahmer.ringnet.models.auth.AuthResponse
+import com.ranamahadahmer.ringnet.models.auth.SignInRequestBody
 import retrofit2.http.Body
 import retrofit2.http.POST
 

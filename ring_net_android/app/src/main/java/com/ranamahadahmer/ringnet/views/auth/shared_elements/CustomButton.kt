@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.shared_elements
+package com.ranamahadahmer.ringnet.views.auth.shared_elements
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -10,10 +10,13 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun CustomButton(modifier: Modifier = Modifier,
-                 onClick: () -> Unit,
-                 content: @Composable () -> Unit) {
-    Button(modifier = modifier,
+fun CustomButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Button(
+        modifier = modifier,
         onClick = onClick,
         colors = ButtonDefaults.buttonColors().copy(containerColor = Color(0xFFD60404)),
         shape = RoundedCornerShape(12.dp)

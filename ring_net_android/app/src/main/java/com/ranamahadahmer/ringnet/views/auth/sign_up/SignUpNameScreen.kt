@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.sign_up
+package com.ranamahadahmer.ringnet.views.auth.sign_up
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -37,17 +37,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.models.AuthResponse
+import com.ranamahadahmer.ringnet.models.auth.AuthResponse
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.TextFieldType
 
 
 @Composable
-fun SignUpNameScreen(modifier: Modifier = Modifier,
-                     navigate: () -> Unit,
-                     viewModel: AuthViewModel) {
+fun SignUpNameScreen(
+    modifier: Modifier = Modifier,
+    navigate: () -> Unit,
+    viewModel: AuthViewModel
+) {
     val scroll = rememberScrollState(0)
     val context = LocalContext.current
     val response by viewModel.signUpResponse.collectAsState()
@@ -59,95 +61,115 @@ fun SignUpNameScreen(modifier: Modifier = Modifier,
     }
 
 
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
 
     ) {
         Column(
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
 
-                    .verticalScroll(scroll)
-                    .padding(horizontal = 24.dp),
+                .verticalScroll(scroll)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp,
-                alignment = Alignment.Top)
+            verticalArrangement = Arrangement.spacedBy(
+                32.dp,
+                alignment = Alignment.Top
+            )
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
-                Image(painterResource(R.drawable.icon),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+            ) {
+                Image(
+                    painterResource(R.drawable.icon),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
-                Text("RingNet",
+                Text(
+                    "RingNet",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
+                    fontSize = 32.sp
+                )
             }
 
-            Text("Create Your Account",
+            Text(
+                "Create Your Account",
                 color = Color.Black,
                 fontWeight = FontWeight.W500,
                 textAlign = TextAlign.Center,
-                fontSize = 32.sp)
+                fontSize = 32.sp
+            )
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.ContactEmergency,
+                CustomTextField(
+                    Icons.Outlined.ContactEmergency,
                     "First Name",
                     valueState = viewModel.firstName,
                     onChange = viewModel::changeFirstName,
-                    type = TextFieldType.Name)
+                    type = TextFieldType.Name
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.ContactEmergency,
+                CustomTextField(
+                    Icons.Outlined.ContactEmergency,
                     "Last Name",
                     valueState = viewModel.lastName,
                     onChange = viewModel::changeLastName,
-                    type = TextFieldType.Name)
+                    type = TextFieldType.Name
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
+                CustomTextField(
+                    Icons.Outlined.Lock,
                     "Enter Password",
                     valueState = viewModel.passwordOne,
                     onChange = viewModel::changePasswordOne,
-                    type = TextFieldType.Password)
+                    type = TextFieldType.Password
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
+                CustomTextField(
+                    Icons.Outlined.Lock,
                     "Confirm Password",
                     valueState = viewModel.passwordTwo,
                     onChange = viewModel::changePasswordTwo,
-                    type = TextFieldType.Password)
+                    type = TextFieldType.Password
+                )
             }
             CustomButton(
                 modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
+                    .fillMaxWidth()
+                    .height(54.dp),
                 onClick = {
                     if (viewModel.signUpValid().not()) {
                         Toast.makeText(context, "Please fill all fields !", Toast.LENGTH_SHORT)
-                                .show()
+                            .show()
                         return@CustomButton
                     }
                     if (viewModel.passwordsMatch().not()) {
                         Toast.makeText(context, "Passwords do not match !", Toast.LENGTH_SHORT)
-                                .show()
+                            .show()
                         return@CustomButton
                     }
                     if (viewModel.passwordValid().not()) {
-                        Toast.makeText(context,
+                        Toast.makeText(
+                            context,
                             "Password must be at least 6 characters long !",
-                            Toast.LENGTH_SHORT).show()
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@CustomButton
                     }
                     viewModel.signUp()

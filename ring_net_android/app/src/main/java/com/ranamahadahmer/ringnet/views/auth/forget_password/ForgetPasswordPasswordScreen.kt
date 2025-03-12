@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.forget_password
+package com.ranamahadahmer.ringnet.views.auth.forget_password
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,20 +31,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.TextFieldType
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
-fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
-                                 navigateToSignInScreen: () -> Unit = {}) {
+fun ForgetPasswordPasswordScreen(
+    modifier: Modifier = Modifier,
+    navigateToSignInScreen: () -> Unit = {}
+) {
     val scroll = rememberScrollState(0)
     val value1 = MutableStateFlow("")
     val value2 = MutableStateFlow("")
 
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
 
@@ -52,66 +55,83 @@ fun ForgetPasswordPasswordScreen(modifier: Modifier = Modifier,
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
-                    .verticalScroll(scroll)
-                    .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(32.dp,
-                alignment = Alignment.Top)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
+                .verticalScroll(scroll)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(
+                32.dp,
+                alignment = Alignment.Top
+            )
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
-                Image(painterResource(R.drawable.icon),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+            ) {
+                Image(
+                    painterResource(R.drawable.icon),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
-                Text("RingNet",
+                Text(
+                    "RingNet",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
+                    fontSize = 32.sp
+                )
             }
-            Column(modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(painterResource(R.drawable.forget_password_password),
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painterResource(R.drawable.forget_password_password),
                     contentDescription = null,
                     modifier = Modifier.size(240.dp)
                 )
-                Text("Enter New Password",
+                Text(
+                    "Enter New Password",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
+                    fontSize = 32.sp
+                )
 
             }
-            Text("Set Complex passwords to protect your account",
+            Text(
+                "Set Complex passwords to protect your account",
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center
             )
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
+                CustomTextField(
+                    Icons.Outlined.Lock,
                     "Enter Password",
                     valueState = value1,
                     onChange = {},
-                    type = TextFieldType.Password)
+                    type = TextFieldType.Password
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Confirm Password", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Lock,
+                CustomTextField(
+                    Icons.Outlined.Lock,
                     "Confirm Password",
                     valueState = value2,
                     onChange = {},
-                    type = TextFieldType.Password)
+                    type = TextFieldType.Password
+                )
             }
 
             CustomButton(
                 modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
+                    .fillMaxWidth()
+                    .height(54.dp),
                 onClick = navigateToSignInScreen,
             ) { Text("Continue", fontSize = 18.sp) }
 

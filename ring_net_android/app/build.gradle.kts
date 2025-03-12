@@ -2,11 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin") version "2.0.1"
 }
 
 android {
     namespace = "com.ranamahadahmer.ringnet"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.ranamahadahmer.ringnet"
@@ -24,8 +26,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -68,21 +72,13 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
 
-//    implementation(project(":ipv8-android")){
-////        exclude( "net.java.dev.jna" ,"jna")
-//
-//    }
-//    implementation(project(":ipv8")) {
-//        exclude( "com.goterl" ,"lazysodium-java")
-//    }
-
 
 
     implementation(project(":ipv8")) {
-        exclude("com.goterl","lazysodium-java")
+        exclude("com.goterl", "lazysodium-java")
     }
-    implementation(project(":ipv8-android")){
-        exclude( "net.java.dev.jna" ,"jna")
+    implementation(project(":ipv8-android")) {
+        exclude("net.java.dev.jna", "jna")
     }
     implementation("net.java.dev.jna:jna:5.12.1@aar")
 
@@ -93,6 +89,40 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
+
+
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+
+
+
+
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+
+
+
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.location)
+
 }
 
 

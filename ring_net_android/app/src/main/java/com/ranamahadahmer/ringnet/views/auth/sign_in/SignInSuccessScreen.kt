@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.sign_in
+package com.ranamahadahmer.ringnet.views.auth.sign_in
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,37 +35,42 @@ fun SignInSuccessScreen(
 
 ) {
 
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
     ) {
         Column(
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
 
-                    .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(28.dp, Alignment.Top)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            Image(painterResource(R.drawable.loginsucess),
+            Image(
+                painterResource(R.drawable.loginsucess),
                 contentDescription = "Icon",
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier.fillMaxWidth()
             )
-            Text("Yeh! Login Successful",
+            Text(
+                "Yeh! Login Successful",
                 fontSize = 24.sp,
                 color = Color.Black,
                 fontWeight = FontWeight.W600,
                 textAlign = TextAlign.Center
             )
-            Text("You will be moved to home screen right now. Enjoy the features!",
+            Text(
+                "You will be moved to home screen right now. Enjoy the features!",
                 fontSize = 16.sp,
                 color = Color.Gray, fontWeight = FontWeight.W500,
                 textAlign = TextAlign.Center
             )
-            Button(modifier = Modifier
+            Button(
+                modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
                 onClick = onNavigate,
