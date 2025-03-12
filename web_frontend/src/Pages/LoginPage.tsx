@@ -14,6 +14,15 @@ import {
   TextField,
   Typography,
   useMediaQuery,
+  Container,
+  Paper,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from "@mui/material";
 
 
@@ -47,9 +56,12 @@ interface FormValues {
 }
 function LoginPage() {
   const [error, setError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showRegister, setShowRegister] = useState(false); // State to toggle between login and register
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [authToken, setAuthToken] = useState('');
 
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const isMediumScreen = useMediaQuery("(min-width:960px)");
@@ -94,7 +106,10 @@ function LoginPage() {
       dispatch(setUserId(userId));
       localStorage.setItem("token", token);
       localStorage.setItem("userId", userId);
-      navigate("/");
+
+      // Show location permission dialog after successful login
+      setShowLocationDialog(true);
+      setAuthToken(token);
     } catch (error) {
       setError("Login failed");
     }
@@ -122,6 +137,60 @@ function LoginPage() {
     } else {
       await login(values);
     }
+  };
+
+  // Function to update user location in the backend
+  const updateUserLocation = async (latitude: number, longitude: number, token: string) => {
+    try {
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/users/location`, 
+        { location: { latitude, longitude } },
+        { headers: { 'Authorization': `Bearer ${token}` }}
+      );
+      console.log("Location updated successfully");
+    } catch (error) {
+      console.error("Failed to update location:", error);
+      setLocationError("Failed to update location. Some features may be limited.");
+    }
+  };
+
+  const requestLocation = () => {
+    if (navigator.geolocation) {
+      // This is now explicitly triggered by a user action (button click)
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Update location in backend
+          updateUserLocation(
+            position.coords.latitude, 
+            position.coords.longitude,
+            authToken
+          );
+          // Close dialog and navigate
+          setShowLocationDialog(false);
+          navigate('/');
+        },
+        (error) => {
+          console.log("Location permission denied or error occurred:", error);
+          setLocationError("Location access denied. Some features may be limited.");
+          // Close dialog and navigate anyway
+          setShowLocationDialog(false);
+          navigate('/');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      setLocationError("Geolocation is not supported by this browser. Some features may be limited.");
+      setShowLocationDialog(false);
+      navigate('/');
+    }
+  };
+
+  const skipLocationRequest = () => {
+    setShowLocationDialog(false);
+    navigate('/');
   };
 
   return (
@@ -322,6 +391,59 @@ function LoginPage() {
 
         </Box>
       </div>
+
+      {/* Location permission dialog */}
+      <Dialog
+        open={showLocationDialog}
+        onClose={skipLocationRequest}
+        aria-labelledby="location-dialog-title"
+        aria-describedby="location-dialog-description"
+      >
+        <DialogTitle id="location-dialog-title">
+          {"Location Access Required"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="location-dialog-description">
+            RingNet needs your location to provide accurate disaster alerts and information relevant to your area. 
+            Would you like to share your location?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={skipLocationRequest} color="primary">
+            Skip
+          </Button>
+          <Button 
+            onClick={requestLocation} 
+            color="primary" 
+            variant="contained"
+            autoFocus
+            sx={{ 
+              bgcolor: '#bc1a1a',
+              '&:hover': {
+                bgcolor: '#a51717'
+              }
+            }}
+          >
+            Allow Location Access
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Location error notification */}
+      <Snackbar 
+        open={!!locationError} 
+        autoHideDuration={6000} 
+        onClose={() => setLocationError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setLocationError('')} 
+          severity="warning" 
+          sx={{ width: '100%' }}
+        >
+          {locationError}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

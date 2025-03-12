@@ -13,7 +13,7 @@ import RegionalStats from "../Components/Dashboard/RegionalStats/RegionalStats";
 import { fetchCurrentWeather } from "../services/weatherService";
 import WeatherCard from '../Components/Dashboard/WeatherCard/WeatherCard';
 import FloodCard from '../Components/Dashboard/FloodCard/FloodCard';
-
+import TsunamiWidget from "../Components/Dashboard/TsunamiWidget/TsunamiWidget";
 
 
 interface HazardStats {
@@ -162,6 +162,7 @@ const DashboardPage = () => {
         <StatsCards hazardStats={hazardStats} />
             {weatherData && <WeatherCard weatherData={weatherData} />}
             <FloodCard />
+            <TsunamiWidget />
         <HazardForecast />
         <RecentAlerts alerts={hazardStats?.recentAlerts || []} />
         <WeatherWarnings />

@@ -7,6 +7,32 @@ require('dotenv').config();
 
 // Open-Meteo Flood API base URL
 const METEO_FLOOD_API_BASE_URL = 'https://flood-api.open-meteo.com/v1/flood';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://ajavedbese21seecs:abubakar1243@cluster0.xjdvgvy.mongodb.net/ringNet';
+
+const connectDB = async () => {
+  try {
+    console.log("weather key",process.env.OPENWEATHER_API_KEY);
+    console.log('Attempting to connect to MongoDB...');
+    console.log('Using connection string:', process.env.MONGO_URI);
+    
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // Reduce the timeout to 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    });
+    
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    
+    // More specific error handling
+    if (error.code === 'ECONNREFUSED') {
+      console.error('Make sure MongoDB is running on your machine');
+    }
+    
+    process.exit(1);
+  }
+};
+
 
 // Configuration for clustering
 const MAX_CLUSTER_RADIUS_KM = 25; // Maximum radius for a cluster in kilometers
@@ -17,6 +43,7 @@ const EARTH_RADIUS_KM = 6371; // Earth radius in kilometers
  */
 async function initialize() {
   try {
+    await connectDB();
     // Don't try to connect to DB, just check the connection state
     if (mongoose.connection.readyState !== 1) {
       console.log('Database connection not ready, skipping initialization');

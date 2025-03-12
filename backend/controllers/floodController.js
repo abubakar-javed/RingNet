@@ -57,13 +57,10 @@ const getFloodsByLocation = async (req, res) => {
 // Get flood alerts for the current user
 const getFloodsForUser = async (req, res) => {
   try {
-    console.log("hereeererere");
     const userId = req.user._id;
     
     // Get flood alerts from the service
     const floodAlerts = await getUserFloodAlerts(userId);
-    console.log("userId",userId);
-    console.log("floodAlerts",floodAlerts);
     res.json(floodAlerts);
   } catch (error) {
     console.error('Error in getFloodsForUser:', error);

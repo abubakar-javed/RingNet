@@ -33,7 +33,6 @@ const fetchAndStoreTsunamiData = async () => {
     }));
 
     await Tsunami.insertMany(tsunamis);
-    console.log('Tsunami data updated successfully');
   } catch (error) {
     console.error('Error updating tsunami data:', error);
   }

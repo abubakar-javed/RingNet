@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../Navbar/Navbar';
 import styles from './Layout.module.css';
@@ -10,6 +10,7 @@ import {
   Settings as SettingsIcon,
   Map as MapIcon
 } from '@mui/icons-material';
+import axios from 'axios';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,6 +59,38 @@ const Layout = ({ children }: LayoutProps) => {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    // Request permission for location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          updateUserLocation(position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.log("Location permission denied or error occurred");
+          // Keep previous location if user denies permission
+        }
+      );
+    }
+  }, []);
+  
+  const updateUserLocation = async (latitude: number, longitude: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/users/location`, 
+        { location: { latitude, longitude } },
+        { headers: { 'Authorization': `Bearer ${token}` }}
+      );
+      console.log("Location updated successfully");
+    } catch (error) {
+      console.error("Failed to update location:", error);
+    }
   };
 
   return (

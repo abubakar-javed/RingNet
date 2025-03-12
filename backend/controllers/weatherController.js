@@ -35,7 +35,6 @@ const getHistoricalWeather = async (req, res) => {
 const getWeatherForUser = async (req, res) => {
   try {
     const userId = req.user._id; 
-    console.log("userId",userId);
     const weatherData = await getUserWeather(userId);
     res.json(weatherData);
   } catch (error) {
