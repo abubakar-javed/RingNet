@@ -24,6 +24,9 @@ import {
   DialogContentText,
   DialogActions
 } from "@mui/material";
+import SiteNavbar from "../Components/SiteHome/SiteNavbar/SiteNavbar.tsx";
+import Faq from "../Components/SiteHome/Faq/Faq.tsx";
+import Footer from "../Components/SiteHome/Footer/Footer.tsx";
 
 
 
@@ -196,7 +199,8 @@ function LoginPage() {
   return (
     <>
       {/* <Navbar /> */}
-      <div className={styles.parentContainer}>
+      <SiteNavbar/>
+      <div className={styles.parentContainer} style={{marginTop:"30px",marginBottom:"30px"}}>
         <Box
           display="flex"
           sx={{
@@ -363,7 +367,7 @@ function LoginPage() {
                       type="submit"
                       sx={{
                         m: "1rem ",
-                        mb: "5rem",
+                        mb: "1rem",
                         p: "1rem",
                         maxWidth: "80%",
                         backgroundColor: "#8B0000",
@@ -391,6 +395,8 @@ function LoginPage() {
 
         </Box>
       </div>
+        <Faq/>
+        <Footer/>
 
       {/* Location permission dialog */}
       <Dialog

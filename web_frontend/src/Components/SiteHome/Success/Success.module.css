@@ -1,0 +1,108 @@
+.successContainer {
+  margin-top: 5rem;
+  margin-bottom: 5rem;
+  color: white;
+}
+
+.successContent {
+  max-width: 1000px;
+  background-color: #bc1a1a;
+  margin: 0 auto;
+  text-align: left;
+  border-radius: 1rem;
+  padding: 3rem;
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.title {
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.subtitle {
+  margin-bottom: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.metricsContainer {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 400px;
+}
+
+.metricsItem label {
+  color: #1f2937;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.metricBar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+.metricProgress {
+  height: 100%;
+  border-radius: 4px;
+  position: absolute;
+  left: 0;
+}
+
+.applications {
+  background-color: #10B981;
+}
+
+.matches {
+  background-color: #3B82F6;
+}
+
+.responses {
+  background-color: #a5a315;
+}
+
+.metricLabel {
+  color: #4b5563;
+  font-size: 0.6rem;
+  margin-top: 1.7rem;
+  z-index: 1;
+}
+
+.metricValue {
+  color: #4b5563;
+  font-size: 0.6rem;
+  font-weight: 500;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+
+
+@media (max-width: 768px) {
+  .successContent {
+    flex-direction: column;
+    padding: 2rem;
+    gap: 2rem;
+  }
+  
+  .metricsContainer {
+    width: 100%;
+  }
+}

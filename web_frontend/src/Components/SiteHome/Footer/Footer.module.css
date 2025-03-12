@@ -1,0 +1,139 @@
+.footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 2rem 0;
+  margin-top: 4rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.section {
+  flex: 1;
+  text-align: center;
+  min-width: 200px;
+}
+
+.section h3 {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.section li {
+  margin-bottom: 0.5rem;
+}
+
+.section a {
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.section a:hover {
+  color: #4338ca;
+}
+
+.bottomBar {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding: 1rem 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.copyright {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.socialLinks a {
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.socialLinks a:hover {
+  color: #4338ca;
+}
+
+/* Large screens */
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+  
+  .section {
+    min-width: 180px;
+  }
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+    justify-content: flex-start;
+  }
+  
+  .section {
+    flex: 0 0 calc(50% - 1rem);
+    min-width: unset;
+  }
+  
+  .bottomBar {
+    padding: 1rem;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 480px) {
+  .footer {
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+  }
+
+  .container {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .section {
+    flex: 1 0 100%;
+    text-align: center;
+  }
+  
+  .bottomBar {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .socialLinks {
+    justify-content: center;
+  }
+}

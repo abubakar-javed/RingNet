@@ -422,7 +422,15 @@ async function getUserWeather(userId) {
     }).sort({ timestamp: -1 });
 
     if (existingUserWeather) {
-      console.log(`User ${userId} is already in weather cluster ${existingUserWeather.clusterId}`);
+      // Check if the weather data is older than 1 hour
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      if (existingUserWeather.timestamp < oneHourAgo) {
+        console.log(`Weather data for user ${userId} is older than 1 hour, fetching new data`);
+        // Create new weather data for the cluster
+        return await createNewClusterForUser(user.location, userId);
+      }
+      
+      console.log(`User ${userId} has recent weather data in cluster ${existingUserWeather.clusterId}`);
       return existingUserWeather;
     }
 
