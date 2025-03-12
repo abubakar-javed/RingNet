@@ -193,24 +193,33 @@ router.get('/stats', auth, async (req, res) => {
     console.log("user flood cluster", userFloodCluster);
     console.log("flood alerts count:", stats.floods);
     // 4. Get heatwave stats
-    // First find the user's weather data
     const userWeather = await Weather.findOne({
-      'metadata.userId': userId
-    }).sort({ date: -1 });
-    console.log("user weather",userWeather);
-    if (userWeather && userWeather.metadata) {
-      console.log("user weather",userWeather);
-      // Check if there's a heatwave alert
-      if (userWeather.metadata.heatwaveAlert) {
+      'metadata.userIds': userId
+    }).sort({ timestamp: -1 });
+
+    if (userWeather) {
+      console.log("user weather", userWeather);
+      
+      // Check if there's a heatwave alert flag
+      if (userWeather.metadata && userWeather.metadata.heatwaveAlert) {
         stats.heatwaves = 1;
-      }
-      
-      // Alternative: count all active heatwave days
-      const heatwaveDays = userWeather.metadata.forecast ? 
-        userWeather.metadata.forecast.filter(day => day.isHeatwave).length : 0;
-      
-      if (heatwaveDays > 0) {
-        stats.heatwaves = heatwaveDays;
+        console.log("Heatwave alert flag is set to true");
+      } 
+      // If no flag, check current temperature
+      else if (userWeather.temperature > 35) {
+        stats.heatwaves = 1;
+        console.log("Heatwave alert: Current temperature is above 35°C");
+      } 
+      // If still no alert, check forecast days
+      else if (userWeather.metadata && userWeather.metadata.forecast) {
+        const heatwaveDays = userWeather.metadata.forecast.filter(day => 
+          day.temperature > 35
+        ).length;
+        
+        if (heatwaveDays > 0) {
+          stats.heatwaves = heatwaveDays;
+          console.log(`Heatwave alert: ${heatwaveDays} days with temperature above 35°C in forecast`);
+        }
       }
     }
     console.log("stats",stats);

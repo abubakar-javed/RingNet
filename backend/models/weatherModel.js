@@ -1,41 +1,76 @@
 const mongoose = require('mongoose');
 
-const weatherDataSchema = new mongoose.Schema({
-  clusterId: { 
-    type: String, 
+const weatherSchema = new mongoose.Schema({
+  clusterId: {
+    type: String,
     required: true,
-    index: true // Add index for faster queries
+    index: true
   },
   location: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
-    placeName: { type: String, required: true },
+    latitude: {
+      type: Number,
+      required: true
+    },
+    longitude: {
+      type: Number,
+      required: true
+    },
+    placeName: {
+      type: String,
+      default: 'Unknown'
+    }
   },
-  userCount: { 
-    type: Number, 
-    required: true 
+  userCount: {
+    type: Number,
+    default: 1
   },
-  temperature: { type: Number, required: true },
-  feelsLike: { type: Number, required: true },
-  humidity: { type: Number, required: true },
-  windSpeed: { type: Number, required: true },
-  description: { type: String, required: true },
-  timestamp: { 
-    type: Date, 
+  temperature: {
+    type: Number,
+    required: true
+  },
+  feelsLike: {
+    type: Number
+  },
+  humidity: {
+    type: Number
+  },
+  windSpeed: {
+    type: Number
+  },
+  description: {
+    type: String
+  },
+  alerts: {
+    type: [String],
+    default: []
+  },
+  timestamp: {
+    type: Date,
     default: Date.now,
-    index: true // Add index for faster queries
+    index: true
   },
-  alerts: [{
-    event: String,
-    description: String,
-    start: Date,
-    end: Date,
-    severity: String
-  }]
-});
+  metadata: {
+    forecast: [{
+      date: String,
+      temperature: Number,
+      description: String,
+      isHeatwave: Boolean
+    }],
+    heatwaveAlert: {
+      type: Boolean,
+      default: false
+    },
+    userIds: {
+      type: [String],
+      default: []
+    }
+  }
+}, { timestamps: true });
 
-// Add compound index for efficient querying by both clusterId and timestamp
-weatherDataSchema.index({ clusterId: 1, timestamp: -1 });
+// Add indexes for better query performance
+weatherSchema.index({ 'metadata.userIds': 1 });
+weatherSchema.index({ timestamp: -1 });
 
-const WeatherData = mongoose.model('WeatherData', weatherDataSchema);
+const WeatherData = mongoose.model('WeatherData', weatherSchema);
+
 module.exports = WeatherData;

@@ -116,7 +116,7 @@ async function fetchAndStoreWeatherData() {
     }
 
     // Get all user locations from database
-    const users = await User.find({}, 'location');
+    const users = await User.find({}, 'location _id'); // Add _id to get user IDs
     
     if (!users || users.length === 0) {
       console.log('No users found in the database');
@@ -124,10 +124,16 @@ async function fetchAndStoreWeatherData() {
     }
     
     console.log(`Found ${users.length} users`);
-    const userLocations = users.map(user => user.location);
+    
+    // Map users with their IDs
+    const userLocationsWithIds = users.map(user => ({
+      latitude: user.location.latitude,
+      longitude: user.location.longitude,
+      userId: user._id.toString() // Include user ID
+    }));
     
     // Cluster the locations
-    const clusters = clusterLocations(userLocations);
+    const clusters = clusterLocations(userLocationsWithIds);
     console.log(`Created ${clusters.length} clusters`);
     
     // Fetch weather data for each cluster center
@@ -143,25 +149,72 @@ async function fetchAndStoreWeatherData() {
 
       const placeName = `Cluster of ${cluster.points.length} users near ${response.data.name}`;
 
+      // Extract user IDs from the cluster points
+      const userIds = cluster.points.map(point => point.userId);
+
+      // Add this after fetching current weather
+      const forecastResponse = await axios.get(`https://api.openweathermap.org/data/2.5/forecast`, {
+        params: {
+          lat: cluster.center.lat,
+          lon: cluster.center.lon,
+          appid: OPENWEATHER_API_KEY,
+          units: 'metric'
+        }
+      });
+
+      // Process forecast data
+      const forecastDays = [];
+      const processedDates = new Set();
+
+      // OpenWeatherMap forecast returns data in 3-hour intervals
+      forecastResponse.data.list.forEach(item => {
+        const date = new Date(item.dt * 1000).toISOString().split('T')[0];
+        
+        if (!processedDates.has(date)) {
+          processedDates.add(date);
+          forecastDays.push({
+            date: date,
+            temperature: item.main.temp,
+            description: item.weather[0].description,
+            isHeatwave: item.main.temp > 35 // Flag for temperatures above 35°C
+          });
+        } else {
+          // Update max temperature if this reading is higher
+          const existingDay = forecastDays.find(day => day.date === date);
+          if (existingDay && item.main.temp > existingDay.temperature) {
+            existingDay.temperature = item.main.temp;
+            existingDay.description = item.weather[0].description;
+            existingDay.isHeatwave = item.main.temp > 35;
+          }
+        }
+      });
+
+      // Then include this forecast data in the WeatherData model
       const weatherData = new WeatherData({
-        clusterId: cluster.id, // Add cluster ID
+        clusterId: cluster.id,
         location: {
           latitude: cluster.center.lat,
           longitude: cluster.center.lon,
           placeName: placeName
         },
-        userCount: cluster.points.length, // Add number of users in cluster
+        userCount: cluster.points.length,
         temperature: response.data.main.temp,
         feelsLike: response.data.main.feels_like,
         humidity: response.data.main.humidity,
         windSpeed: response.data.wind.speed,
         description: response.data.weather[0].description,
         alerts: [],
-        timestamp: new Date() // Explicit timestamp
+        timestamp: new Date(),
+        // Add forecast data and user IDs
+        metadata: {
+          forecast: forecastDays,
+          heatwaveAlert: forecastDays.some(day => day.isHeatwave) || response.data.main.temp > 35,
+          userIds: userIds // Add the array of user IDs in this cluster
+        }
       });
 
       await weatherData.save();
-      console.log(`Weather data stored for ${placeName} (Cluster ID: ${cluster.id})`);
+      console.log(`Weather data stored for ${placeName} (Cluster ID: ${cluster.id}) with ${userIds.length} user IDs`);
     }
   } catch (error) {
     console.error('Error fetching weather data:', error);
@@ -211,7 +264,7 @@ async function getRecentClusterData(clusterId, limit = 24) {
 // Add these new utility functions
 
 // Function to find which cluster a user belongs to
-async function findUserCluster(userLocation) {
+async function findUserCluster(userLocation, userId) {
   // Get all weather data from last hour to get active clusters
   const lastHour = new Date(Date.now() - 60 * 60 * 1000);
   const recentClusters = await WeatherData.find({
@@ -228,6 +281,40 @@ async function findUserCluster(userLocation) {
     );
 
     if (distance <= CLUSTER_RADIUS) {
+      // Check if this user is already in the cluster
+      const userAlreadyInCluster = cluster.metadata && 
+                                  cluster.metadata.userIds && 
+                                  Array.isArray(cluster.metadata.userIds) &&
+                                  cluster.metadata.userIds.includes(userId);
+      
+      // If user is not already in the cluster, add them
+      if (!userAlreadyInCluster) {
+        console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
+        
+        // Create a new weather data entry with updated userIds array
+        const updatedWeatherData = new WeatherData({
+          clusterId: cluster.clusterId,
+          location: cluster.location,
+          userCount: (cluster.userCount || 1) + 1,
+          temperature: cluster.temperature,
+          feelsLike: cluster.feelsLike,
+          humidity: cluster.humidity,
+          windSpeed: cluster.windSpeed,
+          description: cluster.description,
+          alerts: cluster.alerts,
+          timestamp: new Date(),
+          metadata: {
+            ...cluster.metadata,
+            userIds: Array.isArray(cluster.metadata.userIds) 
+              ? [...cluster.metadata.userIds, userId] 
+              : [userId]
+          }
+        });
+        
+        await updatedWeatherData.save();
+        return updatedWeatherData;
+      }
+      
       return cluster;
     }
   }
@@ -236,14 +323,53 @@ async function findUserCluster(userLocation) {
 }
 
 // Function to create a new cluster for a single user and get its weather
-async function createNewClusterForUser(userLocation) {
+async function createNewClusterForUser(userLocation, userId) {
   try {
+    // Fetch current weather data
     const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
       params: {
         lat: userLocation.latitude,
         lon: userLocation.longitude,
         appid: OPENWEATHER_API_KEY,
         units: 'metric'
+      }
+    });
+
+    // Fetch forecast data
+    const forecastResponse = await axios.get(`https://api.openweathermap.org/data/2.5/forecast`, {
+      params: {
+        lat: userLocation.latitude,
+        lon: userLocation.longitude,
+        appid: OPENWEATHER_API_KEY,
+        units: 'metric'
+      }
+    });
+
+    // Process forecast data
+    const forecastDays = [];
+    const processedDates = new Set();
+
+    // OpenWeatherMap forecast returns data in 3-hour intervals
+    // We'll take the max temperature for each day
+    forecastResponse.data.list.forEach(item => {
+      const date = new Date(item.dt * 1000).toISOString().split('T')[0];
+      
+      if (!processedDates.has(date)) {
+        processedDates.add(date);
+        forecastDays.push({
+          date: date,
+          temperature: item.main.temp,
+          description: item.weather[0].description,
+          isHeatwave: item.main.temp > 35 // Flag for temperatures above 35°C
+        });
+      } else {
+        // Update max temperature if this reading is higher
+        const existingDay = forecastDays.find(day => day.date === date);
+        if (existingDay && item.main.temp > existingDay.temperature) {
+          existingDay.temperature = item.main.temp;
+          existingDay.description = item.weather[0].description;
+          existingDay.isHeatwave = item.main.temp > 35;
+        }
       }
     });
 
@@ -263,10 +389,17 @@ async function createNewClusterForUser(userLocation) {
       windSpeed: response.data.wind.speed,
       description: response.data.weather[0].description,
       alerts: [],
-      timestamp: new Date()
+      timestamp: new Date(),
+      // Change from userId to userIds array
+      metadata: {
+        forecast: forecastDays,
+        heatwaveAlert: forecastDays.some(day => day.isHeatwave) || response.data.main.temp > 35,
+        userIds: [userId] // Store as an array instead of a single value
+      }
     });
 
     await weatherData.save();
+    console.log(`Created new weather data for user ${userId} with forecast data`);
     return weatherData;
   } catch (error) {
     console.error('Error creating new cluster:', error);
@@ -283,15 +416,25 @@ async function getUserWeather(userId) {
       throw new Error('User location not found');
     }
 
-    // Try to find an existing cluster for the user
-    const existingCluster = await findUserCluster(user.location);
+    // First check if the user is already in a cluster
+    const existingUserWeather = await WeatherData.findOne({
+      'metadata.userIds': userId
+    }).sort({ timestamp: -1 });
+
+    if (existingUserWeather) {
+      console.log(`User ${userId} is already in weather cluster ${existingUserWeather.clusterId}`);
+      return existingUserWeather;
+    }
+
+    // If not found by userId, try to find a cluster by location
+    const existingCluster = await findUserCluster(user.location, userId);
     
     if (existingCluster) {
       // Return the existing cluster's weather data
       return existingCluster;
     } else {
       // Create a new cluster for the user
-      return await createNewClusterForUser(user.location);
+      return await createNewClusterForUser(user.location, userId);
     }
   } catch (error) {
     console.error('Error getting user weather:', error);
