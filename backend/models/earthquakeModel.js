@@ -2,18 +2,66 @@ const mongoose = require('mongoose');
 
 // Earthquake schema
 const earthquakeSchema = new mongoose.Schema({
-  location: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
-    placeName: { type: String, required: true }, // e.g., city, country
+  date: {
+    type: Date,
+    required: true,
+    default: Date.now
   },
-  magnitude: { type: Number, required: true }, // Richter scale magnitude
-  depth: { type: Number, required: true }, // Depth of the earthquake in km
-  date: { type: Date, required: true },
-  fatalities: { type: Number, default: 0 },
-  injuries: { type: Number, default: 0 },
-  damageEstimate: { type: Number, default: 0 }, 
-});
+  source: {
+    type: String,
+    default: 'USGS Earthquake API'
+  },
+  description: {
+    type: String,
+    default: 'Earthquake data collection'
+  },
+  metadata: {
+    timestamp: {
+      type: Date,
+      default: Date.now
+    },
+    eventCount: {
+      type: Number,
+      required: true
+    },
+    minMagnitude: {
+      type: Number,
+      default: 2.5
+    },
+    timeRange: {
+      start: Date,
+      end: Date
+    },
+    type: {
+      type: String,
+      enum: ['earthquake_collection'],
+      default: 'earthquake_collection'
+    },
+    events: [{
+      eventId: String,
+      title: String,
+      place: String,
+      time: Date,
+      updated: Date,
+      magnitude: Number,
+      magnitudeType: String,
+      depth: Number,
+      tsunami: Number,
+      alert: String,
+      status: String,
+      location: {
+        latitude: Number,
+        longitude: Number,
+        depth: Number
+      },
+      url: String,
+      felt: Number,
+      cdi: Number,
+      mmi: Number,
+      significance: Number
+    }]
+  }
+}, { timestamps: true });
 
 const Earthquake = mongoose.model('Earthquake', earthquakeSchema);
 

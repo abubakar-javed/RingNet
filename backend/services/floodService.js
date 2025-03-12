@@ -302,36 +302,95 @@ async function processClusterAlerts(clusterId, apiData) {
     // Get users in this cluster
     const userIds = await getUsersInCluster(clusterId);
     
-    // Create alerts for users in this cluster
+    // Get the latest flood data for this cluster
+    const latestClusterData = await getLatestFloodDataForCluster(clusterId);
+    
+    if (!latestClusterData) {
+      console.log(`No existing flood data found for cluster ${clusterId}`);
+      return;
+    }
+    
+    // Update the existing cluster record with alert information
+    const alertInfo = {
+      hasAlert: true,
+      alertDays: alertDays,
+      alertThreshold: alertThreshold,
+      avgDischarge: avgDischarge,
+      lastUpdated: new Date(),
+      highestSeverity: alertDays.reduce((highest, day) => {
+        const currentRank = getSeverityRank(day.severity);
+        const highestRank = getSeverityRank(highest);
+        return currentRank > highestRank ? day.severity : highest;
+      }, 'Low')
+    };
+    
+    // Update the cluster record with alert information
+    await Flood.findByIdAndUpdate(
+      latestClusterData._id,
+      {
+        $set: {
+          'metadata.alertInfo': alertInfo,
+          description: `Cluster with ${alertDays.length} potential flood alerts`
+        }
+      }
+    );
+    
+    console.log(`Updated cluster ${clusterId} with alert information`);
+    
+    // For each user, update or create a user-specific alert reference
     for (const userId of userIds) {
-      for (const day of alertDays) {
-        // Create an alert in the database for each user and each alert day
+      // Check if user already has an alert for this cluster
+      const existingAlert = await Flood.findOne({
+        'metadata.userId': userId,
+        'metadata.clusterId': clusterId,
+        'metadata.type': 'FLOOD'
+      });
+      
+      if (existingAlert) {
+        // Update existing alert
+        await Flood.findByIdAndUpdate(
+          existingAlert._id,
+          {
+            $set: {
+              date: new Date(),
+              waterLevel: Math.max(...alertDays.map(day => day.discharge)) / 100,
+              description: `Updated flood alert: ${alertDays.length} high discharge days detected`,
+              'metadata.alertDays': alertDays,
+              'metadata.severity': alertInfo.highestSeverity,
+              'metadata.title': `Potential Flood Alert - ${alertInfo.highestSeverity}`,
+              'metadata.message': `${alertDays.length} days with high river discharge detected. Highest: ${Math.max(...alertDays.map(day => day.discharge)).toFixed(1)} m³/s`
+            }
+          }
+        );
+        console.log(`Updated flood alert for user ${userId}`);
+      } else {
+        // Create a new user-specific alert reference (not a full new record)
         const alert = new Flood({
           location: {
             latitude: apiData.latitude,
             longitude: apiData.longitude,
             placeName: `Near ${apiData.latitude.toFixed(2)}, ${apiData.longitude.toFixed(2)}`
           },
-          date: new Date(day.date),
-          waterLevel: day.discharge / 100,
-          duration: 1,
-          affectedArea: calculateAffectedArea(day.discharge),
+          date: new Date(),
+          waterLevel: Math.max(...alertDays.map(day => day.discharge)) / 100,
+          duration: alertDays.length,
+          affectedArea: calculateAffectedArea(Math.max(...alertDays.map(day => day.discharge))),
           source: 'Flood Monitoring System',
-          description: `High river discharge of ${day.discharge.toFixed(1)} m³/s expected on ${day.date}`,
+          description: `Flood alert: ${alertDays.length} high discharge days detected`,
           metadata: {
-            discharge: day.discharge,
-            avgDischarge: avgDischarge,
             clusterId: clusterId,
-            severity: day.severity,
-            title: `Potential Flood Alert - ${day.severity}`,
-            message: `High river discharge of ${day.discharge.toFixed(1)} m³/s expected on ${day.date}`,
+            alertDays: alertDays,
+            severity: alertInfo.highestSeverity,
+            title: `Potential Flood Alert - ${alertInfo.highestSeverity}`,
+            message: `${alertDays.length} days with high river discharge detected. Highest: ${Math.max(...alertDays.map(day => day.discharge)).toFixed(1)} m³/s`,
             userId: userId,
-            type: 'FLOOD'
+            type: 'FLOOD',
+            isReference: true  // Mark this as a reference to the main cluster data
           }
         });
         
         await alert.save();
-        console.log(`Created flood alert for user ${userId} for ${day.date}`);
+        console.log(`Created flood alert reference for user ${userId}`);
       }
     }
     
@@ -563,6 +622,41 @@ async function createNewClusterData(clusterId, location, userId) {
       }
     }
     
+    // Calculate alert threshold and find potential alert days
+    const alertThreshold = avgDischarge * 1.5;
+    const alertDays = [];
+    
+    for (let i = 0; i < dailyData.time.length; i++) {
+      // Only consider forecast days (not past data)
+      if (new Date(dailyData.time[i]) > new Date()) {
+        const discharge = dailyData.river_discharge[i];
+        if (discharge > alertThreshold) {
+          alertDays.push({
+            date: dailyData.time[i],
+            discharge,
+            severity: getSeverity(discharge, avgDischarge)
+          });
+        }
+      }
+    }
+    
+    // Determine if there's an alert
+    const hasAlert = alertDays.length > 0;
+    
+    // Create alert info object
+    const alertInfo = {
+      hasAlert,
+      alertDays,
+      alertThreshold,
+      avgDischarge,
+      lastUpdated: new Date(),
+      highestSeverity: hasAlert ? alertDays.reduce((highest, day) => {
+        const currentRank = getSeverityRank(day.severity);
+        const highestRank = getSeverityRank(highest);
+        return currentRank > highestRank ? day.severity : highest;
+      }, 'Low') : 'None'
+    };
+    
     // Store the flood data for this new cluster
     const floodData = new Flood({
       location: {
@@ -575,7 +669,9 @@ async function createNewClusterData(clusterId, location, userId) {
       duration: 1, // Default 1 day
       affectedArea: calculateAffectedArea(maxDischarge), // Estimate affected area
       source: 'Open-Meteo Flood API',
-      description: `New cluster for user ${userId}`,
+      description: hasAlert 
+        ? `New cluster for user ${userId} with ${alertDays.length} potential flood alerts` 
+        : `New cluster for user ${userId} with no flood alerts`,
       metadata: {
         clusterId: clusterId,
         center: { lat: location.latitude, lon: location.longitude },
@@ -595,15 +691,13 @@ async function createNewClusterData(clusterId, location, userId) {
         },
         userIds: [userId],
         userCount: 1,
-        type: 'flood'
+        type: 'flood',
+        alertInfo: alertInfo
       }
     });
     
     await floodData.save();
-    console.log(`Created new flood cluster ${clusterId} for user ${userId}`);
-    
-    // Generate and store initial alerts
-    await generateAlertsForNewCluster(clusterId, userId, floodData, apiData);
+    console.log(`Created new flood cluster ${clusterId} for user ${userId} (hasAlert: ${hasAlert})`);
     
     return floodData;
   } catch (error) {
@@ -693,7 +787,7 @@ async function getUserFloodAlerts(userId) {
     // Ensure database connection
     if (mongoose.connection.readyState !== 1) {
       console.log('Database connection not ready');
-      return { alerts: [] };
+      return { hasAlert: false, alerts: [] };
     }
     
     // First get the appropriate cluster for this user
@@ -701,114 +795,156 @@ async function getUserFloodAlerts(userId) {
     
     if (!clusterInfo) {
       console.log(`No cluster found for user ${userId}`);
-      return { alerts: [] };
+      return { hasAlert: false, alerts: [] };
     }
     
     const clusterId = clusterInfo.clusterId;
     console.log(`Found cluster ${clusterId} for user ${userId}`);
     
-    // Get alerts from database
-    const userAlerts = await Flood.find({
-      'metadata.userId': userId,
-      'metadata.type': 'FLOOD',
-      'metadata.date': { $gte: new Date() } // Only future alerts
-    }).sort({ 'metadata.date': 1 }); // Sort by date ascending
+    // Get the latest flood data for this cluster
+    const floodData = clusterInfo.floodData;
     
-    // If we have flood data and no alerts, generate them
-    if (clusterInfo.floodData && userAlerts.length === 0) {
-      const floodData = clusterInfo.floodData;
-      const generatedAlerts = [];
+    if (!floodData) {
+      console.log(`No flood data found for cluster ${clusterId}`);
+      return { hasAlert: false, alerts: [] };
+    }
+    
+    // Check if alert info exists and is less than 24 hours old
+    const hasAlertInfo = floodData.metadata && floodData.metadata.alertInfo;
+    const alertLastUpdated = hasAlertInfo ? new Date(floodData.metadata.alertInfo.lastUpdated) : null;
+    const now = new Date();
+    const isAlertRecent = alertLastUpdated && 
+                          (now.getTime() - alertLastUpdated.getTime() < 24 * 60 * 60 * 1000);
+    
+    // If we have recent alert info, use it
+    if (hasAlertInfo && isAlertRecent) {
+      console.log(`Using existing alert info for cluster ${clusterId} (last updated: ${alertLastUpdated})`);
       
-      // Calculate base average for reference
-      const avgDischarge = floodData.metadata.averageDischarge;
-      const dailyData = floodData.metadata.dailyData;
-      
-      // Generate alerts for high discharge days
-      for (let i = 0; i < dailyData.time.length; i++) {
-        const date = new Date(dailyData.time[i]);
-        
-        // Only consider future dates
-        if (date > new Date()) {
-          const discharge = dailyData.riverDischarge[i];
-          
-          // If discharge is significantly high, create an alert
-          if (discharge > avgDischarge * 1.5) {
-            const severity = getSeverity(discharge, avgDischarge);
-            
-            // Create alert object
-            const alertObj = {
-              date: dailyData.time[i],
-              discharge,
-              severity,
-              message: `High river discharge of ${discharge.toFixed(1)} m³/s expected on ${dailyData.time[i]}`
-            };
-            
-            generatedAlerts.push(alertObj);
-            
-            // Store this alert in the database for future reference
-            const alert = new Flood({
-              location: {
-                latitude: floodData.location.latitude,
-                longitude: floodData.location.longitude,
-                placeName: floodData.location.placeName
-              },
-              date: new Date(dailyData.time[i]),
-              waterLevel: discharge / 100,
-              duration: 1,
-              affectedArea: calculateAffectedArea(discharge),
-              source: 'Flood Monitoring System',
-              description: alertObj.message,
-              metadata: {
-                discharge,
-                avgDischarge,
-                clusterId,
-                severity,
-                title: `Potential Flood Alert - ${severity}`,
-                message: alertObj.message,
-                userId,
-                type: 'FLOOD'
-              }
-            });
-            
-            try {
-              await alert.save();
-            } catch (err) {
-              console.error(`Error saving generated alert:`, err.message);
-            }
-          }
-        }
-      }
-      
+      // Return the alert info from the cluster
       return {
         location: {
           latitude: floodData.location.latitude,
           longitude: floodData.location.longitude
         },
         clusterId,
-        alerts: generatedAlerts
+        hasAlert: floodData.metadata.alertInfo.hasAlert,
+        alerts: floodData.metadata.alertInfo.hasAlert ? floodData.metadata.alertInfo.alertDays : []
       };
     }
     
-    // If we have stored alerts, return those
+    // If alert info doesn't exist or is outdated, fetch new data from API
+    console.log(`Alert info for cluster ${clusterId} is outdated or missing, fetching new data`);
+    
+    // Fetch new flood data from API
+    const response = await axios.get(METEO_FLOOD_API_BASE_URL, {
+      params: {
+        latitude: floodData.location.latitude,
+        longitude: floodData.location.longitude,
+        daily: 'river_discharge,river_discharge_mean,river_discharge_max,river_discharge_min',
+        forecast_days: 7,
+        past_days: 7,
+        timeformat: 'iso8601'
+      }
+    });
+    
+    const apiData = response.data;
+    const dailyData = apiData.daily;
+    
+    // Skip if no river discharge data
+    if (!dailyData || !dailyData.river_discharge || dailyData.river_discharge.length === 0) {
+      console.log(`No river discharge data for cluster ${clusterId}`);
+      
+      // Update cluster with no alert info
+      await Flood.findByIdAndUpdate(
+        floodData._id,
+        {
+          $set: {
+            'metadata.alertInfo': {
+              hasAlert: false,
+              alertDays: [],
+              lastUpdated: new Date()
+            }
+          }
+        }
+      );
+      
+      return { 
+        location: {
+          latitude: floodData.location.latitude,
+          longitude: floodData.location.longitude
+        },
+        clusterId,
+        hasAlert: false, 
+        alerts: [] 
+      };
+    }
+    
+    // Calculate thresholds for alerts
+    const avgDischarge = dailyData.river_discharge.reduce((sum, val) => sum + val, 0) / dailyData.river_discharge.length;
+    const alertThreshold = avgDischarge * 1.5;
+    
+    // Find days with high discharge (potential floods)
+    const alertDays = [];
+    for (let i = 0; i < dailyData.time.length; i++) {
+      // Only consider forecast days (not past data)
+      if (new Date(dailyData.time[i]) > new Date()) {
+        const discharge = dailyData.river_discharge[i];
+        if (discharge > alertThreshold) {
+          alertDays.push({
+            date: dailyData.time[i],
+            discharge,
+            severity: getSeverity(discharge, avgDischarge)
+          });
+        }
+      }
+    }
+    
+    // Determine if there's an alert
+    const hasAlert = alertDays.length > 0;
+    
+    // Update the cluster with new alert info
+    const alertInfo = {
+      hasAlert,
+      alertDays,
+      alertThreshold,
+      avgDischarge,
+      lastUpdated: new Date(),
+      highestSeverity: hasAlert ? alertDays.reduce((highest, day) => {
+        const currentRank = getSeverityRank(day.severity);
+        const highestRank = getSeverityRank(highest);
+        return currentRank > highestRank ? day.severity : highest;
+      }, 'Low') : 'None'
+    };
+    
+    // Update the cluster record with alert information
+    await Flood.findByIdAndUpdate(
+      floodData._id,
+      {
+        $set: {
+          'metadata.alertInfo': alertInfo,
+          description: hasAlert 
+            ? `Cluster with ${alertDays.length} potential flood alerts` 
+            : `Cluster with no flood alerts`
+        }
+      }
+    );
+    
+    console.log(`Updated cluster ${clusterId} with new alert information (hasAlert: ${hasAlert})`);
+    
+    // Return the updated alert info
     return {
-      location: clusterInfo.floodData ? {
-        latitude: clusterInfo.floodData.location.latitude,
-        longitude: clusterInfo.floodData.location.longitude
-      } : {
-        latitude: 0,
-        longitude: 0
+      location: {
+        latitude: floodData.location.latitude,
+        longitude: floodData.location.longitude
       },
       clusterId,
-      alerts: userAlerts.map(alert => ({
-        date: alert.metadata.date,
-        discharge: alert.metadata.discharge,
-        severity: alert.metadata.severity,
-        message: alert.metadata.message
-      }))
+      hasAlert,
+      alerts: alertDays
     };
+    
   } catch (error) {
     console.error('Error getting user flood alerts:', error.message);
-    return { alerts: [] };
+    return { hasAlert: false, alerts: [] };
   }
 }
 

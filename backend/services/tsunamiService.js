@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // GDACS API URL for tsunami data
-const GDACS_TSUNAMI_API_URL = 'https://www.gdacs.org/xml/rss.xml?profile=TSUNAMI';
+const GDACS_TSUNAMI_API_URL = 'https://www.gdacs.org/xml/rss.xml?eventtype=TS';
 
 // Maximum distance to consider a user affected by a tsunami (in kilometers)
 const MAX_TSUNAMI_IMPACT_DISTANCE_KM = 200; // Coastal areas within this distance
@@ -111,7 +111,6 @@ async function fetchTsunamiData() {
       : [parsedData.rss.channel.item];
     
     console.log(`Found ${items.length} events from GDACS API`);
-    
     // Filter for tsunami events only
     const tsunamiEvents = items.filter(item => 
       item.title && item.title.toLowerCase().includes('tsunami')
@@ -337,7 +336,6 @@ async function getUserTsunamiAlerts(userId) {
     return { alerts: [] };
   }
 }
-
 // Export functions
 module.exports = {
   fetchTsunamiData,

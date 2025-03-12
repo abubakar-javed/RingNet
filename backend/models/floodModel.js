@@ -1,48 +1,119 @@
 const mongoose = require('mongoose');
-// Flood schema
+
 const floodSchema = new mongoose.Schema({
-    location: {
-      latitude: { type: Number, required: true },
-      longitude: { type: Number, required: true },
-      placeName: { type: String, required: true },
+  location: {
+    latitude: {
+      type: Number,
+      required: true
     },
-    date: { type: Date, required: true },
-    waterLevel: { type: Number, required: true }, // Height of floodwaters in meters
-    duration: { type: Number, required: true }, // Duration in days
-    affectedArea: { type: Number, required: true }, // Affected area in square kilometers
-    fatalities: { type: Number, default: 0 },
-    injuries: { type: Number, default: 0 },
-    damageEstimate: { type: Number, default: 0 },
-    source: { type: String, default: 'Open-Meteo Flood API' },
-    description: { type: String },
-    // Add metadata for cluster-based implementation
-    metadata: {
-      clusterId: { type: String },
-      center: {
-        lat: { type: Number },
-        lon: { type: Number }
-      },
-      timestamp: { type: Date },
-      timeRange: {
-        start: { type: String },
-        end: { type: String }
-      },
-      averageDischarge: { type: Number },
-      maxDischarge: { type: Number },
-      maxDischargeDate: { type: String },
-      dailyData: {
-        time: [String],
-        riverDischarge: [Number],
-        riverDischargeMax: [Number],
-        riverDischargeMin: [Number]
-      },
-      userIds: [String],
-      userCount: { type: Number, default: 1 },
-      type: { type: String, default: 'flood' }
+    longitude: {
+      type: Number,
+      required: true
+    },
+    placeName: {
+      type: String,
+      default: 'Unknown'
     }
-  });
-  
-  const Flood = mongoose.model('Flood', floodSchema);
-  
-  module.exports = Flood;
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  },
+  waterLevel: {
+    type: Number,
+    default: 0
+  },
+  duration: {
+    type: Number,
+    default: 1
+  },
+  affectedArea: {
+    type: Number,
+    default: 0
+  },
+  source: {
+    type: String,
+    default: 'Open-Meteo Flood API'
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  metadata: {
+    clusterId: String,
+    center: {
+      lat: Number,
+      lon: Number
+    },
+    timestamp: Date,
+    timeRange: {
+      start: String,
+      end: String
+    },
+    averageDischarge: Number,
+    maxDischarge: Number,
+    maxDischargeDate: String,
+    dailyData: {
+      time: [String],
+      riverDischarge: [Number],
+      riverDischargeMax: [Number],
+      riverDischargeMin: [Number]
+    },
+    userIds: [String],
+    userCount: {
+      type: Number,
+      default: 1
+    },
+    type: {
+      type: String,
+      enum: ['flood', 'FLOOD'],
+      default: 'flood'
+    },
+    alertInfo: {
+      hasAlert: {
+        type: Boolean,
+        default: false
+      },
+      alertDays: [{
+        date: String,
+        discharge: Number,
+        severity: {
+          type: String,
+          enum: ['None', 'Low', 'Moderate', 'High', 'Severe'],
+          default: 'None'
+        }
+      }],
+      alertThreshold: Number,
+      avgDischarge: Number,
+      lastUpdated: Date,
+      highestSeverity: {
+        type: String,
+        enum: ['None', 'Low', 'Moderate', 'High', 'Severe'],
+        default: 'None'
+      }
+    },
+    // Fields for user-specific alerts
+    userId: String,
+    discharge: Number,
+    severity: String,
+    title: String,
+    message: String,
+    isReference: Boolean,
+    status: {
+      type: String,
+      enum: ['ACTIVE', 'EXPIRED'],
+      default: 'ACTIVE'
+    }
+  }
+}, { timestamps: true });
+
+// Add indexes for better query performance
+floodSchema.index({ 'metadata.clusterId': 1 });
+floodSchema.index({ 'metadata.userId': 1 });
+floodSchema.index({ 'metadata.type': 1 });
+floodSchema.index({ date: -1 });
+
+const Flood = mongoose.model('Flood', floodSchema);
+
+module.exports = Flood;
   

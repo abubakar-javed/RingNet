@@ -24,6 +24,8 @@ const floodRoutes = require("./routes/floodRoutes");
 const heatwaveRoutes = require("./routes/heatwaveRoutes");
 const weatherRoutes = require('./routes/weatherRoutes');
 const userRoutes = require('./routes/userRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 // Create Express app
 const app = express();
 
@@ -72,6 +74,7 @@ app.use("/api/tsunami", tsunamiRoutes);
 app.use("/api/hazards", generalHazardRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

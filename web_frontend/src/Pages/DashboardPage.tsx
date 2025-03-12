@@ -159,10 +159,10 @@ const DashboardPage = () => {
   return (
     <Layout>
       <Box sx={{ width: '100%', p: 3 }}>
-        <StatsCards hazardStats={hazardStats} />
-            {weatherData && <WeatherCard weatherData={weatherData} />}
-            <FloodCard />
-            <TsunamiWidget />
+        <StatsCards  />
+        {weatherData && <WeatherCard weatherData={weatherData} />}
+        <FloodCard />
+        <TsunamiWidget />
         <HazardForecast />
         <RecentAlerts alerts={hazardStats?.recentAlerts || []} />
         <WeatherWarnings />
