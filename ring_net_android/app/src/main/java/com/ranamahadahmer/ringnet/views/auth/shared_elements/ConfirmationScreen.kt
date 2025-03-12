@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.shared_elements
+package com.ranamahadahmer.ringnet.views.auth.shared_elements
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,8 +24,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,47 +42,56 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: () -> Unit = {}) {
     val scroll = rememberScrollState(0)
     val value = MutableStateFlow("")
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
     ) {
         Column(
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
-                    .verticalScroll(scroll)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
+                .verticalScroll(scroll)
 
-                    .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(28.dp, Alignment.Top)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
-                Image(painterResource(R.drawable.icon),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+            ) {
+                Image(
+                    painterResource(R.drawable.icon),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
-                Text("RingNet",
+                Text(
+                    "RingNet",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
+                    fontSize = 32.sp
+                )
             }
-            Image(painterResource(R.drawable.signup_email_confirm),
+            Image(
+                painterResource(R.drawable.signup_email_confirm),
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier.size(240.dp)
             )
-            Text("Confirm your Email",
+            Text(
+                "Confirm your Email",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.W600,
                 textAlign = TextAlign.Center
             )
-            Text("We’ve sent 5 digits verification code\n" +
-                    "to Hello@tyler.com",
+            Text(
+                "We’ve sent 5 digits verification code\n" +
+                        "to Hello@tyler.com",
                 fontSize = 16.sp,
                 color = Color.Gray, fontWeight = FontWeight.W500,
                 textAlign = TextAlign.Center
@@ -92,14 +99,16 @@ fun ConfirmationScreen(modifier: Modifier = Modifier, msg: String, navToNext: ()
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Enter Verification Code", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.AttachEmail,
+                CustomTextField(
+                    Icons.Outlined.AttachEmail,
                     "OTP",
                     valueState = value,
                     type = TextFieldType.Name,
                     onChange = {},
                     trailing = { Text("Optional", color = Color.Gray) })
             }
-            Button(modifier = Modifier
+            Button(
+                modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
                 onClick = navToNext,

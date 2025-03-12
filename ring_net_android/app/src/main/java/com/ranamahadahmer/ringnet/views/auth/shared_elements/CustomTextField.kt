@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.shared_elements
+package com.ranamahadahmer.ringnet.views.auth.shared_elements
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,12 +30,14 @@ enum class TextFieldType {
 }
 
 @Composable
-fun CustomTextField(icon: ImageVector,
-                    placeHolder: String,
-                    onChange: (String) -> Unit,
-                    valueState: StateFlow<String>,
-                    trailing: @Composable (() -> Unit)? = null,
-                    type: TextFieldType) {
+fun CustomTextField(
+    icon: ImageVector,
+    placeHolder: String,
+    onChange: (String) -> Unit,
+    valueState: StateFlow<String>,
+    trailing: @Composable (() -> Unit)? = null,
+    type: TextFieldType
+) {
     val value by valueState.collectAsState()
     var hidden by remember { mutableStateOf(type == TextFieldType.Password) }
     TextField(
@@ -58,7 +60,8 @@ fun CustomTextField(icon: ImageVector,
         ),
         trailingIcon = {
             if (type == TextFieldType.Password) {
-                Icon(Icons.Outlined.RemoveRedEye,
+                Icon(
+                    Icons.Outlined.RemoveRedEye,
                     contentDescription = null,
                     modifier = Modifier.clickable {
                         hidden = !hidden

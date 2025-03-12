@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.sign_up
+package com.ranamahadahmer.ringnet.views.auth.sign_up
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -34,56 +34,71 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.TextFieldType
 
 
 @Composable
-fun SignUpEmailScreen(modifier: Modifier = Modifier,
-                      navigateToSignUpNameScreen: () -> Unit,
-                      viewModel: AuthViewModel) {
+fun SignUpEmailScreen(
+    modifier: Modifier = Modifier,
+    navigateToSignUpNameScreen: () -> Unit,
+    viewModel: AuthViewModel
+) {
     val scroll = rememberScrollState(0)
     val context = LocalContext.current
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
 
     ) {
 
         Column(
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
-                    .windowInsetsPadding(WindowInsets.ime)
-                    .verticalScroll(scroll)
-                    .padding(horizontal = 24.dp),
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
+                .windowInsetsPadding(WindowInsets.ime)
+                .verticalScroll(scroll)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp,
-                alignment = Alignment.Top)
+            verticalArrangement = Arrangement.spacedBy(
+                32.dp,
+                alignment = Alignment.Top
+            )
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
-                Image(painterResource(R.drawable.icon),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+            ) {
+                Image(
+                    painterResource(R.drawable.icon),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
-                Text("RingNet",
+                Text(
+                    "RingNet",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
+                    fontSize = 32.sp
+                )
             }
-            Column(modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Create Your Account",
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Create Your Account",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
-                Image(painterResource(R.drawable.signup_email),
+                    fontSize = 32.sp
+                )
+                Image(
+                    painterResource(R.drawable.signup_email),
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxWidth()
@@ -92,26 +107,28 @@ fun SignUpEmailScreen(modifier: Modifier = Modifier,
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email,
+                CustomTextField(
+                    Icons.Outlined.Email,
                     "Enter your Email",
                     valueState = viewModel.email,
                     onChange = viewModel::changeEmail,
-                    type = TextFieldType.Email)
+                    type = TextFieldType.Email
+                )
             }
 
             CustomButton(
                 modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
+                    .fillMaxWidth()
+                    .height(54.dp),
                 onClick = {
                     if (viewModel.emailEmpty()) {
                         Toast.makeText(context, "Enter Email !", Toast.LENGTH_SHORT)
-                                .show()
+                            .show()
                         return@CustomButton
                     }
                     if (viewModel.emailValid().not()) {
                         Toast.makeText(context, "Incorrect Email !", Toast.LENGTH_SHORT)
-                                .show()
+                            .show()
                         return@CustomButton
                     }
                     navigateToSignUpNameScreen()

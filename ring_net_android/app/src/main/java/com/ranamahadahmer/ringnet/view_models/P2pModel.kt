@@ -5,10 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.nsd.NsdManager
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import androidx.lifecycle.ViewModel
@@ -17,14 +13,11 @@ import com.ranamahadahmer.ringnet.MainActivity
 import com.ranamahadahmer.ringnet.R
 //import com.ranamahadahmer.ringnet.User
 import com.ranamahadahmer.ringnet.database.DataStoreManager
-import com.ranamahadahmer.ringnet.models.AuthResponse
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import nl.tudelft.ipv8.Community
 import nl.tudelft.ipv8.IPv8Configuration
 import nl.tudelft.ipv8.Overlay

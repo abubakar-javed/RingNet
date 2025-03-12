@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.forget_password
+package com.ranamahadahmer.ringnet.views.auth.forget_password
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,60 +32,76 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomButton
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomButton
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.TextFieldType
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
-fun ForgetPasswordEmailScreen(modifier: Modifier = Modifier,
-                              navigateToConfirmationScreen: () -> Unit = {}) {
+fun ForgetPasswordEmailScreen(
+    modifier: Modifier = Modifier,
+    navigateToConfirmationScreen: () -> Unit = {}
+) {
     val scroll = rememberScrollState(0)
     val value = MutableStateFlow("")
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
     ) {
         Column(
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
-                    .verticalScroll(scroll)
-                    .padding(horizontal = 24.dp),
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
+                .verticalScroll(scroll)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp,
-                alignment = Alignment.Top)
+            verticalArrangement = Arrangement.spacedBy(
+                32.dp,
+                alignment = Alignment.Top
+            )
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)) {
-                Image(painterResource(R.drawable.icon),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+            ) {
+                Image(
+                    painterResource(R.drawable.icon),
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
-                Text("RingNet",
+                Text(
+                    "RingNet",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
+                    fontSize = 32.sp
+                )
             }
-            Column(modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(painterResource(R.drawable.forget_password_email),
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painterResource(R.drawable.forget_password_email),
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text("Reset Your Password",
+                Text(
+                    "Reset Your Password",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center,
-                    fontSize = 32.sp)
-                Text("Enter your email address below \n" +
-                        "and we’ll send you a link with instructions",
+                    fontSize = 32.sp
+                )
+                Text(
+                    "Enter your email address below \n" +
+                            "and we’ll send you a link with instructions",
                     fontSize = 16.sp,
                     color = Color.Gray, fontWeight = FontWeight.W500,
                     textAlign = TextAlign.Center
@@ -94,17 +110,19 @@ fun ForgetPasswordEmailScreen(modifier: Modifier = Modifier,
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Email", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email,
+                CustomTextField(
+                    Icons.Outlined.Email,
                     "Enter your Email",
                     valueState = value,
                     onChange = {},
-                    type = TextFieldType.Email)
+                    type = TextFieldType.Email
+                )
             }
 
             CustomButton(
                 modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
+                    .fillMaxWidth()
+                    .height(54.dp),
                 onClick = navigateToConfirmationScreen,
             ) { Text("Continue", fontSize = 18.sp) }
 

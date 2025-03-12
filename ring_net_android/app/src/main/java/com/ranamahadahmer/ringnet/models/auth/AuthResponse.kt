@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.models
+package com.ranamahadahmer.ringnet.models.auth
 
 import com.google.gson.annotations.SerializedName
 

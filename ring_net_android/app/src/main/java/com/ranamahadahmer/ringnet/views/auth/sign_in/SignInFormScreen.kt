@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views.sign_in
+package com.ranamahadahmer.ringnet.views.auth.sign_in
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -41,18 +41,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
-import com.ranamahadahmer.ringnet.models.AuthResponse
+import com.ranamahadahmer.ringnet.models.auth.AuthResponse
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
-import com.ranamahadahmer.ringnet.views.shared_elements.CustomTextField
-import com.ranamahadahmer.ringnet.views.shared_elements.TextFieldType
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.CustomTextField
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.TextFieldType
 
 
 @Composable
-fun SignInFormScreen(modifier: Modifier = Modifier,
-                     navigateToSuccessScreen: () -> Unit,
-                     navigateToSignUpScreen: () -> Unit,
-                     navigateToForgotPasswordScreen: () -> Unit = {},
-                     viewModel: AuthViewModel
+fun SignInFormScreen(
+    modifier: Modifier = Modifier,
+    navigateToSuccessScreen: () -> Unit,
+    navigateToSignUpScreen: () -> Unit,
+    navigateToForgotPasswordScreen: () -> Unit = {},
+    viewModel: AuthViewModel
 ) {
     val response by viewModel.signInResponse.collectAsState()
     val scroll = rememberScrollState(0)
@@ -63,41 +64,51 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
             navigateToSuccessScreen()
         }
     }
-    Scaffold(modifier = modifier
+    Scaffold(
+        modifier = modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.ime)
     ) {
         Column(
             modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
-                    .padding(it)
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(it)
 
-                    .verticalScroll(scroll)
-                    .padding(horizontal = 24.dp),
+                .verticalScroll(scroll)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(28.dp,
-                alignment = Alignment.CenterVertically)
+            verticalArrangement = Arrangement.spacedBy(
+                28.dp,
+                alignment = Alignment.CenterVertically
+            )
         ) {
-            Column(modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(painterResource(R.drawable.icon),
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painterResource(R.drawable.icon),
                     contentDescription = "Icon",
                     modifier = Modifier.size(80.dp)
                 )
-                Text("RingNet",
+                Text(
+                    "RingNet",
                     color = Color.Black,
                     fontWeight = FontWeight.W500,
-                    fontSize = 40.sp)
+                    fontSize = 40.sp
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
                 Text("Email or Phone Number", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(Icons.Outlined.Email,
+                CustomTextField(
+                    Icons.Outlined.Email,
                     "Enter your Email",
                     valueState = viewModel.email,
                     onChange = viewModel::changeEmail,
-                    type = TextFieldType.Email)
+                    type = TextFieldType.Email
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Password", color = Color.Black, fontWeight = FontWeight.Bold)
@@ -106,34 +117,39 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
                     placeHolder = "Enter your password",
                     valueState = viewModel.passwordOne,
                     onChange = viewModel::changePasswordOne,
-                    type = TextFieldType.Password)
+                    type = TextFieldType.Password
+                )
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Text("Forget Password",
+                Text(
+                    "Forget Password",
                     color = Color(0xFFAF1616),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { navigateToForgotPasswordScreen() })
             }
 
-            Button(modifier = Modifier
+            Button(
+                modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
                 onClick = {
                     if (viewModel.emailEmpty()) {
                         Toast.makeText(context, "Please enter Email !", Toast.LENGTH_SHORT)
-                                .show()
+                            .show()
                         return@Button
                     }
                     if (viewModel.emailValid().not()) {
                         Toast.makeText(context, "Please enter Valid Email !", Toast.LENGTH_SHORT)
-                                .show()
+                            .show()
                         return@Button
                     }
                     if (viewModel.passwordValid().not()) {
-                        Toast.makeText(context,
+                        Toast.makeText(
+                            context,
                             "Password must be at least 6 characters long !",
-                            Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
                         return@Button
                     }
                     viewModel.signIn()
@@ -165,37 +181,17 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
 
             }
 
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(space = 8.dp,
-                    alignment = Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically) {
-                HorizontalDivider(thickness = 1.dp,
-                    color = Color(0xFAE3E1E3),
-                    modifier = Modifier.weight(1f))
-                Text("You can connect with", color = Color.Gray, fontWeight = FontWeight.W500)
-                HorizontalDivider(thickness = 1.dp,
-                    color = Color(0xFFE3E1E3),
-                    modifier = Modifier.weight(1f))
-            }
 
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp,
-                    alignment = Alignment.CenterHorizontally)) {
-                Image(painterResource(R.drawable.facebook),
-                    contentDescription = null,
-                    modifier = Modifier.size(50.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(
+                    4.dp,
+                    alignment = Alignment.CenterHorizontally
                 )
-
-                Image(painterResource(R.drawable.google),
-                    contentDescription = null,
-                    modifier = Modifier.size(50.dp)
-                )
-            }
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp,
-                    alignment = Alignment.CenterHorizontally)) {
+            ) {
                 Text("Don't have an account?", color = Color.Gray, fontWeight = FontWeight.W500)
-                Text("Sign Up", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold,
+                Text(
+                    "Sign Up", color = Color(0xFFAF1616), fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { navigateToSignUpScreen() })
             }
         }
@@ -203,14 +199,14 @@ fun SignInFormScreen(modifier: Modifier = Modifier,
 }
 
 
-
 @Composable
 @Preview
 fun SignInFormScreenPreview() {
-    SignInFormScreen(navigateToSuccessScreen = {},
+    SignInFormScreen(
+        navigateToSuccessScreen = {},
         navigateToSignUpScreen = {},
         modifier = Modifier,
-        navigateToForgotPasswordScreen = {  },
+        navigateToForgotPasswordScreen = { },
         viewModel = AuthViewModel(LocalContext.current)
     )
 }

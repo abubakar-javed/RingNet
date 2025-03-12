@@ -2,6 +2,8 @@ package com.ranamahadahmer.ringnet
 
 
 import android.app.Application
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,32 +12,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.view_models.P2pModel
 import com.ranamahadahmer.ringnet.views.Loading
-import com.ranamahadahmer.ringnet.views.SplashScreen
-import com.ranamahadahmer.ringnet.views.dashboard.DashboardScreen
-import com.ranamahadahmer.ringnet.views.dashboard.LandingScreen
-import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordEmailScreen
-import com.ranamahadahmer.ringnet.views.forget_password.ForgetPasswordPasswordScreen
-import com.ranamahadahmer.ringnet.views.shared_elements.ConfirmationScreen
-import com.ranamahadahmer.ringnet.views.sign_in.SignInFormScreen
-import com.ranamahadahmer.ringnet.views.sign_in.SignInSuccessScreen
-import com.ranamahadahmer.ringnet.views.sign_up.SignUpEmailScreen
-import com.ranamahadahmer.ringnet.views.sign_up.SignUpNameScreen
+import com.ranamahadahmer.ringnet.views.auth.SplashScreen
+
+
+import com.ranamahadahmer.ringnet.views.auth.forget_password.ForgetPasswordEmailScreen
+import com.ranamahadahmer.ringnet.views.auth.forget_password.ForgetPasswordPasswordScreen
+import com.ranamahadahmer.ringnet.views.auth.shared_elements.ConfirmationScreen
+import com.ranamahadahmer.ringnet.views.auth.sign_in.SignInFormScreen
+import com.ranamahadahmer.ringnet.views.auth.sign_in.SignInSuccessScreen
+import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpEmailScreen
+import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpNameScreen
+import com.ranamahadahmer.ringnet.views.dashboard.Dashboard
 import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
 
-
-// TODO: Request permissions
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        requestLocationPermissions()
         enableEdgeToEdge()
         setContent {
             RingNetTheme {
@@ -43,6 +47,31 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun requestLocationPermissions() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                1
+            )
+
+        } else {
+//            TODO: Close App if not given permission
+        }
+    }
+
 }
 
 
@@ -51,10 +80,9 @@ fun RingNetApp() {
     val navController = rememberNavController()
     val authViewModel = AuthViewModel(LocalContext.current)
     val application = LocalContext.current.applicationContext as Application
-    val model = P2pModel(application)
+    P2pModel(application)
+    val appModel = AppViewModel()
 
-
-    val userId by authViewModel.userId.collectAsState()
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
 
 
@@ -62,7 +90,7 @@ fun RingNetApp() {
     NavHost(navController = navController, startDestination = "loading_screen") {
         composable("loading_screen") {
             Loading {
-                val nextDestination = if (isUserLoggedIn) "dashboard/$userId" else "splash_screen"
+                val nextDestination = if (isUserLoggedIn) "dashboard" else "splash_screen"
                 navController.popBackStack()
                 navController.navigate(nextDestination)
             }
@@ -93,7 +121,7 @@ fun RingNetApp() {
                 SignInSuccessScreen {
                     navController.popBackStack()
                     authViewModel.saveUser()
-                    navController.navigate("dashboard/$userId")
+                    navController.navigate("dashboard")
                 }
             }
         }
@@ -137,16 +165,10 @@ fun RingNetApp() {
             }
         }
 
-        composable("dashboard/{message}") {
-            val message = it.arguments?.getString("message") ?: ""
-            DashboardScreen(
-                userId = message, model = model
-            )
-        }
-        composable("landing_screen") {
-            LandingScreen()
-        }
 
+        composable("dashboard") {
+            Dashboard(appModel)
+        }
     }
 }
 

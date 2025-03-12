@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.views
+package com.ranamahadahmer.ringnet.views.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -46,13 +46,14 @@ fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit
         )
         Column(
             modifier = Modifier
-                    .padding(it)
-                    .background(brush)
-                    .fillMaxSize(),
+                .padding(it)
+                .background(brush)
+                .fillMaxSize(),
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Card(modifier = Modifier
+            Card(
+                modifier = Modifier
                     .height(400.dp)
                     .width(300.dp),
                 shape = RoundedCornerShape(20.dp)
@@ -65,15 +66,19 @@ fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit
                     contentScale = ContentScale.FillBounds
                 )
             }
-            Text(stringResource(R.string.grow_your_insights_with_latest_alerts),
+            Text(
+                stringResource(R.string.grow_your_insights_with_latest_alerts),
                 modifier = Modifier.padding(horizontal = 54.dp),
                 fontSize = 32.sp,
                 lineHeight = 40.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center)
-            Text(stringResource(R.string.explore_the_world_of_analyzing_news_and_sports_where_you_will_be_submerged_to_games),
+                textAlign = TextAlign.Center
+            )
+            Text(
+                stringResource(R.string.explore_the_world_of_analyzing_news_and_sports_where_you_will_be_submerged_to_games),
                 modifier = Modifier.padding(horizontal = 54.dp),
-                textAlign = TextAlign.Center)
+                textAlign = TextAlign.Center
+            )
 
 
 //            TODO: Replace the following code with button from Login Screen
@@ -82,15 +87,15 @@ fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFFAF1616),
                 modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 64.dp)
-                        .clickable { navigateToNextScreen() },
+                    .fillMaxWidth()
+                    .padding(horizontal = 64.dp)
+                    .clickable { navigateToNextScreen() },
 
                 ) {
                 Row(
                     modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 20.dp, horizontal = 24.dp),
+                        .fillMaxWidth()
+                        .padding(vertical = 20.dp, horizontal = 24.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
@@ -99,8 +104,10 @@ fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit
                         fontSize = 22.sp,
                         fontFamily = FontFamily.SansSerif,
                     )
-                    Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
-                        contentDescription = null)
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = null
+                    )
                 }
             }
         }
