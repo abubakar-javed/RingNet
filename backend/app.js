@@ -22,6 +22,10 @@ const tsunamiRoutes = require("./routes/tsunamiRoutes");
 const generalHazardRoutes = require("./routes/generalHazardRoutes");
 const floodRoutes = require("./routes/floodRoutes");    
 const heatwaveRoutes = require("./routes/heatwaveRoutes");
+const weatherRoutes = require('./routes/weatherRoutes');
+const userRoutes = require('./routes/userRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 // Create Express app
 const app = express();
 
@@ -46,6 +50,17 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Add this where you initialize your services
+const { initialize: initializeFloodService } = require('./services/floodService');
+
+// Initialize flood service when the server starts
+initializeFloodService()
+  .then(() => {
+    console.log('Flood service initialized successfully');
+  })
+  .catch(err => {
+    console.error('Failed to initialize flood service:', err);
+  });
 
 app.get('/api/welcome', (req, res) => {
     res.send('Hello, World!');
@@ -57,6 +72,9 @@ app.use("/api/flood", floodRoutes);
 app.use("/api/heatwave", heatwaveRoutes);
 app.use("/api/tsunami", tsunamiRoutes);
 app.use("/api/hazards", generalHazardRoutes);
+app.use('/api/weather', weatherRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

@@ -1,0 +1,149 @@
+.chooseContainer {
+    padding: 1rem 2rem;
+    background-color: #ffffff;
+}
+
+.chooseContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.leftContent {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 700px;
+}
+
+.decorativeCircle {
+    width: 350px;
+    height: 350px;
+    border: 1px solid rgba(67, 56, 202, 0.1);
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.decorativeCircle2 {
+    width: 400px;
+    height: 400px;
+    transform: translateX(-50%);
+}
+
+.star {
+    position: absolute;
+    color:#bc1a1a;
+    font-size: 2rem;
+    transform: rotate(45deg);
+}
+
+.rightContent {
+    flex: 2;
+    margin-left: -7rem;
+}
+
+.title {
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+}
+
+.highlight {
+    color: #bc1a1a;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.featureItem {
+    padding: 0rem;
+}
+
+.featureItem h3 {
+    color: #1f2937;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.featureItem p {
+    color: #4b5563;
+    line-height: 1.6;
+    font-size: 0.875rem;
+}
+
+/* Tablet Styles */
+@media (max-width: 1024px) {
+    .chooseContent {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .rightContent {
+        margin-left: 0;
+        text-align: center;
+        padding: 0 1rem;
+    }
+
+    .features {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        text-align: left;
+    }
+
+    .leftContent {
+        display: none;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .chooseContainer {
+        padding: 2rem 1rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .featureItem h3 {
+        font-size: 1.1rem;
+    }
+
+    .featureItem p {
+        font-size: 0.9rem;
+    }
+
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+    .chooseContainer {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .featureItem {
+        padding: 0 0.5rem;
+    }
+}

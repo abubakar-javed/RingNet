@@ -3,24 +3,29 @@ const router = express.Router();
 const {
   getAllFloods,
   getFloodById,
+  getFloodsByLocation,
+  getFloodsForUser,
   createFlood,
   updateFlood,
-  deleteFlood
+  deleteFlood,
+  updateFloodData,
+  getFloodAlerts
 } = require('../controllers/floodController');
+const authMiddleware = require('../middlewares/auth');
 
-// GET all floods
+// Public routes
 router.get('/', getAllFloods);
-
-// GET single flood
+router.get('/by-location', getFloodsByLocation);
 router.get('/:id', getFloodById);
 
-// POST new flood
-router.post('/', createFlood);
+// Protected routes - require authentication
+router.get('/user/floods', authMiddleware, getFloodsForUser);
+router.get('/user/alerts', authMiddleware, getFloodAlerts);
 
-// PUT update flood
-router.put('/:id', updateFlood);
-
-// DELETE flood
-router.delete('/:id', deleteFlood);
+// Admin-only routes
+router.post('/', authMiddleware, createFlood);
+router.put('/:id', authMiddleware, updateFlood);
+router.delete('/:id', authMiddleware, deleteFlood);
+router.post('/update-data', authMiddleware, updateFloodData);
 
 module.exports = router;
