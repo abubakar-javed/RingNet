@@ -74,6 +74,7 @@ const Layout = ({ children }: LayoutProps) => {
         },
         (error) => {
           console.log("Location permission denied or error occurred");
+          console.log(error);
           // Keep previous location if user denies permission
         }
       );

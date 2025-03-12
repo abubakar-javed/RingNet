@@ -29,6 +29,8 @@ const StatsCards = () => {
 
   // Fetch stats from the backend
   useEffect(() => {
+    console.log(loading);
+    console.log(error);
     const fetchStats = async () => {
       try {
         setLoading(true);

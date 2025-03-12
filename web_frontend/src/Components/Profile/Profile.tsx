@@ -55,7 +55,6 @@ const Profile = () => {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [newAlert, setNewAlert] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState('');
   

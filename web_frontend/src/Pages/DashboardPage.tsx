@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Alert, CircularProgress, Container, Grid } from "@mui/material";
+import { Box, Alert, CircularProgress,  } from "@mui/material";
 import axios from "axios";
 
 // import { useSelector } from "react-redux";
@@ -10,70 +10,18 @@ import HazardForecast from "../Components/Dashboard/HazardForecast/HazardForecas
 import RecentAlerts from "../Components/Dashboard/RecentAlerts/RecentAlerts";
 import WeatherWarnings from "../Components/Dashboard/WeatherWarnings/WeatherWarnings";
 import RegionalStats from "../Components/Dashboard/RegionalStats/RegionalStats";
-import { fetchCurrentWeather } from "../services/weatherService";
 import WeatherCard from '../Components/Dashboard/WeatherCard/WeatherCard';
 import FloodCard from '../Components/Dashboard/FloodCard/FloodCard';
 import TsunamiWidget from "../Components/Dashboard/TsunamiWidget/TsunamiWidget";
 
 
-interface HazardStats {
-  earthquakes: number;
-  tsunamis: number;
-  floods: number;
-  heatwaves: number;
-  recentAlerts: Array<{
-    type: string;
-    severity: string;
-    location: string;
-    timestamp: string;
-  }>;
-}
 
 interface WeatherAlert {
   severity: string;
   start: string;
 }
 
-interface WeatherData {
-  temperature: number;
-  location: {
-    placeName: string;
-  };
-  alerts: WeatherAlert[];
-}
 
-const MOCK_HAZARD_STATS: HazardStats = {
-  earthquakes: 12,
-  tsunamis: 3,
-  floods: 8,
-  heatwaves: 5,
-  recentAlerts: [
-    {
-      type: "Earthquake",
-      severity: "error",
-      location: "Nepal, Kathmandu",
-      timestamp: "2024-03-15T08:30:00Z"
-    },
-    {
-      type: "Tsunami",
-      severity: "warning",
-      location: "Indonesia, Jakarta",
-      timestamp: "2024-03-14T15:45:00Z"
-    },
-    {
-      type: "Flood",
-      severity: "warning",
-      location: "Bangladesh, Dhaka",
-      timestamp: "2024-03-14T12:20:00Z"
-    },
-    {
-      type: "Heatwave",
-      severity: "info",
-      location: "India, New Delhi",
-      timestamp: "2024-03-13T09:15:00Z"
-    }
-  ]
-};
 
 const DashboardPage = () => {
   const [weatherData, setWeatherData] = useState(null);

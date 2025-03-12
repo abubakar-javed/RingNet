@@ -56,7 +56,7 @@ interface WeatherCardProps {
 type WeatherType = 'clear' | 'cloudy' | 'rainy' | 'stormy' | 'snowy' | 'foggy' | 'night';
 
 // Styled components
-const WeatherContainer = styled(Paper)(({ theme }) => ({
+const WeatherContainer = styled(Paper)(() => ({
   borderRadius: 16,
   overflow: 'hidden',
   boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
@@ -134,7 +134,7 @@ const WeatherLabel = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(0.5),
 }));
 
-const WeatherValue = styled(Typography)(({ theme }) => ({
+const WeatherValue = styled(Typography)(() => ({
   fontSize: '1.125rem',
   fontWeight: 500,
 }));
@@ -285,11 +285,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData, isLoading = fals
     return null;
   }
 
-  // Format the timestamp
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+ 
 
   // Get user-friendly timestamp (e.g., "10 minutes ago")
   const getTimeAgo = (timestamp: string) => {
