@@ -15,7 +15,7 @@ import MapPage from './Pages/MapPage.js';
 import ActiveAlertsPage from './Pages/ActiveAlertsPage.js';
 import HistoricalDataPage from './Pages/HistoricalDataPage.js';
 import ExportDataPage from './Pages/ExportDataPage.js';
-
+import SitePage from './Pages/SitePage.js';
 function App() {
   const dispatch = useDispatch();
 
@@ -30,6 +30,7 @@ function App() {
     <>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/site" element={<SitePage />} />
         <Route path="/auth/callback" element={<OAuthCallback />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<DashboardPage />} />

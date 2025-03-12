@@ -29,9 +29,25 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  phone: {
+    type: String,
+    default: ''
+  },
+  locationString: {
+    type: String,
+    default: ''
+  },
   location: {
     latitude: { type: Number, default: 33.6844 }, 
     longitude: { type: Number, default: 73.0479 },
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  alertPreferences: {
+    type: [String],
+    default: []
   },
   createdAt: {
     type: Date,
@@ -42,7 +58,6 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-
 
 const User = mongoose.model('User', userSchema);
 

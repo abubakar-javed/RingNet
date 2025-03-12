@@ -15,7 +15,6 @@ const predictEarthquakeMagnitude = async (req, res) => {
                 'Content-Type': 'application/json'
             }
         });
-        console.log(response.data);
 
         const earthquake = new Earthquake({
             location: {

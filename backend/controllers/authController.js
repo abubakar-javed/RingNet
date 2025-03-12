@@ -23,9 +23,6 @@ const login = async (req, res) => {
     if (!user) {
         return res.status(400).json({message: "Invalid credentials."});
     }
-    console.log(user)
-    console.log(password)
-    console.log(decrypt(user.password))
     // Compare passwords
     if (password != decrypt(user.password)) {
         return res.status(400).json({message: "Invalid credentials."});

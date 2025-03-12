@@ -1,0 +1,153 @@
+.heroContainer {
+  padding-top: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 1200px;
+  padding: 0 2rem;
+}
+
+.title {
+  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.titleHighlight {
+  color: #bc1a1a;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #4b5563;
+  margin: 0 auto;
+  max-width: 800px;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.ctaContainer {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statNumber {
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: #bc1a1a;
+}
+
+.statLabel {
+  color: #4b5563;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Tablet Styles */
+@media (max-width: 1024px) {
+  .heroContent {
+    padding: 2rem 1.5rem;
+  }
+
+  .title {
+    font-size: 2.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+    max-width: 700px;
+  }
+
+  .statsContainer {
+    gap: 2rem;
+  }
+}
+
+/* Small Tablet Styles */
+@media (max-width: 768px) {
+  .heroContent {
+    padding: 1.5rem 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    max-width: 600px;
+  }
+
+  .ctaContainer {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .statsContainer {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .statItem {
+    width: 100%;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .statNumber {
+    font-size: 1.5rem;
+  }
+
+  .statLabel {
+    margin-top: 0;
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 480px) {
+  .heroContainer {
+    padding-top: 3rem;
+  }
+
+  .heroContent {
+    padding: 1rem 0.75rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .ctaContainer {
+    margin-bottom: 2rem;
+  }
+}
