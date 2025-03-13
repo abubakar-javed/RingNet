@@ -1,7 +1,6 @@
 package com.ranamahadahmer.ringnet
 
 
-import android.app.Application
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -18,9 +17,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
-import com.ranamahadahmer.ringnet.view_models.P2pModel
+
 import com.ranamahadahmer.ringnet.views.Loading
 import com.ranamahadahmer.ringnet.views.auth.SplashScreen
 
@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestLocationPermissions()
         enableEdgeToEdge()
+
         setContent {
             RingNetTheme {
                 RingNetApp()
@@ -79,12 +80,11 @@ class MainActivity : ComponentActivity() {
 fun RingNetApp() {
     val navController = rememberNavController()
     val authViewModel = AuthViewModel(LocalContext.current)
-    val application = LocalContext.current.applicationContext as Application
-    P2pModel(application)
+//    val application = LocalContext.current.applicationContext as Application
+//    P2pModel(application)
     val appModel = AppViewModel()
 
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
-
 
 
     NavHost(navController = navController, startDestination = "loading_screen") {
