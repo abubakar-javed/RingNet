@@ -3,6 +3,8 @@ const WeatherData = require('../models/weatherModel');
 const User = require('../models/userModel');
 const cron = require('node-cron');
 const mongoose = require('mongoose');
+const Alert = require('../models/alertModel');
+const Notification = require('../models/notificationModel');
 require('dotenv').config(); 
 
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || 'eed41bad5cf0d45290152944586af33c';
@@ -167,7 +169,7 @@ async function fetchAndStoreWeatherData() {
       const processedDates = new Set();
 
       // OpenWeatherMap forecast returns data in 3-hour intervals
-      forecastResponse.data.list.forEach(item => {
+      for (const item of forecastResponse.data.list) {
         const date = new Date(item.dt * 1000).toISOString().split('T')[0];
         
         if (!processedDates.has(date)) {
@@ -187,7 +189,45 @@ async function fetchAndStoreWeatherData() {
             existingDay.isHeatwave = item.main.temp > 35;
           }
         }
-      });
+
+        // Add near where the heatwave condition is checked
+        if (item.main.temp > 35) {
+          // Create alert entry
+          const newAlert = new Alert({
+            type: 'Heatwave',
+            severity: item.main.temp > 40 ? 'error' : item.main.temp > 37 ? 'warning' : 'info',
+            location: `${item.name}, ${item.sys.country}`,
+            timestamp: new Date(),
+            hazardId: new mongoose.Types.ObjectId(), // Generate a new ID if no specific hazard record exists
+            hazardModel: 'Heatwave',
+            coordinates: {
+              latitude: item.coord.lat,
+              longitude: item.coord.lon
+            },
+            details: `Temperature: ${item.main.temp}°C, Humidity: ${item.main.humidity}%`
+          });
+          
+          await newAlert.save();
+          
+          // Create notification entry
+          const newNotification = new Notification({
+            notificationId: Math.random().toString(36).substr(2, 6).toUpperCase(),
+            alertId: newAlert._id,
+            hazardId: newAlert.hazardId,
+            hazardModel: 'Heatwave',
+            type: 'Heatwave',
+            severity: newAlert.severity,
+            location: newAlert.location,
+            sentAt: new Date(),
+            status: 'Sent',
+            message: `Heatwave alert: ${item.main.temp}°C detected in ${item.name}, ${item.sys.country}`,
+            // Recipients would be determined based on your app's logic
+            // recipients: [...affected users...]
+          });
+          
+          await newNotification.save();
+        }
+      }
 
       // Then include this forecast data in the WeatherData model
       const weatherData = new WeatherData({
@@ -351,7 +391,7 @@ async function createNewClusterForUser(userLocation, userId) {
 
     // OpenWeatherMap forecast returns data in 3-hour intervals
     // We'll take the max temperature for each day
-    forecastResponse.data.list.forEach(item => {
+    for (const item of forecastResponse.data.list) {
       const date = new Date(item.dt * 1000).toISOString().split('T')[0];
       
       if (!processedDates.has(date)) {
@@ -360,7 +400,7 @@ async function createNewClusterForUser(userLocation, userId) {
           date: date,
           temperature: item.main.temp,
           description: item.weather[0].description,
-          isHeatwave: item.main.temp > 35 // Flag for temperatures above 35°C
+          isHeatwave: item.main.temp > 35 
         });
       } else {
         // Update max temperature if this reading is higher
@@ -371,7 +411,7 @@ async function createNewClusterForUser(userLocation, userId) {
           existingDay.isHeatwave = item.main.temp > 35;
         }
       }
-    });
+    }
 
     const clusterId = generateClusterId(userLocation.latitude, userLocation.longitude);
     
@@ -408,42 +448,89 @@ async function createNewClusterForUser(userLocation, userId) {
 }
 
 // Main function to get weather data for a user
-async function getUserWeather(userId) {
+async function getUserWeather(userId, updatedLocation = null) {
   try {
-    // Get user's location
+    // Get user's location from DB
     const user = await User.findById(userId);
-    if (!user || !user.location) {
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    // If location is provided from frontend, update it
+    if (updatedLocation) {
+      console.log(`Updating location for user ${userId} from ${JSON.stringify(user.location)} to ${JSON.stringify(updatedLocation)}`);
+      
+      // Update user's location in the database
+      user.location = updatedLocation;
+      await user.save();
+    }
+    
+    // Ensure we have a location to work with
+    if (!user.location) {
       throw new Error('User location not found');
     }
 
-    // First check if the user is already in a cluster
-    const existingUserWeather = await WeatherData.findOne({
-      'metadata.userIds': userId
-    }).sort({ timestamp: -1 });
-
-    if (existingUserWeather) {
-      // Check if the weather data is older than 1 hour
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      if (existingUserWeather.timestamp < oneHourAgo) {
-        console.log(`Weather data for user ${userId} is older than 1 hour, fetching new data`);
-        // Create new weather data for the cluster
-        return await createNewClusterForUser(user.location, userId);
-      }
-      
-      console.log(`User ${userId} has recent weather data in cluster ${existingUserWeather.clusterId}`);
-      return existingUserWeather;
-    }
-
-    // If not found by userId, try to find a cluster by location
-    const existingCluster = await findUserCluster(user.location, userId);
+    // Check existing clusters based on proximity to current location
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentClusters = await WeatherData.find({
+      timestamp: { $gte: oneHourAgo }
+    });
     
-    if (existingCluster) {
-      // Return the existing cluster's weather data
-      return existingCluster;
-    } else {
-      // Create a new cluster for the user
-      return await createNewClusterForUser(user.location, userId);
+    // Look for a cluster that includes this location
+    for (const cluster of recentClusters) {
+      const distance = getDistanceInKm(
+        user.location.latitude,
+        user.location.longitude,
+        cluster.location.latitude,
+        cluster.location.longitude
+      );
+      
+      // If user is within cluster radius and data is recent
+      if (distance <= CLUSTER_RADIUS) {
+        console.log(`Found existing cluster ${cluster.clusterId} for user ${userId} within ${distance.toFixed(2)}km`);
+        
+        // Check if user is already in this cluster
+        const userInCluster = cluster.metadata && 
+                             cluster.metadata.userIds && 
+                             Array.isArray(cluster.metadata.userIds) &&
+                             cluster.metadata.userIds.includes(userId);
+        
+        // If user isn't in cluster yet, add them
+        if (!userInCluster) {
+          console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
+          
+          // Create updated record with user added to cluster
+          const updatedWeatherData = new WeatherData({
+            clusterId: cluster.clusterId,
+            location: cluster.location,
+            userCount: (cluster.userCount || 1) + 1,
+            temperature: cluster.temperature,
+            feelsLike: cluster.feelsLike,
+            humidity: cluster.humidity,
+            windSpeed: cluster.windSpeed,
+            description: cluster.description,
+            alerts: cluster.alerts,
+            timestamp: new Date(),
+            metadata: {
+              ...cluster.metadata,
+              userIds: Array.isArray(cluster.metadata.userIds) 
+                ? [...cluster.metadata.userIds, userId] 
+                : [userId]
+            }
+          });
+          
+          await updatedWeatherData.save();
+          return updatedWeatherData;
+        }
+        
+        return cluster;
+      }
     }
+    
+    // If no suitable cluster found, create a new one for this user
+    console.log(`No suitable cluster found for user ${userId}, creating new one`);
+    return await createNewClusterForUser(user.location, userId);
+    
   } catch (error) {
     console.error('Error getting user weather:', error);
     throw error;

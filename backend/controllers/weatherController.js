@@ -34,8 +34,14 @@ const getHistoricalWeather = async (req, res) => {
 
 const getWeatherForUser = async (req, res) => {
   try {
-    const userId = req.user._id; 
-    const weatherData = await getUserWeather(userId);
+    const userId = req.user._id;
+    // Check if location is provided in request params
+    const updatedLocation = req.query.latitude && req.query.longitude ? {
+      latitude: parseFloat(req.query.latitude),
+      longitude: parseFloat(req.query.longitude)
+    } : null;
+    
+    const weatherData = await getUserWeather(userId, updatedLocation);
     res.json(weatherData);
   } catch (error) {
     console.error('Error in getWeatherForUser:', error);
