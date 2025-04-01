@@ -84,6 +84,8 @@ const Layout = ({ children }: LayoutProps) => {
   const updateUserLocation = async (latitude: number, longitude: number) => {
     try {
       const token = localStorage.getItem('token');
+      console.log("latitude",latitude);
+      console.log("longitude",longitude);
       await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/users/location`, 
         { location: { latitude, longitude } },
         { headers: { 'Authorization': `Bearer ${token}` }}

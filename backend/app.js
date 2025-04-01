@@ -25,6 +25,8 @@ const heatwaveRoutes = require("./routes/heatwaveRoutes");
 const weatherRoutes = require('./routes/weatherRoutes');
 const userRoutes = require('./routes/userRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const alertRoutes = require('./routes/alertRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Create Express app
 const app = express();
@@ -75,6 +77,8 @@ app.use("/api/hazards", generalHazardRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
@@ -110,7 +114,26 @@ function onListening() {
 
 // Start server and connect to MongoDB
 const startServer = async () => {
-    const dbConnected = await mongoConnection();
+    try {
+        // Wait for MongoDB connection to be established
+        const dbConnected = await mongoConnection();
+        
+        if (dbConnected) {
+            console.log('MongoDB connected successfully');
+            
+            // Initialize services AFTER database connection
+            const { initialize: initializeFloodService } = require('./services/floodService');
+            initializeFloodService()
+              .then(() => console.log('Flood service initialized'))
+              .catch(err => console.error('Failed to initialize flood service:', err));
+              
+            // Initialize other services here if needed
+        } else {
+            console.error('Failed to connect to MongoDB');
+        }
+    } catch (error) {
+        console.error('Error starting server:', error);
+    }
 };
 
 startServer();

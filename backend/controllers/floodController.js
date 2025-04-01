@@ -59,8 +59,14 @@ const getFloodsForUser = async (req, res) => {
   try {
     const userId = req.user._id;
     
-    // Get flood alerts from the service
-    const floodAlerts = await getUserFloodAlerts(userId);
+    // Check if location is provided in request params
+    const updatedLocation = req.query.latitude && req.query.longitude ? {
+      latitude: parseFloat(req.query.latitude),
+      longitude: parseFloat(req.query.longitude)
+    } : null;
+    
+    // Get flood alerts from the service with possible updated location
+    const floodAlerts = await getUserFloodAlerts(userId, updatedLocation);
     res.json(floodAlerts);
   } catch (error) {
     console.error('Error in getFloodsForUser:', error);

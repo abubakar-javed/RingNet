@@ -3,6 +3,8 @@ const Earthquake = require('../models/earthquakeModel');
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const Alert = require('../models/alertModel');
+const Notification = require('../models/notificationModel');
 
 // USGS Earthquake API URL
 const USGS_EARTHQUAKE_API_URL = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
@@ -13,22 +15,22 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://ajavedbese21seecs:abub
 
 const connectDB = async () => {
   try {
-    console.log("weather key",process.env.OPENWEATHER_API_KEY);
-    console.log('Attempting to connect to MongoDB...');
-    console.log('Using connection string:', process.env.MONGO_URI);
+    // console.log("weather key",process.env.OPENWEATHER_API_KEY);
+    // console.log('Attempting to connect to MongoDB...');
+    // console.log('Using connection string:', process.env.MONGO_URI);
     
     await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000, // Reduce the timeout to 5 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     });
     
-    console.log('MongoDB connected successfully');
+    // console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    // console.error('MongoDB connection error:', error);
     
     // More specific error handling
     if (error.code === 'ECONNREFUSED') {
-      console.error('Make sure MongoDB is running on your machine');
+      // console.error('Make sure MongoDB is running on your machine');
     }
     
     process.exit(1);
@@ -43,17 +45,17 @@ async function initialize() {
     await connectDB();
     // Check database connection state
     if (mongoose.connection.readyState !== 1) {
-      console.log('Database connection not ready, skipping earthquake service initialization');
+      // console.log('Database connection not ready, skipping earthquake service initialization');
       return false;
     }
     
     // Schedule regular updates
     // scheduleEarthquakeDataUpdates();
     fetchEarthquakeData();
-    console.log('Earthquake service initialized successfully');
+    // console.log('Earthquake service initialized successfully');
     return true;
   } catch (error) {
-    console.error('Error initializing earthquake service:', error);
+    // console.error('Error initializing earthquake service:', error);
     return false;
   }
 }
@@ -69,7 +71,7 @@ async function shouldRefreshEarthquakeData() {
     }).sort({ 'metadata.timestamp': -1 });
     
     if (!latestEntry) {
-      console.log('No earthquake data found in database, refresh needed');
+      // console.log('No earthquake data found in database, refresh needed');
       return true;
     }
     
@@ -78,14 +80,14 @@ async function shouldRefreshEarthquakeData() {
     
     // Check if more than 24 hours have passed
     if (currentTime - lastUpdateTime > REFRESH_THRESHOLD_MS) {
-      console.log('Earthquake data is older than 24 hours, refresh needed');
+      // console.log('Earthquake data is older than 24 hours, refresh needed');
       return true;
     }
     
-    console.log('Using existing earthquake data from database (less than 24 hours old)');
+    // console.log('Using existing earthquake data from database (less than 24 hours old)');
     return false;
   } catch (error) {
-    console.error('Error checking earthquake data refresh status:', error);
+    // console.error('Error checking earthquake data refresh status:', error);
     return true; // Refresh on error to be safe
   }
 }
@@ -103,7 +105,7 @@ async function fetchEarthquakeData(minMagnitude = 2.5) {
       return await getStoredEarthquakeEvents();
     }
     
-    console.log('Fetching earthquake data from USGS API...');
+    // console.log('Fetching earthquake data from USGS API...');
     
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - REFRESH_THRESHOLD_MS);
@@ -123,13 +125,13 @@ async function fetchEarthquakeData(minMagnitude = 2.5) {
     });
     
     const data = response.data;
-    console.log("data",data);
+    // console.log("data",data);
     if (!data || !data.features || data.features.length === 0) {
-      console.log('No earthquake data found in USGS API response');
+      // console.log('No earthquake data found in USGS API response');
       return [];
     }
     
-    console.log(`Found ${data.features.length} earthquakes from USGS API`);
+    // console.log(`Found ${data.features.length} earthquakes from USGS API`);
     
     // Process earthquake events
     const processedEvents = data.features.map(feature => {
@@ -169,9 +171,9 @@ async function fetchEarthquakeData(minMagnitude = 2.5) {
     
     return processedEvents;
   } catch (error) {
-    console.error('Error fetching earthquake data:', error.message);
+    // console.error('Error fetching earthquake data:', error.message);
     if (error.response) {
-      console.error('Response status:', error.response.status);
+      // console.error('Response status:', error.response.status);
     }
     
     // Try to return existing data if available
@@ -203,11 +205,11 @@ async function storeEarthquakeCollection(events, timeRange, minMagnitude) {
     });
     
     await earthquakeCollection.save();
-    console.log(`Stored collection of ${events.length} earthquakes in database`);
+    // console.log(`Stored collection of ${events.length} earthquakes in database`);
     
     return earthquakeCollection;
   } catch (error) {
-    console.error('Error storing earthquake collection:', error.message);
+    // console.error('Error storing earthquake collection:', error.message);
     return null;
   }
 }
@@ -223,13 +225,13 @@ async function getStoredEarthquakeEvents() {
     }).sort({ 'metadata.timestamp': -1 });
     
     if (!latestCollection || !latestCollection.metadata || !latestCollection.metadata.events) {
-      console.log('No earthquake events found in database');
+      // console.log('No earthquake events found in database');
       return [];
     }
     
     return latestCollection.metadata.events;
   } catch (error) {
-    console.error('Error getting stored earthquake events:', error.message);
+    // console.error('Error getting stored earthquake events:', error.message);
     return [];
   }
 }
@@ -241,7 +243,7 @@ async function getUserEarthquakeData(userId, maxDistanceKm = 500) {
   try {
     // Ensure database connection
     if (mongoose.connection.readyState !== 1) {
-      console.log('Database connection not ready');
+      // console.log('Database connection not ready');
       return { events: [] };
     }
     
@@ -250,7 +252,7 @@ async function getUserEarthquakeData(userId, maxDistanceKm = 500) {
     const user = await User.findById(userId);
     
     if (!user || !user.location) {
-      console.log(`User ${userId} not found or has no location data`);
+      // console.log(`User ${userId} not found or has no location data`);
       return { events: [] };
     }
     
@@ -258,7 +260,7 @@ async function getUserEarthquakeData(userId, maxDistanceKm = 500) {
     const earthquakeEvents = await fetchEarthquakeData();
     
     if (!earthquakeEvents || earthquakeEvents.length === 0) {
-      console.log('No earthquake events available');
+      // console.log('No earthquake events available');
       return { events: [] };
     }
     
@@ -288,6 +290,49 @@ async function getUserEarthquakeData(userId, maxDistanceKm = 500) {
       return a.distance - b.distance;
     });
     
+    // Add where relevant earthquake events are processed
+    // This would typically be after filtering and sorting events
+    for (const event of relevantEvents) {
+      // Create alert entry for each relevant earthquake
+      const newAlert = new Alert({
+        type: 'Earthquake',
+        severity: event.magnitude >= 7 ? 'error' : 
+                 event.magnitude >= 5 ? 'warning' : 'info',
+        location: event.location.name || `${event.location.latitude}, ${event.location.longitude}`,
+        timestamp: new Date(event.time),
+        hazardId: event._id || new mongoose.Types.ObjectId(),
+        hazardModel: 'Earthquake',
+        coordinates: {
+          latitude: event.location.latitude,
+          longitude: event.location.longitude
+        },
+        details: `Magnitude: ${event.magnitude}, Depth: ${event.depth}km, Distance: ${event.distance}km`,
+        isActive: true
+      });
+      
+      await newAlert.save();
+      
+      // Create notification entry
+      const newNotification = new Notification({
+        notificationId: Math.random().toString(36).substr(2, 6).toUpperCase(),
+        alertId: newAlert._id,
+        hazardId: newAlert.hazardId,
+        hazardModel: 'Earthquake',
+        type: 'Earthquake',
+        severity: newAlert.severity,
+        location: newAlert.location,
+        magnitude: event.magnitude,
+        impactRadius: event.magnitude * 10, // Simple calculation based on magnitude
+        sentAt: new Date(),
+        status: 'Sent',
+        message: `Earthquake alert: Magnitude ${event.magnitude} earthquake detected ${event.distance}km from your location`,
+        // Recipients would be determined based on your app's logic
+        recipients: [user._id] // Since this is in the context of a specific user
+      });
+      
+      await newNotification.save();
+    }
+    
     return {
       location: {
         latitude: user.location.latitude,
@@ -296,7 +341,7 @@ async function getUserEarthquakeData(userId, maxDistanceKm = 500) {
       events: relevantEvents
     };
   } catch (error) {
-    console.error('Error getting user earthquake data:', error.message);
+    // console.error('Error getting user earthquake data:', error.message);
     return { events: [] };
   }
 }
@@ -327,10 +372,10 @@ function scheduleEarthquakeDataUpdates() {
   // Fetch earthquake data once a day
   cron.schedule('0 0 * * *', async () => {
     try {
-      console.log('Running scheduled earthquake data update');
+      // console.log('Running scheduled earthquake data update');
       await fetchEarthquakeData();
     } catch (error) {
-      console.error('Error in scheduled earthquake data update:', error);
+      // console.error('Error in scheduled earthquake data update:', error);
     }
   });
 }

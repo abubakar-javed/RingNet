@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { 
   Box, Card, CardContent, Typography, Divider, Alert, 
-  CircularProgress, Chip, Paper, Grid 
+   Chip, Paper, Grid 
 } from '@mui/material';
 import WaterIcon from '@mui/icons-material/Water';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -10,7 +10,6 @@ import InfoIcon from '@mui/icons-material/Info';
 import WavesIcon from '@mui/icons-material/Waves';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import { alpha } from '@mui/material/styles';
-import { fetchUserFloodData } from '../../../services/floodService';
 
 interface FloodAlert {
   date: string;
@@ -28,34 +27,11 @@ interface FloodData {
   alerts: FloodAlert[];
 }
 
-const FloodCard: React.FC = () => {
-  const [floodData, setFloodData] = useState<FloodData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+interface FloodCardProps {
+  floodData: FloodData | null;
+}
 
-  useEffect(() => {
-    const getFloodData = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchUserFloodData();
-        console.log("floodData",data);
-        setFloodData(data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching flood data:', err);
-        setError('Failed to load flood data');
-        setFloodData({ location: { latitude: 0, longitude: 0 }, clusterId: '', alerts: [] });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getFloodData();
-    // Refresh data every 30 minutes
-    const intervalId = setInterval(getFloodData, 30 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+const FloodCard: React.FC<FloodCardProps> = ({ floodData }) => {
 
   const getSeverityColor = (severity: string): string => {
     switch (severity.toLowerCase()) {
@@ -96,27 +72,6 @@ const FloodCard: React.FC = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <Card elevation={3} sx={{ minWidth: 275, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <CircularProgress />
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card elevation={3} sx={{ minWidth: 275, height: '100%' }}>
-        <CardContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // No flood data available
   if (!floodData || !floodData.alerts || floodData.alerts.length === 0) {
     return (
       <Card elevation={3} sx={{ minWidth: 275, height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -227,7 +182,7 @@ const FloodCard: React.FC = () => {
             highestSeverity.toLowerCase() === 'severe' ? alpha(theme.palette.error.main, 0.1) :
             highestSeverity.toLowerCase() === 'high' ? alpha(theme.palette.warning.main, 0.1) :
             alpha(theme.palette.primary.main, 0.1),
-          zIndex: 0
+          zIndex: -1
         }} 
       />
       
@@ -239,7 +194,7 @@ const FloodCard: React.FC = () => {
           </Typography>
         </Box>
         
-        <Alert 
+        {/* <Alert 
           severity={
             highestSeverity.toLowerCase() === 'severe' ? 'error' : 
             highestSeverity.toLowerCase() === 'high' ? 'warning' : 
@@ -248,7 +203,7 @@ const FloodCard: React.FC = () => {
           sx={{ mb: 2 }}
         >
           {sortedAlerts[0].message}
-        </Alert>
+        </Alert> */}
         
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           The following dates may experience high river discharge levels in your area.

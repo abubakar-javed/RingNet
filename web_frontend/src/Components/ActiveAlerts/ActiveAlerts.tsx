@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Box,
   Paper,
@@ -21,35 +22,57 @@ import {
 
 // Referencing the alert interface from RecentAlerts
 interface Alert {
-  id: string;
-  type: 'Earthquake' | 'Tsunami' | 'Flood' | 'Heatwave';
-  severity: 'high' | 'medium' | 'low';
+  type: string;
+  severity: string;
   location: string;
   timestamp: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
   details: string;
+  distance?: number;
 }
 
 const ActiveAlerts = () => {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const alerts: Alert[] = [
-    {
-      id: '1',
-      type: 'Earthquake',
-      severity: 'high',
-      location: 'Nepal, Kathmandu',
-      timestamp: '2024-03-15T08:30:00Z',
-      details: 'Magnitude 6.2 earthquake detected'
-    },
-    {
-      id: '2',
-      type: 'Tsunami',
-      severity: 'high',
-      location: 'Indonesia, Jakarta',
-      timestamp: '2024-03-14T15:45:00Z',
-      details: 'Potential tsunami threat detected'
-    }
-  ];
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/alerts/user-alerts`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        setAlerts(response.data.alerts);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching alerts:', err);
+        setError('Failed to load alerts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlerts();
+    
+    // Optional: Set up polling to refresh alerts every few minutes
+    const intervalId = setInterval(fetchAlerts, 5 * 60 * 1000); // 5 minutes
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
+  if (loading) return <div>Loading active alerts...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (alerts.length === 0) return <div>No active alerts in your area</div>;
 
   const getAlertIcon = (type: string) => {
     switch (type) {
@@ -105,8 +128,8 @@ const ActiveAlerts = () => {
         </Box>
 
         <Grid container spacing={2}>
-          {alerts.map((alert) => (
-            <Grid item xs={12} key={alert.id}>
+          {alerts.map((alert, index) => (
+            <Grid item xs={12} key={index}>
               <Paper
                 elevation={0}
                 sx={{

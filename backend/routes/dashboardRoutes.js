@@ -72,7 +72,7 @@ router.get('/stats', auth, async (req, res) => {
       
       stats.earthquakes = nearbyEarthquakes.length;
     }
-    console.log("earthquake collection",earthquakeCollection);
+    // console.log("earthquake collection",earthquakeCollection);
     // 2. Get tsunami stats
     const tsunamiCollection = await Tsunami.findOne({
       'metadata.type': 'tsunami_collection'
@@ -93,7 +93,7 @@ router.get('/stats', auth, async (req, res) => {
       
       stats.tsunamis = nearbyTsunamis.length;
     }
-    console.log("tsunami collection",tsunamiCollection);
+    // console.log("tsunami collection",tsunamiCollection);
     // 3. Get flood stats - corrected implementation
     // First find the user's flood cluster
     const userFloodCluster = await Flood.findOne({
@@ -122,22 +122,22 @@ router.get('/stats', auth, async (req, res) => {
           // If we have recent alert info and hasAlert is true, use the alert count from there
           if (isAlertRecent && latestFloodData.metadata.alertInfo.hasAlert) {
             stats.floods = latestFloodData.metadata.alertInfo.alertDays.length;
-            console.log(`Found ${stats.floods} flood alerts in alert info for user ${userId}`);
+            // console.log(`Found ${stats.floods} flood alerts in alert info for user ${userId}`);
           } 
           // If we have recent alert info but hasAlert is false, set floods to 0
           else if (isAlertRecent && !latestFloodData.metadata.alertInfo.hasAlert) {
             stats.floods = 0;
-            console.log(`No flood alerts in alert info for user ${userId}`);
+            // console.log(`No flood alerts in alert info for user ${userId}`);
           }
           // If alert info is outdated, fall back to calculating from daily data
           else {
-            console.log(`Alert info is outdated for user ${userId}, calculating from daily data`);
+            // console.log(`Alert info is outdated for user ${userId}, calculating from daily data`);
             calculateFromDailyData();
           }
         } 
         // If no alert info, fall back to calculating from daily data
         else {
-          console.log(`No alert info found for user ${userId}, calculating from daily data`);
+          // console.log(`No alert info found for user ${userId}, calculating from daily data`);
           calculateFromDailyData();
         }
         
@@ -190,25 +190,25 @@ router.get('/stats', auth, async (req, res) => {
         }
       }
     }
-    console.log("user flood cluster", userFloodCluster);
-    console.log("flood alerts count:", stats.floods);
+    // console.log("user flood cluster", userFloodCluster);
+    // console.log("flood alerts count:", stats.floods);
     // 4. Get heatwave stats
     const userWeather = await Weather.findOne({
       'metadata.userIds': userId
     }).sort({ timestamp: -1 });
 
     if (userWeather) {
-      console.log("user weather", userWeather);
+      // console.log("user weather", userWeather);
       
       // Check if there's a heatwave alert flag
       if (userWeather.metadata && userWeather.metadata.heatwaveAlert) {
         stats.heatwaves = 1;
-        console.log("Heatwave alert flag is set to true");
+        // console.log("Heatwave alert flag is set to true");
       } 
       // If no flag, check current temperature
       else if (userWeather.temperature > 35) {
         stats.heatwaves = 1;
-        console.log("Heatwave alert: Current temperature is above 35°C");
+        // console.log("Heatwave alert: Current temperature is above 35°C");
       } 
       // If still no alert, check forecast days
       else if (userWeather.metadata && userWeather.metadata.forecast) {
@@ -218,18 +218,18 @@ router.get('/stats', auth, async (req, res) => {
         
         if (heatwaveDays > 0) {
           stats.heatwaves = heatwaveDays;
-          console.log(`Heatwave alert: ${heatwaveDays} days with temperature above 35°C in forecast`);
+          // console.log(`Heatwave alert: ${heatwaveDays} days with temperature above 35°C in forecast`);
         }
       }
     }
-    console.log("stats",stats);
+    // console.log("stats",stats);
     res.json({
       stats,
       location: userLocation
     });
     
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+    // console.error('Error fetching dashboard stats:', error);
     res.status(500).json({ message: 'Error fetching dashboard stats' });
   }
 });

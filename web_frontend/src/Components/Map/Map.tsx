@@ -8,6 +8,7 @@ import {
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
 } from '@mui/icons-material';
+import axios from 'axios';
 
 // Set the access token from environment variable
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
@@ -20,33 +21,75 @@ interface Hazard {
   details: string;
 }
 
+interface Alert {
+  _id: string;
+  type: string;
+  severity: string;
+  location: string;
+  timestamp: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  details: string;
+}
+
+// Convert Alert to Hazard format
+const alertToHazard = (alert: Alert): Hazard => ({
+  id: alert._id,
+  type: alert.type as 'Earthquake' | 'Tsunami' | 'Flood' | 'Heatwave',
+  severity: alert.severity as 'high' | 'medium' | 'low',
+  location: [alert.coordinates.longitude, alert.coordinates.latitude],
+  details: alert.details
+});
+
 const Map = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [hazards, setHazards] = useState<Hazard[]>([]);
 
-  // Mock hazard data
-  const hazards: Hazard[] = [
-    {
-      id: '1',
-      type: 'Earthquake',
-      location: [85.3240, 27.7172], // Kathmandu
-      severity: 'high',
-      details: 'Magnitude 6.2'
-    },
-    {
-      id: '2',
-      type: 'Flood',
-      location: [90.4125, 23.8103], // Dhaka
-      severity: 'medium',
-      details: 'River level rising'
-    }
-  ];
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await axios.get('/api/alerts/user-alerts');
+        
+        // Convert alerts to hazards format
+        const alertHazards = response.data.alerts?.map(alertToHazard);
+        console.log("alertHazards",alertHazards);
+        setHazards(alertHazards);
+      } catch (error) {
+        console.error('Error fetching alerts for map:', error);
+      }
+    };
+
+    fetchAlerts();
+    // Add hazard markers
+    hazards.forEach(hazard => {
+      const el = document.createElement('div');
+      el.className = 'hazard-marker';
+      el.style.backgroundColor = hazard.severity === 'high' ? '#ef4444' : 
+                                hazard.severity === 'medium' ? '#f59e0b' : '#3b82f6';
+      el.style.width = '20px';
+      el.style.height = '20px';
+      el.style.borderRadius = '50%';
+      el.style.border = '2px solid white';
+      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+
+      new mapboxgl.Marker(el)
+        .setLngLat(hazard.location)
+        .setPopup(new mapboxgl.Popup().setHTML(`
+          <h3>${hazard.type}</h3>
+          <p>${hazard.details}</p>
+        `))
+        .addTo(map.current!);
+    });
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Initialize map
+    // Initialize map centered on Islamabad
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -75,26 +118,7 @@ const Map = () => {
       );
     }
 
-    // Add hazard markers
-    hazards.forEach(hazard => {
-      const el = document.createElement('div');
-      el.className = 'hazard-marker';
-      el.style.backgroundColor = hazard.severity === 'high' ? '#ef4444' : 
-                                hazard.severity === 'medium' ? '#f59e0b' : '#3b82f6';
-      el.style.width = '20px';
-      el.style.height = '20px';
-      el.style.borderRadius = '50%';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-
-      new mapboxgl.Marker(el)
-        .setLngLat(hazard.location)
-        .setPopup(new mapboxgl.Popup().setHTML(`
-          <h3>${hazard.type}</h3>
-          <p>${hazard.details}</p>
-        `))
-        .addTo(map.current!);
-    });
+    
 
     // Cleanup
     return () => {

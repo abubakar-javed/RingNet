@@ -1,10 +1,5 @@
 import { Box, Typography, Grid, Paper, Chip } from '@mui/material';
 
-interface RegionalStat {
-  label: string;
-  value: string;
-  trend: string;
-}
 
 interface EmergencyContact {
   dept: string;
@@ -13,21 +8,17 @@ interface EmergencyContact {
 }
 
 const RegionalStats = () => {
-  const stats: RegionalStat[] = [
-    { label: 'Active Monitoring Stations', value: '156', trend: '+12%' },
-    { label: 'Average Temperature', value: '32°C', trend: '+2.3°C' },
-    { label: 'Seismic Events (24h)', value: '23', trend: '-5%' }
-  ];
 
   const emergencyContacts: EmergencyContact[] = [
-    { dept: 'Emergency Response', contact: '+1-800-123-4567', status: 'Available' },
-    { dept: 'Weather Bureau', contact: '+1-800-765-4321', status: 'Busy' },
-    { dept: 'Disaster Management', contact: '+1-800-987-6543', status: 'Available' }
+    { dept: 'Rescue 1122', contact: '1122', status: 'Available' },
+    { dept: 'PMD Islamabad', contact: '051-9250360', status: 'Available' },
+    { dept: 'NDMA Control Room', contact: '051-111-157-157', status: 'Available' },
+    { dept: 'ICT Police', contact: '15', status: 'Available' }
   ];
 
   return (
     <Grid container spacing={2} mb={3}>
-      <Grid item xs={12} md={6}>
+      {/* <Grid item xs={12} md={6}>
         <Paper 
           elevation={0}
           sx={{ 
@@ -74,9 +65,9 @@ const RegionalStats = () => {
             ))}
           </Box>
         </Paper>
-      </Grid>
+      </Grid> */}
 
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={12}>
         <Paper 
           elevation={0}
           sx={{ 

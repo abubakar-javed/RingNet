@@ -6,70 +6,32 @@ import axios from "axios";
 // import { RootState } from "../State/store";
 import Layout from "../Components/Layout/Layout";
 import StatsCards from "../Components/Dashboard/StatsCards/StatsCards";
-import HazardForecast from "../Components/Dashboard/HazardForecast/HazardForecast";
 import RecentAlerts from "../Components/Dashboard/RecentAlerts/RecentAlerts";
-import WeatherWarnings from "../Components/Dashboard/WeatherWarnings/WeatherWarnings";
 import RegionalStats from "../Components/Dashboard/RegionalStats/RegionalStats";
 import WeatherCard from '../Components/Dashboard/WeatherCard/WeatherCard';
 import FloodCard from '../Components/Dashboard/FloodCard/FloodCard';
 import TsunamiWidget from "../Components/Dashboard/TsunamiWidget/TsunamiWidget";
+import { fetchUserFloodData } from "../services/floodService";
 
 
 
-interface WeatherAlert {
-  severity: string;
-  start: string;
-}
 
 
 
 const DashboardPage = () => {
   const [weatherData, setWeatherData] = useState(null);
-  const [hazardStats, setHazardStats] = useState({
-    earthquakes: 0,
-    tsunamis: 0,
-    floods: 0,
-    heatwaves: 0,
-    recentAlerts: []
-  });
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const token = useSelector((state: RootState) => state.auth.token);
-  // useEffect(() => {
-  //   const fetchHazardStats = async () => {
-  //     try {
-  //       // Simulate API delay
-  //       await new Promise(resolve => setTimeout(resolve, 1000));
-  //       setHazardStats(MOCK_HAZARD_STATS);
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Failed to fetch hazard data", error);
-  //       setError("Failed to load hazard statistics");
-  //       setLoading(false);
-  //     }
-  //   };
+  const [userAlerts, setUserAlerts] = useState([]);
+  const [floodData, setFloodData] = useState<any>(null);
 
-  //   fetchHazardStats();
-  // }, []);
+ 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const weatherData = await fetchUserWeather();
-        
-        // Update hazard stats based on user's local weather
-        setHazardStats({
-          earthquakes: 1,
-          tsunamis: 0,
-          floods: 2,
-          heatwaves: weatherData.temperature > 35 ? 1 : 0,
-          recentAlerts: weatherData.alerts?.map((alert: WeatherAlert) => ({
-            type: 'Weather',
-            severity: alert.severity,
-            location: weatherData.location.placeName,
-            timestamp: alert.start
-          })) || []
-        });
         console.log("weatherData",weatherData);
         setWeatherData(weatherData);
         setLoading(false);
@@ -82,9 +44,62 @@ const DashboardPage = () => {
 
     fetchData();
     // Set up periodic refresh if needed
-    const interval = setInterval(fetchData, 300000); // Refresh every 5 minutes
+    const interval = setInterval(fetchData, 30 * 60 * 1000); // Refresh every 5 minutes
     return () => clearInterval(interval);
   }, []);
+  useEffect(() => {
+    const getFloodData = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchUserFloodData();
+        console.log("floodData",data);
+        setFloodData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching flood data:', err);
+        setError('Failed to load flood data');
+        setFloodData({ location: { latitude: 0, longitude: 0 }, clusterId: '', alerts: [] });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getFloodData();
+    // Refresh data every 30 minutes
+    const intervalId = setInterval(getFloodData, 30 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+
+  useEffect(() => {
+    const fetchUserAlerts = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/alerts/user-alerts`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log("here are recent alerts",response.data);
+        setUserAlerts(response.data.alerts);
+      } catch (error) {
+        console.error('Error fetching alerts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (weatherData && floodData) {
+      fetchUserAlerts();
+    }
+  }, [weatherData, floodData]);
+
+ 
+
 
   if (loading) {
     return (
@@ -109,11 +124,14 @@ const DashboardPage = () => {
       <Box sx={{ width: '100%', p: 3 }}>
         <StatsCards  />
         {weatherData && <WeatherCard weatherData={weatherData} />}
-        <FloodCard />
+        {floodData && <FloodCard floodData={floodData} />}
         <TsunamiWidget />
-        <HazardForecast />
-        <RecentAlerts alerts={hazardStats?.recentAlerts || []} />
-        <WeatherWarnings />
+        {/* <HazardForecast /> */}
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <RecentAlerts alerts={userAlerts} />
+        )}
         <RegionalStats />
       </Box>
     </Layout>
@@ -129,12 +147,41 @@ async function fetchUserWeather() {
     throw new Error('Not authenticated');
   }
 
-  const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/weather/user-weather`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-  return response.data;
+  // Get current user location from browser
+  const getCurrentPosition = () => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
+  };
+
+  try {
+    const position = await getCurrentPosition() as GeolocationPosition;
+    const currentLocation = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
+    };
+    console.log('currentLocation', currentLocation);
+
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/weather/user-weather`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      params: {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude
+      }
+    });
+    return response.data;
+  } catch (geoError) {
+    console.log("Could not get current location:", geoError);
+    // Fall back to API call without location
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/weather/user-weather`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  }
 }
 
 export default DashboardPage;
