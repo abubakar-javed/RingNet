@@ -9,14 +9,41 @@ export const fetchUserFloodData = async () => {
     if (!token) {
       throw new Error('Authentication required');
     }
-    console.log(`${API_BASE_URL}/api/flood/user/floods`);
-    const response = await axios.get(`${API_BASE_URL}/api/flood/user/floods`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    console.log("response",response.data);
-    return response.data;
+
+    // Get current user location from browser
+    const getCurrentPosition = () => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+    };
+
+    try {
+      const position = await getCurrentPosition() as GeolocationPosition;
+      const currentLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+      console.log('currentLocation', currentLocation);
+      const response = await axios.get(`${API_BASE_URL}/api/flood/user/floods`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        params: {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude
+        }
+      });
+      return response.data;
+    } catch (geoError) {
+      console.log("Could not get current location:", geoError);
+      // Fall back to API call without location
+      const response = await axios.get(`${API_BASE_URL}/api/flood/user/floods`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    }
   } catch (error) {
     console.error('Error fetching user flood data:', error);
     throw error;

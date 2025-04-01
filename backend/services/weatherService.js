@@ -10,31 +10,6 @@ require('dotenv').config();
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || 'eed41bad5cf0d45290152944586af33c';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://ajavedbese21seecs:abubakar1243@cluster0.xjdvgvy.mongodb.net/ringNet';
 
-// Connect to MongoDB with better error handling
-const connectDB = async () => {
-  try {
-    console.log("weather key",process.env.OPENWEATHER_API_KEY);
-    console.log('Attempting to connect to MongoDB...');
-    console.log('Using connection string:', process.env.MONGO_URI);
-    
-    await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Reduce the timeout to 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-    });
-    
-    console.log('MongoDB connected successfully');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    
-    // More specific error handling
-    if (error.code === 'ECONNREFUSED') {
-      console.error('Make sure MongoDB is running on your machine');
-    }
-    
-    process.exit(1);
-  }
-};
-
 const CLUSTER_RADIUS = 10;
 
 // Convert degrees to radians
@@ -114,11 +89,17 @@ async function fetchAndStoreWeatherData() {
   try {
     // Ensure DB connection before proceeding
     if (mongoose.connection.readyState !== 1) {
-      await connectDB();
+      console.log('Database connection not ready, skipping initialization');
+      return false;
     }
 
+    // First, delete all existing weather data
+    console.log('Deleting all previous weather data...');
+    await WeatherData.deleteMany({});
+    console.log('Previous weather data deleted successfully');
+
     // Get all user locations from database
-    const users = await User.find({}, 'location _id'); // Add _id to get user IDs
+    const users = await User.find({}, 'location _id'); 
     
     if (!users || users.length === 0) {
       console.log('No users found in the database');
@@ -131,12 +112,12 @@ async function fetchAndStoreWeatherData() {
     const userLocationsWithIds = users.map(user => ({
       latitude: user.location.latitude,
       longitude: user.location.longitude,
-      userId: user._id.toString() // Include user ID
+      userId: user._id.toString()
     }));
     
     // Cluster the locations
     const clusters = clusterLocations(userLocationsWithIds);
-    console.log(`Created ${clusters.length} clusters`);
+    console.log(`Created ${clusters.length} fresh clusters`);
     
     // Fetch weather data for each cluster center
     for (const cluster of clusters) {
@@ -189,44 +170,6 @@ async function fetchAndStoreWeatherData() {
             existingDay.isHeatwave = item.main.temp > 35;
           }
         }
-
-        // Add near where the heatwave condition is checked
-        if (item.main.temp > 35) {
-          // Create alert entry
-          const newAlert = new Alert({
-            type: 'Heatwave',
-            severity: item.main.temp > 40 ? 'error' : item.main.temp > 37 ? 'warning' : 'info',
-            location: `${item.name}, ${item.sys.country}`,
-            timestamp: new Date(),
-            hazardId: new mongoose.Types.ObjectId(), // Generate a new ID if no specific hazard record exists
-            hazardModel: 'Heatwave',
-            coordinates: {
-              latitude: item.coord.lat,
-              longitude: item.coord.lon
-            },
-            details: `Temperature: ${item.main.temp}°C, Humidity: ${item.main.humidity}%`
-          });
-          
-          await newAlert.save();
-          
-          // Create notification entry
-          const newNotification = new Notification({
-            notificationId: Math.random().toString(36).substr(2, 6).toUpperCase(),
-            alertId: newAlert._id,
-            hazardId: newAlert.hazardId,
-            hazardModel: 'Heatwave',
-            type: 'Heatwave',
-            severity: newAlert.severity,
-            location: newAlert.location,
-            sentAt: new Date(),
-            status: 'Sent',
-            message: `Heatwave alert: ${item.main.temp}°C detected in ${item.name}, ${item.sys.country}`,
-            // Recipients would be determined based on your app's logic
-            // recipients: [...affected users...]
-          });
-          
-          await newNotification.save();
-        }
       }
 
       // Then include this forecast data in the WeatherData model
@@ -254,16 +197,21 @@ async function fetchAndStoreWeatherData() {
       });
 
       await weatherData.save();
-      console.log(`Weather data stored for ${placeName} (Cluster ID: ${cluster.id}) with ${userIds.length} user IDs`);
+      
+      // Now process alerts for each user in the cluster using the same function we use in the user flow
+      // This keeps the alert creation consistent between cron job and user requests
+      for (const userId of userIds) {
+        await processUserWeatherAlerts(userId, weatherData);
+      }
     }
   } catch (error) {
-    console.error('Error fetching weather data:', error);
+    // console.error('Error fetching weather data:', error);
   } finally {
     // If you're running this as a standalone script (not part of the main app),
     // you might want to close the connection after you're done
     if (process.env.NODE_ENV !== 'production') {
       await mongoose.connection.close();
-      console.log('Database connection closed');
+      // console.log('Database connection closed');
     }
   }
 }
@@ -329,7 +277,7 @@ async function findUserCluster(userLocation, userId) {
       
       // If user is not already in the cluster, add them
       if (!userAlreadyInCluster) {
-        console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
+        // console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
         
         // Create a new weather data entry with updated userIds array
         const updatedWeatherData = new WeatherData({
@@ -439,10 +387,10 @@ async function createNewClusterForUser(userLocation, userId) {
     });
 
     await weatherData.save();
-    console.log(`Created new weather data for user ${userId} with forecast data`);
+    // console.log(`Created new weather data for user ${userId} with forecast data`);
     return weatherData;
   } catch (error) {
-    console.error('Error creating new cluster:', error);
+    // console.error('Error creating new cluster:', error);
     throw error;
   }
 }
@@ -458,9 +406,6 @@ async function getUserWeather(userId, updatedLocation = null) {
     
     // If location is provided from frontend, update it
     if (updatedLocation) {
-      console.log(`Updating location for user ${userId} from ${JSON.stringify(user.location)} to ${JSON.stringify(updatedLocation)}`);
-      
-      // Update user's location in the database
       user.location = updatedLocation;
       await user.save();
     }
@@ -477,6 +422,8 @@ async function getUserWeather(userId, updatedLocation = null) {
     });
     
     // Look for a cluster that includes this location
+    let weatherData = null;
+    
     for (const cluster of recentClusters) {
       const distance = getDistanceInKm(
         user.location.latitude,
@@ -487,8 +434,6 @@ async function getUserWeather(userId, updatedLocation = null) {
       
       // If user is within cluster radius and data is recent
       if (distance <= CLUSTER_RADIUS) {
-        console.log(`Found existing cluster ${cluster.clusterId} for user ${userId} within ${distance.toFixed(2)}km`);
-        
         // Check if user is already in this cluster
         const userInCluster = cluster.metadata && 
                              cluster.metadata.userIds && 
@@ -497,7 +442,7 @@ async function getUserWeather(userId, updatedLocation = null) {
         
         // If user isn't in cluster yet, add them
         if (!userInCluster) {
-          console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
+          // console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
           
           // Create updated record with user added to cluster
           const updatedWeatherData = new WeatherData({
@@ -520,20 +465,112 @@ async function getUserWeather(userId, updatedLocation = null) {
           });
           
           await updatedWeatherData.save();
-          return updatedWeatherData;
+          weatherData = updatedWeatherData;
+          break;
         }
         
-        return cluster;
+        weatherData = cluster;
+        break;
       }
     }
     
     // If no suitable cluster found, create a new one for this user
-    console.log(`No suitable cluster found for user ${userId}, creating new one`);
-    return await createNewClusterForUser(user.location, userId);
+    if (!weatherData) {
+      weatherData = await createNewClusterForUser(user.location, userId);
+    }
+    
+    // Process user-specific weather alerts
+    await processUserWeatherAlerts(userId, weatherData);
+    
+    return weatherData;
     
   } catch (error) {
     console.error('Error getting user weather:', error);
     throw error;
+  }
+}
+
+// New helper function to process user-specific weather alerts
+async function processUserWeatherAlerts(userId, weatherData) {
+  try {
+    if (!weatherData || !weatherData.metadata) {
+      return;
+    }
+    
+    // Check for heatwave conditions
+    const isHeatwave = weatherData.metadata.heatwaveAlert === true || weatherData.temperature > 35;
+    
+    if (isHeatwave) {
+      // Get user details
+      const user = await User.findById(userId);
+      if (!user) {
+        console.log(`User ${userId} not found, cannot process weather alerts`);
+        return;
+      }
+      
+      // Check if there's already a recent alert (within last 3 hours) for this user
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const recentAlert = await Alert.findOne({
+        type: 'Heatwave',
+        hazardModel: 'Heatwave',
+        'coordinates.latitude': { $gte: weatherData.location.latitude - 0.01, $lte: weatherData.location.latitude + 0.01 },
+        'coordinates.longitude': { $gte: weatherData.location.longitude - 0.01, $lte: weatherData.location.longitude + 0.01 },
+        timestamp: { $gte: threeHoursAgo },
+        // We need to also check if there's a notification linked to this alert for this specific user
+      });
+      
+      if (recentAlert) {
+        // Check if there's a notification for this alert that includes this user
+        const notification = await Notification.findOne({
+          alertId: recentAlert._id,
+          recipients: userId
+        });
+        
+        if (notification) {
+          console.log(`Skipping heatwave alert for user ${userId} - already notified within last 3 hours`);
+          return;
+        }
+      }
+      
+      // Create user-specific alert entry
+      const newAlert = new Alert({
+        type: 'Heatwave',
+        severity: weatherData.temperature > 40 ? 'error' : 
+                 weatherData.temperature > 37 ? 'warning' : 'info',
+        location: weatherData.location.placeName || `${weatherData.location.latitude}, ${weatherData.location.longitude}`,
+        timestamp: new Date(),
+        hazardId: new mongoose.Types.ObjectId(),
+        hazardModel: 'Heatwave',
+        coordinates: {
+          latitude: weatherData.location.latitude,
+          longitude: weatherData.location.longitude
+        },
+        details: `Temperature exceeds 35°C in upcoming days near your location`,
+        isActive: true
+      });
+      
+      await newAlert.save();
+      
+      // Create user-specific notification entry
+      const newNotification = new Notification({
+        notificationId: Math.random().toString(36).substr(2, 6).toUpperCase(),
+        alertId: newAlert._id,
+        hazardId: newAlert.hazardId,
+        hazardModel: 'Heatwave',
+        type: 'Heatwave',
+        severity: newAlert.severity,
+        location: newAlert.location,
+        sentAt: new Date(),
+        status: 'Sent',
+        message: `Temperature exceeds 35°C in upcoming days near your location`,
+        recipients: [userId] // Add the specific user
+      });
+      
+      await newNotification.save();
+      console.log(`Created user-specific heatwave alert and notification for user ${userId}`);
+    }
+  } catch (error) {
+    console.error(`Error processing weather alerts for user ${userId}:`, error);
   }
 }
 
