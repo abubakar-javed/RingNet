@@ -48,12 +48,10 @@ const Map = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [hazards, setHazards] = useState<Hazard[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        setLoading(true);
         const response = await axios.get('/api/alerts/user-alerts');
         
         // Convert alerts to hazards format
@@ -62,8 +60,6 @@ const Map = () => {
         setHazards(alertHazards);
       } catch (error) {
         console.error('Error fetching alerts for map:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
