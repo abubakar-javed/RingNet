@@ -1,70 +1,18 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
   TextField,
   MenuItem
 } from '@mui/material';
 import {
   Assessment as ReportsIcon,
-  Public as EarthquakeIcon,
-  Tsunami as TsunamiIcon,
-  WaterDrop as FloodIcon,
-  Thermostat as HeatwaveIcon
 } from '@mui/icons-material';
-
-interface HistoricalEvent {
-  id: string;
-  type: 'Earthquake' | 'Tsunami' | 'Flood' | 'Heatwave';
-  location: string;
-  date: string;
-  magnitude: string;
-  impact: 'High' | 'Medium' | 'Low';
-  details: string;
-}
 
 const HistoricalData = () => {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedYear, setSelectedYear] = useState('2024');
-
-  const historicalEvents: HistoricalEvent[] = [
-    {
-      id: '1',
-      type: 'Earthquake',
-      location: 'Nepal, Kathmandu',
-      date: '2024-01-15',
-      magnitude: '6.2',
-      impact: 'High',
-      details: 'Major seismic activity'
-    },
-    {
-      id: '2',
-      type: 'Tsunami',
-      location: 'Indonesia, Jakarta',
-      date: '2024-02-20',
-      magnitude: '5.0',
-      impact: 'Medium',
-      details: 'Coastal areas affected'
-    }
-  ];
-
-  const getEventIcon = (type: string) => {
-    switch (type) {
-      case 'Earthquake': return <EarthquakeIcon sx={{ color: '#cf1322' }} />;
-      case 'Tsunami': return <TsunamiIcon sx={{ color: '#d46b08' }} />;
-      case 'Flood': return <FloodIcon sx={{ color: '#096dd9' }} />;
-      case 'Heatwave': return <HeatwaveIcon sx={{ color: '#d46b08' }} />;
-      default: return null;
-    }
-  };
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
@@ -111,48 +59,18 @@ const HistoricalData = () => {
           </TextField>
         </Box>
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Type</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Magnitude</TableCell>
-                <TableCell>Impact</TableCell>
-                <TableCell>Details</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {historicalEvents.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {getEventIcon(event.type)}
-                      <Typography>{event.type}</Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{event.location}</TableCell>
-                  <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{event.magnitude}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={event.impact}
-                      size="small"
-                      sx={{
-                        bgcolor: event.impact === 'High' ? '#fef2f2' : 
-                                event.impact === 'Medium' ? '#fff7ed' : '#f0f9ff',
-                        color: event.impact === 'High' ? '#ef4444' : 
-                               event.impact === 'Medium' ? '#f59e0b' : '#3b82f6'
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>{event.details}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '200px'
+          }}
+        >
+          <Typography variant="body1" color="#64748b">
+            No historical data to show
+          </Typography>
+        </Box>
       </Paper>
     </Box>
   );

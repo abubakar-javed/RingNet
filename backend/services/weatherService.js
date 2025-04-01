@@ -249,66 +249,6 @@ async function getRecentClusterData(clusterId, limit = 24) {
     .limit(limit);
 }
 
-// Add these new utility functions
-
-// Function to find which cluster a user belongs to
-async function findUserCluster(userLocation, userId) {
-  // Get all weather data from last hour to get active clusters
-  const lastHour = new Date(Date.now() - 60 * 60 * 1000);
-  const recentClusters = await WeatherData.find({
-    timestamp: { $gte: lastHour }
-  });
-
-  // Check if user is within CLUSTER_RADIUS of any existing cluster
-  for (const cluster of recentClusters) {
-    const distance = getDistanceInKm(
-      userLocation.latitude,
-      userLocation.longitude,
-      cluster.location.latitude,
-      cluster.location.longitude
-    );
-
-    if (distance <= CLUSTER_RADIUS) {
-      // Check if this user is already in the cluster
-      const userAlreadyInCluster = cluster.metadata && 
-                                  cluster.metadata.userIds && 
-                                  Array.isArray(cluster.metadata.userIds) &&
-                                  cluster.metadata.userIds.includes(userId);
-      
-      // If user is not already in the cluster, add them
-      if (!userAlreadyInCluster) {
-        // console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
-        
-        // Create a new weather data entry with updated userIds array
-        const updatedWeatherData = new WeatherData({
-          clusterId: cluster.clusterId,
-          location: cluster.location,
-          userCount: (cluster.userCount || 1) + 1,
-          temperature: cluster.temperature,
-          feelsLike: cluster.feelsLike,
-          humidity: cluster.humidity,
-          windSpeed: cluster.windSpeed,
-          description: cluster.description,
-          alerts: cluster.alerts,
-          timestamp: new Date(),
-          metadata: {
-            ...cluster.metadata,
-            userIds: Array.isArray(cluster.metadata.userIds) 
-              ? [...cluster.metadata.userIds, userId] 
-              : [userId]
-          }
-        });
-        
-        await updatedWeatherData.save();
-        return updatedWeatherData;
-      }
-      
-      return cluster;
-    }
-  }
-
-  return null; // User doesn't belong to any existing cluster
-}
 
 // Function to create a new cluster for a single user and get its weather
 async function createNewClusterForUser(userLocation, userId) {
@@ -423,7 +363,6 @@ async function getUserWeather(userId, updatedLocation = null) {
     
     // Look for a cluster that includes this location
     let weatherData = null;
-    
     for (const cluster of recentClusters) {
       const distance = getDistanceInKm(
         user.location.latitude,

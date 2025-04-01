@@ -65,19 +65,19 @@ const StatsCards = () => {
       title: 'Earthquakes',
       value: stats.earthquakes,
       icon: <EarthquakeIcon />,
-      subtitle: 'Active seismic zones'
+      subtitle: 'Active seismic activites'
     },
     {
       title: 'Tsunamis',
       value: stats.tsunamis,
       icon: <TsunamiIcon />,
-      subtitle: 'Coastal warnings active'
+      subtitle: 'Coastal warnings'
     },
     {
       title: 'Floods',
       value: stats.floods,
       icon: <FloodIcon />,
-      subtitle: 'Regions affected'
+      subtitle: 'Flood Alerts'
     },
     {
       title: 'Heatwaves',

@@ -3,6 +3,8 @@ const xml2js = require('xml2js');
 const Tsunami = require('../models/tsunamiModel');
 const User = require('../models/userModel');
 const mongoose = require('mongoose');
+const Alert = require('../models/alertModel');
+const Notification = require('../models/notificationModel');
 require('dotenv').config();
 
 // GDACS API URL for tsunami data
@@ -42,7 +44,7 @@ async function parseGdacsXmlData(xmlData) {
     const result = await parser.parseStringPromise(xmlData);
     return result;
   } catch (error) {
-    console.error('Error parsing GDACS XML data:', error);
+    // console.error('Error parsing GDACS XML data:', error);
     throw error;
   }
 }
@@ -58,7 +60,7 @@ async function shouldRefreshTsunamiData() {
     }).sort({ 'metadata.timestamp': -1 });
     
     if (!latestEntry) {
-      console.log('No tsunami data found in database, refresh needed');
+      // console.log('No tsunami data found in database, refresh needed');
       return true;
     }
     
@@ -67,14 +69,14 @@ async function shouldRefreshTsunamiData() {
     
     // Check if more than 24 hours have passed
     if (currentTime - lastUpdateTime > REFRESH_THRESHOLD_MS) {
-      console.log('Tsunami data is older than 24 hours, refresh needed');
+      // console.log('Tsunami data is older than 24 hours, refresh needed');
       return true;
     }
     
-    console.log('Using existing tsunami data from database (less than 24 hours old)');
+    // console.log('Using existing tsunami data from database (less than 24 hours old)');
     return false;
   } catch (error) {
-    console.error('Error checking tsunami data refresh status:', error);
+    // console.error('Error checking tsunami data refresh status:', error);
     return true; // Refresh on error to be safe
   }
 }
@@ -92,7 +94,7 @@ async function fetchTsunamiData() {
       return await getStoredTsunamiEvents();
     }
     
-    console.log('Fetching tsunami data from GDACS API...');
+    // console.log('Fetching tsunami data from GDACS API...');
     
     // Make API request
     const response = await axios.get(GDACS_TSUNAMI_API_URL);
@@ -101,7 +103,7 @@ async function fetchTsunamiData() {
     const parsedData = await parseGdacsXmlData(response.data);
     
     if (!parsedData || !parsedData.rss || !parsedData.rss.channel || !parsedData.rss.channel.item) {
-      console.log('No tsunami data found in GDACS API response');
+      // console.log('No tsunami data found in GDACS API response');
       return [];
     }
     
@@ -110,13 +112,13 @@ async function fetchTsunamiData() {
       ? parsedData.rss.channel.item 
       : [parsedData.rss.channel.item];
     
-    console.log(`Found ${items.length} events from GDACS API`);
+    // console.log(`Found ${items.length} events from GDACS API`);
     // Filter for tsunami events only
     const tsunamiEvents = items.filter(item => 
       item.title && item.title.toLowerCase().includes('tsunami')
     );
     
-    console.log(`Found ${tsunamiEvents.length} tsunami events from GDACS API`);
+    // console.log(`Found ${tsunamiEvents.length} tsunami events from GDACS API`);
     
     // Process tsunami events
     const processedEvents = [];
@@ -175,6 +177,47 @@ async function fetchTsunamiData() {
         link: item.link || ''
       };
       
+      // Add after the severity and magnitude are determined
+      if (alertLevel !== 'UNKNOWN') {
+        // Create alert entry
+        const newAlert = new Alert({
+          type: 'Tsunami',
+          severity: alertLevel === 'RED' ? 'error' : alertLevel === 'ORANGE' ? 'warning' : 'info',
+          location: item.title || 'Ocean region',
+          timestamp: new Date(item.pubDate || Date.now()),
+          hazardId: new mongoose.Types.ObjectId(), // Or use a specific ID if available
+          hazardModel: 'Tsunami',
+          coordinates: {
+            latitude: latitude,
+            longitude: longitude
+          },
+          details: `Magnitude: ${magnitude}, Alert Level: ${alertLevel}`,
+          isActive: true
+        });
+        
+        await newAlert.save();
+        
+        // Create notification entry
+        const newNotification = new Notification({
+          notificationId: Math.random().toString(36).substr(2, 6).toUpperCase(),
+          alertId: newAlert._id,
+          hazardId: newAlert.hazardId,
+          hazardModel: 'Tsunami',
+          type: 'Tsunami',
+          severity: newAlert.severity,
+          location: newAlert.location,
+          magnitude: magnitude,
+          impactRadius: 100, // Default or calculate based on magnitude
+          sentAt: new Date(),
+          status: 'Sent',
+          message: `Tsunami alert: ${severity} risk tsunami detected near ${newAlert.location}`,
+          // Recipients would be determined based on your app's logic
+          // recipients: [...affected users...]
+        });
+        
+        await newNotification.save();
+      }
+      
       processedEvents.push(tsunamiEvent);
     }
     
@@ -183,9 +226,9 @@ async function fetchTsunamiData() {
     
     return processedEvents;
   } catch (error) {
-    console.error('Error fetching tsunami data:', error.message);
+    // console.error('Error fetching tsunami data:', error.message);
     if (error.response) {
-      console.error('Response status:', error.response.status);
+      // console.error('Response status:', error.response.status);
     }
     
     // Try to return existing data if available
@@ -220,11 +263,11 @@ async function storeTsunamiCollection(events) {
     });
     
     await tsunamiCollection.save();
-    console.log(`Stored collection of ${events.length} tsunami events in database`);
+    // console.log(`Stored collection of ${events.length} tsunami events in database`);
     
     return tsunamiCollection;
   } catch (error) {
-    console.error('Error storing tsunami collection:', error.message);
+    // console.error('Error storing tsunami collection:', error.message);
     return null;
   }
 }
@@ -240,13 +283,13 @@ async function getStoredTsunamiEvents() {
     }).sort({ 'metadata.timestamp': -1 });
     
     if (!latestCollection || !latestCollection.metadata || !latestCollection.metadata.events) {
-      console.log('No tsunami events found in database');
+      // console.log('No tsunami events found in database');
       return [];
     }
     
     return latestCollection.metadata.events;
   } catch (error) {
-    console.error('Error getting stored tsunami events:', error.message);
+    // console.error('Error getting stored tsunami events:', error.message);
     return [];
   }
 }
@@ -258,14 +301,14 @@ async function getUserTsunamiAlerts(userId) {
   try {
     // Ensure database connection
     if (mongoose.connection.readyState !== 1) {
-      console.log('Database connection not ready');
+      // console.log('Database connection not ready');
       return { alerts: [] };
     }
     
     // Get user data
     const user = await User.findById(userId);
     if (!user || !user.location) {
-      console.log(`User ${userId} not found or has no location data`);
+      // console.log(`User ${userId} not found or has no location data`);
       return { alerts: [] };
     }
     
@@ -273,11 +316,11 @@ async function getUserTsunamiAlerts(userId) {
     const tsunamiEvents = await fetchTsunamiData();
     
     if (!tsunamiEvents || tsunamiEvents.length === 0) {
-      console.log('No tsunami events available');
+      // console.log('No tsunami events available');
       return { alerts: [] };
     }
     
-    console.log(`Checking ${tsunamiEvents.length} tsunami events for user ${userId}`);
+    // console.log(`Checking ${tsunamiEvents.length} tsunami events for user ${userId}`);
     
     // Filter events that are relevant to the user's location
     const relevantAlerts = [];
@@ -296,7 +339,7 @@ async function getUserTsunamiAlerts(userId) {
       
       // If user is within impact distance, create alert
       if (distance <= MAX_TSUNAMI_IMPACT_DISTANCE_KM) {
-        console.log(`User ${userId} is within impact distance (${distance.toFixed(1)} km) of tsunami event ${event.eventId}`);
+        // console.log(`User ${userId} is within impact distance (${distance.toFixed(1)} km) of tsunami event ${event.eventId}`);
         
         // Create alert object
         const alert = {
@@ -332,7 +375,7 @@ async function getUserTsunamiAlerts(userId) {
       alerts: relevantAlerts
     };
   } catch (error) {
-    console.error('Error getting user tsunami alerts:', error.message);
+    // console.error('Error getting user tsunami alerts:', error.message);
     return { alerts: [] };
   }
 }

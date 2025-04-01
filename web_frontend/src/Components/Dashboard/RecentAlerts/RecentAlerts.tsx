@@ -51,7 +51,7 @@ const RecentAlerts: React.FC<RecentAlertsProps> = ({ alerts }) => {
       </Box>
       
       <Grid container spacing={2}>
-        {alerts.map((alert, index) => (
+        {alerts && alerts.map((alert, index) => (
           <Grid item xs={12} key={index}>
             <Box
               sx={{

@@ -84,24 +84,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
  const [notifications] = useState([
-    {
-      id: '1',
-      type: 'Earthquake',
-      title: 'High Magnitude Earthquake Alert',
-      message: 'Magnitude 6.2 earthquake detected in Nepal region',
-      severity: 'high',
-      timestamp: '2024-03-20T10:30:00Z',
-      isRead: false
-    },
-    {
-      id: '2',
-      type: 'Tsunami',
-      title: 'Tsunami Warning',
-      message: 'Potential tsunami threat detected in Indonesian waters',
-      severity: 'high',
-      timestamp: '2024-03-20T09:15:00Z',
-      isRead: true
-    }
+  {
+    id: '1',
+    type: 'Flood',
+    title: 'Flood Alert',
+    message: 'River discharge: 2.2 m³/s',
+    severity: 'medium',
+    timestamp: '2025-03-13T00:00:00Z',
+    isRead: false
+  }
   ]);
 
   

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -23,48 +23,45 @@ import {
   Delete as DeleteIcon,
   CheckCircle as ReadIcon
 } from '@mui/icons-material';
+import axios from 'axios';
 
 interface Notification {
-  id: string;
-  type: 'Earthquake' | 'Tsunami' | 'Flood' | 'Heatwave';
-  title: string;
+  _id: string;
+  type: string;
+  severity: string;
+  location: string;
   message: string;
-  severity: 'high' | 'medium' | 'low';
-  timestamp: string;
-  isRead: boolean;
+  sentAt: string;
+  status: string;
 }
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'Earthquake',
-      title: 'High Magnitude Earthquake Alert',
-      message: 'Magnitude 6.2 earthquake detected in Nepal region',
-      severity: 'high',
-      timestamp: '2024-03-20T10:30:00Z',
-      isRead: false
-    },
-    {
-      id: '2',
-      type: 'Tsunami',
-      title: 'Tsunami Warning',
-      message: 'Potential tsunami threat detected in Indonesian waters',
-      severity: 'high',
-      timestamp: '2024-03-20T09:15:00Z',
-      isRead: true
-    },
-    {
-      id: '3',
-      type: 'Flood',
-      title: 'Flood Alert',
-      message: 'Rising water levels in Bangladesh coastal areas',
-      severity: 'medium',
-      timestamp: '2024-03-19T23:45:00Z',
-      isRead: false
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications/user-notifications`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        setNotifications(response.data.notifications);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -76,21 +73,33 @@ const Notifications = () => {
     }
   };
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(notifications.map(notif =>
-      notif.id === id ? { ...notif, isRead: true } : notif
-    ));
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await axios.patch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      setNotifications(notifications.map(notif => 
+        notif._id === id ? {...notif, status: 'Read'} : notif
+      ));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
   const handleDelete = (id: string) => {
-    setNotifications(notifications.filter(notif => notif.id !== id));
+    setNotifications(notifications.filter(notif => notif._id !== id));
   };
 
-  const filteredNotifications = activeTab === 0 
-    ? notifications 
-    : activeTab === 1 
-    ? notifications.filter(n => !n.isRead)
-    : notifications.filter(n => n.isRead);
+  const filteredNotifications = !notifications ? [] : 
+    activeTab === 0 
+      ? notifications 
+      : activeTab === 1 
+      ? notifications.filter(n => n.status !== 'Read')
+      : notifications.filter(n => n.status === 'Read');
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
@@ -128,72 +137,78 @@ const Notifications = () => {
         </Tabs>
 
         <List sx={{ p: 0 }}>
-          {filteredNotifications.map((notification, index) => (
-            <React.Fragment key={notification.id}>
-              {index > 0 && <Divider />}
-              <ListItem
-                sx={{
-                  p: 2,
-                  backgroundColor: notification.isRead ? 'transparent' : '#fff5f5',
-                  '&:hover': {
-                    backgroundColor: '#f8fafc'
-                  }
-                }}
-                secondaryAction={
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    {!notification.isRead && (
+          {loading ? (
+            <ListItem><ListItemText primary="Loading notifications..." /></ListItem>
+          ) : !notifications || notifications.length === 0 ? (
+            <ListItem><ListItemText primary="No notifications" /></ListItem>
+          ) : (
+            filteredNotifications.map((notification, index) => (
+              <React.Fragment key={notification._id}>
+                {index > 0 && <Divider />}
+                <ListItem
+                  sx={{
+                    p: 2,
+                    backgroundColor: notification.status !== 'Read' ? 'transparent' : '#fff5f5',
+                    '&:hover': {
+                      backgroundColor: '#f8fafc'
+                    }
+                  }}
+                  secondaryAction={
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      {notification.status !== 'Read' && (
+                        <IconButton 
+                          onClick={() => handleMarkAsRead(notification._id)}
+                          sx={{ color: '#bc1a1a' }}
+                        >
+                          <ReadIcon />
+                        </IconButton>
+                      )}
                       <IconButton 
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        sx={{ color: '#bc1a1a' }}
+                        onClick={() => handleDelete(notification._id)}
+                        sx={{ color: '#64748b' }}
                       >
-                        <ReadIcon />
+                        <DeleteIcon />
                       </IconButton>
-                    )}
-                    <IconButton 
-                      onClick={() => handleDelete(notification.id)}
-                      sx={{ color: '#64748b' }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                }
-              >
-                <ListItemIcon>
-                  {getNotificationIcon(notification.type)}
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <Typography variant="subtitle1" fontWeight={600} color="#1f2937">
-                        {notification.title}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={notification.severity.toUpperCase()}
-                        sx={{
-                          bgcolor: notification.severity === 'high' ? '#fef2f2' : 
-                                  notification.severity === 'medium' ? '#fffbeb' : '#f0fdf4',
-                          color: notification.severity === 'high' ? '#ef4444' : 
-                                notification.severity === 'medium' ? '#f59e0b' : '#22c55e',
-                          fontWeight: 500
-                        }}
-                      />
                     </Box>
                   }
-                  secondary={
-                    <Box>
-                      <Typography variant="body2" color="#4b5563" mb={0.5}>
-                        {notification.message}
-                      </Typography>
-                      <Typography variant="caption" color="#64748b">
-                        {new Date(notification.timestamp).toLocaleString()}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </ListItem>
-            </React.Fragment>
-          ))}
+                >
+                  <ListItemIcon>
+                    {getNotificationIcon(notification.type)}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="subtitle1" fontWeight={600} color="#1f2937">
+                          {notification.location}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={notification.severity.toUpperCase()}
+                          sx={{
+                            bgcolor: notification.severity === 'high' ? '#fef2f2' : 
+                                    notification.severity === 'medium' ? '#fffbeb' : '#f0fdf4',
+                            color: notification.severity === 'high' ? '#ef4444' : 
+                                  notification.severity === 'medium' ? '#f59e0b' : '#22c55e',
+                            fontWeight: 500
+                          }}
+                        />
+                      </Box>
+                    }
+                    secondary={
+                      <Box>
+                        <Typography variant="body2" color="#4b5563" mb={0.5}>
+                          {notification.message}
+                        </Typography>
+                        <Typography variant="caption" color="#64748b">
+                          {new Date(notification.sentAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              </React.Fragment>
+            ))
+          )}
         </List>
       </Paper>
     </Box>
