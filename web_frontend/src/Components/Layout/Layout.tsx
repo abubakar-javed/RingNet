@@ -67,18 +67,33 @@ const Layout = ({ children }: LayoutProps) => {
     if (!token) return;
     
     // Request permission for location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          updateUserLocation(position.coords.latitude, position.coords.longitude);
-        },
-        (error) => {
-          console.log("Location permission denied or error occurred");
-          console.log(error);
-          // Keep previous location if user denies permission
-        }
-      );
-    }
+    // if (navigator.geolocation) {
+    //   navigator.geolocation.getCurrentPosition(
+    //     (position) => {
+    //       updateUserLocation(position.coords.latitude, position.coords.longitude);
+    //     },
+    //     (error) => {
+    //       console.log("Location permission denied or error occurred");
+    //       console.log(error);
+    //       // Keep previous location if user denies permission
+    //     }
+    //   );
+    // }
+    navigator.geolocation.watchPosition(
+      (position) => {
+        console.log("position watch");
+        console.log("Latitude:", position.coords.latitude);
+        console.log("Longitude:", position.coords.longitude);
+      },
+      (error) => {
+        console.error("Error:", error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
+      }
+    );
   }, []);
   
   const updateUserLocation = async (latitude: number, longitude: number) => {

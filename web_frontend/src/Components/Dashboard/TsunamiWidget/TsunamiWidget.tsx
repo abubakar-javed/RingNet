@@ -88,7 +88,7 @@ const TsunamiWidget = () => {
   }
 
   return (
-    <Card sx={{ minHeight: 200 }}>
+    <Card sx={{ minHeight: 200,marginBottom:"2rem" }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
           <WavesIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
