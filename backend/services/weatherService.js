@@ -7,7 +7,7 @@ const Alert = require('../models/alertModel');
 const Notification = require('../models/notificationModel');
 require('dotenv').config(); 
 
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || 'eed41bad5cf0d45290152944586af33c';
+const OPENWEATHER_API_KEY = '2615076ed8801e1cea8ef4ef3e933838';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://ajavedbese21seecs:abubakar1243@cluster0.xjdvgvy.mongodb.net/ringNet';
 
 const CLUSTER_RADIUS = 10;
@@ -253,6 +253,7 @@ async function getRecentClusterData(clusterId, limit = 24) {
 // Function to create a new cluster for a single user and get its weather
 async function createNewClusterForUser(userLocation, userId) {
   try {
+    console.log(OPENWEATHER_API_KEY)
     // Fetch current weather data
     const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
       params: {

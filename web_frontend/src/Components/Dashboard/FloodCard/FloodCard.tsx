@@ -74,7 +74,7 @@ const FloodCard: React.FC<FloodCardProps> = ({ floodData }) => {
 
   if (!floodData || !floodData.alerts || floodData.alerts.length === 0) {
     return (
-      <Card elevation={3} sx={{ minWidth: 275, height: '100%', position: 'relative', overflow: 'hidden' }}>
+      <Card elevation={3} sx={{ minWidth: 275, height: '100%', position: 'relative', overflow: 'hidden',marginBottom:'2rem' }}>
         {/* Background decoration element */}
         <Box 
           sx={{ 

@@ -7,11 +7,11 @@ import axios from "axios";
 import Layout from "../Components/Layout/Layout";
 import StatsCards from "../Components/Dashboard/StatsCards/StatsCards";
 import RecentAlerts from "../Components/Dashboard/RecentAlerts/RecentAlerts";
-import RegionalStats from "../Components/Dashboard/RegionalStats/RegionalStats";
 import WeatherCard from '../Components/Dashboard/WeatherCard/WeatherCard';
 import FloodCard from '../Components/Dashboard/FloodCard/FloodCard';
 import TsunamiWidget from "../Components/Dashboard/TsunamiWidget/TsunamiWidget";
 import { fetchUserFloodData } from "../services/floodService";
+import EmergencyContacts from "../Components/Dashboard/EmergencyContacts/EmergencyContacts";
 
 
 
@@ -132,7 +132,7 @@ const DashboardPage = () => {
         ) : (
           <RecentAlerts alerts={userAlerts} />
         )}
-        <RegionalStats />
+        <EmergencyContacts />
       </Box>
     </Layout>
   );
