@@ -61,46 +61,11 @@ const Layout = ({ children }: LayoutProps) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    // Request permission for location
-    // if (navigator.geolocation) {
-    //   navigator.geolocation.getCurrentPosition(
-    //     (position) => {
-    //       updateUserLocation(position.coords.latitude, position.coords.longitude);
-    //     },
-    //     (error) => {
-    //       console.log("Location permission denied or error occurred");
-    //       console.log(error);
-    //       // Keep previous location if user denies permission
-    //     }
-    //   );
-    // }
-    navigator.geolocation.watchPosition(
-      (position) => {
-        console.log("position watch");
-        console.log("Latitude:", position.coords.latitude);
-        console.log("Longitude:", position.coords.longitude);
-      },
-      (error) => {
-        console.error("Error:", error.message);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0,
-      }
-    );
-  }, []);
-  
   const updateUserLocation = async (latitude: number, longitude: number) => {
     try {
       const token = localStorage.getItem('token');
-      console.log("latitude",latitude);
-      console.log("longitude",longitude);
+      console.log("latitude", latitude);
+      console.log("longitude", longitude);
       await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/users/location`, 
         { location: { latitude, longitude } },
         { headers: { 'Authorization': `Bearer ${token}` }}
@@ -111,6 +76,34 @@ const Layout = ({ children }: LayoutProps) => {
     }
   };
 
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    // Use watchPosition to track user location changes
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        console.log("Position updated");
+        // Update the user's location in the backend
+        updateUserLocation(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        console.error("Geolocation error:", error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
+      }
+    );
+    
+    // Clean up by clearing the watch when component unmounts
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+  
   return (
     <div className={styles.dashboardLayout}>
       <div className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
