@@ -43,8 +43,8 @@ fun Map() {
         }
     }
 
-    LatLng(35.6762, 139.6503) // Tokyo, Japan
-    LatLng(27.7172, 85.3240) // Kathmandu, Nepal
+//    LatLng(35.6762, 139.6503) // Tokyo, Japan
+//    LatLng(27.7172, 85.3240) // Kathmandu, Nepal
 
 
     GoogleMap(

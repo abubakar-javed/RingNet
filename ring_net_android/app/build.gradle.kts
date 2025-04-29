@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.converter.gson)
+
     implementation(libs.retrofit)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.dagger)
@@ -83,6 +83,8 @@ dependencies {
         exclude("net.java.dev.jna", "jna")
     }
     implementation("net.java.dev.jna:jna:5.12.1@aar")
+    implementation(libs.adapter.guava)
+    implementation(libs.converter.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
