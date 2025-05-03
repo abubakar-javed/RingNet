@@ -83,7 +83,7 @@ fun HazardMonitor(viewModel: AppViewModel) {
                                 emptyDataPlaceholder()
                             }
                         }
-                        
+
                         items(hazardAlertInfo.value) { alert ->
                             AlertCard(alert)
                             Spacer(modifier = Modifier.height(12.dp))

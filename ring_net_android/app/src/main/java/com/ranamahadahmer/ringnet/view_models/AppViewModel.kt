@@ -1,21 +1,31 @@
 package com.ranamahadahmer.ringnet.view_models
 
+
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.notifications.Notification
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import com.ranamahadahmer.ringnet.views.dashboard.hazard_monitoring.HazardAlertInfo
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class AppViewModel : ViewModel() {
     var mainBottomBarState = MutableStateFlow(PagerState(pageCount = { 5 }, currentPage = 0))
     var notificationsPagerState = MutableStateFlow(PagerState(pageCount = { 3 }, currentPage = 0))
     var hazardMonitorPagerState = MutableStateFlow(PagerState(pageCount = { 2 }, currentPage = 0))
     val dashboardScrollState = ScrollState(0)
+
+    private val _currentLocation = MutableStateFlow<LatLng?>(null)
+    val currentLocation: StateFlow<LatLng?> = _currentLocation
+    private var locationMonitoringJob: Job? = null
 
 
     private val _notifications = MutableStateFlow(
@@ -106,4 +116,29 @@ class AppViewModel : ViewModel() {
             hazardMonitorPagerState.value.scrollToPage(page)
         }
     }
+
+
+    fun updateLocation(location: Location) {
+        _currentLocation.value = LatLng(location.latitude, location.longitude)
+    }
+
+    fun startLocationMonitoring(isAuthenticated: Boolean, getLocation: () -> Unit) {
+        if (!isAuthenticated) {
+            locationMonitoringJob?.cancel()
+            return
+        }
+
+        locationMonitoringJob = viewModelScope.launch {
+            while (true) {
+                getLocation()
+                delay(TimeUnit.MINUTES.toMillis(5))
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        locationMonitoringJob?.cancel()
+    }
+
 }

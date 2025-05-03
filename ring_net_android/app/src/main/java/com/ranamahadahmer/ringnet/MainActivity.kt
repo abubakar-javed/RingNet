@@ -2,6 +2,8 @@ package com.ranamahadahmer.ringnet
 
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,13 +12,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
@@ -34,55 +40,138 @@ import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpEmailScreen
 import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpNameScreen
 import com.ranamahadahmer.ringnet.views.dashboard.Dashboard
 import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var appViewModel: AppViewModel
+    private lateinit var authViewModel: AuthViewModel
+
+    // Permission handling
+    private val requiredPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.INTERNET,
+        Manifest.permission.ACCESS_NETWORK_STATE
+    )
+
+    companion object {
+        private const val PERMISSIONS_REQUEST_CODE = 100
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestLocationPermissions()
-        enableEdgeToEdge()
+        initializeApp()
+        setupLocation()
+        setupUI()
+        observeAuthState()
+    }
 
+    private fun initializeApp() {
+        enableEdgeToEdge()
+        authViewModel = AuthViewModel(this)
+        appViewModel = AppViewModel()
+//        P2PModel(this)
+    }
+
+    private fun setupLocation() {
+        if (!checkPermissions()) {
+            requestPermissions()
+            return
+        }
+        initializeLocationClient()
+    }
+
+    private fun initializeLocationClient() {
+        if (!::fusedLocationClient.isInitialized) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        }
+    }
+
+    private fun setupUI() {
         setContent {
             RingNetTheme {
-                RingNetApp()
+                RingNetApp(authViewModel, appViewModel)
             }
         }
     }
 
-    private fun requestLocationPermissions() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ),
-                1
-            )
-
-        } else {
-//            TODO: Close App if not given permission
+    private fun observeAuthState() {
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.isUserLoggedIn.collect { isLoggedIn ->
+                    if (isLoggedIn && checkPermissions()) {
+                        startLocationUpdates()
+                    }
+                }
+            }
         }
     }
 
+    // Permission handling methods
+    private fun checkPermissions(): Boolean {
+        return requiredPermissions.all { permission ->
+            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun requestPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            requiredPermissions,
+            PERMISSIONS_REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            PERMISSIONS_REQUEST_CODE -> handlePermissionResult(grantResults)
+        }
+    }
+
+    private fun handlePermissionResult(grantResults: IntArray) {
+        if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+            initializeLocationClient()
+        } else {
+            showPermissionDeniedDialog()
+        }
+    }
+
+    private fun showPermissionDeniedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Permissions Required")
+            .setMessage("This app requires location and internet permissions to function. The app will now close.")
+            .setPositiveButton("OK") { _, _ -> finish() }
+            .setCancelable(false)
+            .show()
+    }
+
+    // Location updates
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates() {
+        try {
+            initializeLocationClient()
+            appViewModel.startLocationMonitoring(authViewModel.isUserLoggedIn.value) {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    location?.let { appViewModel.updateLocation(it) }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
 
-
 @Composable
-fun RingNetApp() {
+fun RingNetApp(authViewModel: AuthViewModel, appModel: AppViewModel) {
     val navController = rememberNavController()
-    val authViewModel = AuthViewModel(LocalContext.current)
-//    val application = LocalContext.current.applicationContext as Application
-//    P2pModel(application)
-    val appModel = AppViewModel()
+
 
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
 
