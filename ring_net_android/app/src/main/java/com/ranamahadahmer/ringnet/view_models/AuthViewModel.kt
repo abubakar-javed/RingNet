@@ -4,9 +4,8 @@ import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-//import com.ranamahadahmer.ringnet.User
-//import com.ranamahadahmer.ringnet.User.key
-import com.ranamahadahmer.ringnet.api.auth.AuthBackendApi
+
+import com.ranamahadahmer.ringnet.api.BackendApi
 import com.ranamahadahmer.ringnet.api.auth.SignInService
 import com.ranamahadahmer.ringnet.api.auth.SignUpService
 import com.ranamahadahmer.ringnet.database.DataStoreManager
@@ -16,7 +15,7 @@ import com.ranamahadahmer.ringnet.models.auth.SignUpRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,9 +24,9 @@ import kotlinx.coroutines.withContext
 class AuthViewModel(context: Context) : ViewModel() {
 
     private val _signInApiService: SignInService =
-        AuthBackendApi.retrofit.create(SignInService::class.java)
+        BackendApi.retrofit.create(SignInService::class.java)
     private val _signUpApiService: SignUpService =
-        AuthBackendApi.retrofit.create(SignUpService::class.java)
+        BackendApi.retrofit.create(SignUpService::class.java)
 
     private val _signInResponse: MutableStateFlow<AuthResponse> =
         MutableStateFlow(AuthResponse.Initial)
@@ -104,17 +103,7 @@ class AuthViewModel(context: Context) : ViewModel() {
 
 
     init {
-//        viewModelScope.launch {
-//            combine(dataStoreManager.token, dataStoreManager.userId) { token, userId ->
-//                _token.value = token.orEmpty()
-//                _userId.value = userId.orEmpty()
-//                !token.isNullOrEmpty() && !userId.isNullOrEmpty()
-//            }.collect {
-//                _isUserLoggedIn.value = it
-//            }
-//        }
 
-        // Load session info immediately
         viewModelScope.launch(Dispatchers.IO) {
             val savedToken = dataStoreManager.token.first()
             val savedUserId = dataStoreManager.userId.first()
@@ -122,10 +111,11 @@ class AuthViewModel(context: Context) : ViewModel() {
             withContext(Dispatchers.Main) {
                 _token.value = savedToken.orEmpty()
                 _userId.value = savedUserId.orEmpty()
+                
                 _isUserLoggedIn.value = !savedToken.isNullOrEmpty() && !savedUserId.isNullOrEmpty()
             }
         }
-    
+
     }
 
 

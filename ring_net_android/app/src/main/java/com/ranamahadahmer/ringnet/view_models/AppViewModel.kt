@@ -9,15 +9,20 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
+import com.ranamahadahmer.ringnet.api.BackendApi
+import com.ranamahadahmer.ringnet.api.emergency_contacts.EmergencyContactsService
+import com.ranamahadahmer.ringnet.models.emergency_contacts.EmergencyContactsResponse
 import com.ranamahadahmer.ringnet.views.dashboard.hazard_monitoring.HazardAlertInfo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-class AppViewModel : ViewModel() {
+class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
     var mainBottomBarState = MutableStateFlow(PagerState(pageCount = { 5 }, currentPage = 0))
     var notificationsPagerState = MutableStateFlow(PagerState(pageCount = { 3 }, currentPage = 0))
     var hazardMonitorPagerState = MutableStateFlow(PagerState(pageCount = { 2 }, currentPage = 0))
@@ -128,7 +133,9 @@ class AppViewModel : ViewModel() {
             return
         }
 
+
         locationMonitoringJob = viewModelScope.launch {
+            loadData()
             while (true) {
                 getLocation()
                 delay(TimeUnit.MINUTES.toMillis(5))
@@ -140,5 +147,43 @@ class AppViewModel : ViewModel() {
         super.onCleared()
         locationMonitoringJob?.cancel()
     }
+
+
+    private val _emergencyContactsService: EmergencyContactsService =
+        BackendApi.retrofit.create(EmergencyContactsService::class.java)
+
+    private val _emergencyContacts =
+        MutableStateFlow<EmergencyContactsResponse>(EmergencyContactsResponse.Initial)
+    val emergencyContacts: StateFlow<EmergencyContactsResponse> = _emergencyContacts
+
+
+    fun getEmergencyContacts() {
+        viewModelScope.launch {
+            _emergencyContacts.value = EmergencyContactsResponse.Loading
+            try {
+                println("${_currentLocation.value?.latitude} ${_currentLocation.value?.longitude}")
+                val result = withContext(Dispatchers.IO) {
+                    _emergencyContactsService.getContacts(
+                        token = "Bearer ${authViewModel.token.value}",
+                        latitude = _currentLocation.value?.latitude ?: 0.0,
+                        longitude = _currentLocation.value?.longitude ?: 0.0
+                    )
+                }
+                _emergencyContacts.value = EmergencyContactsResponse.Success(result)
+                println("Emergency Contacts: $result")
+            } catch (e: Exception) {
+                _emergencyContacts.value =
+                    EmergencyContactsResponse.Error(e.message ?: "An error occurred")
+                println("Error fetching emergency contacts: ${e.message}")
+            }
+        }
+    }
+
+
+    fun loadData() {
+        getEmergencyContacts()
+
+    }
+
 
 }

@@ -21,8 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.ActiveWeatherWarningsScreen
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.CurrentWarningCardRow
+import com.ranamahadahmer.ringnet.views.dashboard.home.components.EmergencyContactsScreen
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.FiveDayHazardForecasts
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.RecentAlerts
 
@@ -42,9 +44,8 @@ val myCards = listOf(
 )
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Home(scrollState: ScrollState) {
+fun Home(scrollState: ScrollState, appModel: AppViewModel) {
 
     Column(
         modifier = Modifier
@@ -72,6 +73,9 @@ fun Home(scrollState: ScrollState) {
         RecentAlerts(Modifier.padding(horizontal = 8.dp))
         Spacer(modifier = Modifier.height(16.dp))
         ActiveWeatherWarningsScreen(Modifier.padding(horizontal = 8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        EmergencyContactsScreen(Modifier.padding(horizontal = 8.dp), appModel = appModel)
+
     }
 }
 

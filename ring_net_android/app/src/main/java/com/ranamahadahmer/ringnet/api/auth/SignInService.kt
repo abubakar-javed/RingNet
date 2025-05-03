@@ -12,3 +12,4 @@ interface SignInService {
         @Body request: SignInRequestBody
     ): AuthResponse.Success
 }
+
