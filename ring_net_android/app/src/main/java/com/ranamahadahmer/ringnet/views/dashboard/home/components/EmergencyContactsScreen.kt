@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ranamahadahmer.ringnet.models.emergency_contacts.EmergencyContact
-import com.ranamahadahmer.ringnet.models.emergency_contacts.EmergencyContactsResponse
+import com.ranamahadahmer.ringnet.models.EmergencyContact
+import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 
 @Composable

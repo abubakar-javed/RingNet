@@ -1,9 +1,8 @@
-package com.ranamahadahmer.ringnet.api.emergency_contacts
+package com.ranamahadahmer.ringnet.api
 
-import com.ranamahadahmer.ringnet.models.emergency_contacts.EmergencyContact
+import com.ranamahadahmer.ringnet.models.EmergencyContact
 import retrofit2.http.GET
 import retrofit2.http.Header
-
 import retrofit2.http.Query
 
 interface EmergencyContactsService {
@@ -14,4 +13,3 @@ interface EmergencyContactsService {
         @Query("latitude") latitude: Double
     ): List<EmergencyContact>
 }
-

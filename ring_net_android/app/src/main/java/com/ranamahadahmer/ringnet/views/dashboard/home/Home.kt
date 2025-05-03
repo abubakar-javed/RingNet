@@ -1,7 +1,5 @@
 package com.ranamahadahmer.ringnet.views.dashboard.home
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,9 +16,12 @@ import androidx.compose.material.icons.filled.Flood
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.ranamahadahmer.ringnet.models.Stats
+import com.ranamahadahmer.ringnet.models.StatsInfoResponse
+import com.ranamahadahmer.ringnet.models.common.WarningCard
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.ActiveWeatherWarningsScreen
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.CurrentWarningCardRow
@@ -29,24 +30,43 @@ import com.ranamahadahmer.ringnet.views.dashboard.home.components.FiveDayHazardF
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.RecentAlerts
 
 
-data class WarningCard(
-    val title: String,
-    val number: Int,
-    val description: String,
-    val icon: ImageVector,
-)
-
-val myCards = listOf(
-    WarningCard("Earthquakes", 0, "Active seismic zones", Icons.Default.Public),
-    WarningCard("Tsunamis", 0, "Coastal warnings active", Icons.Default.Waves),
-    WarningCard("Floods", 0, "Regions affected", Icons.Default.Flood),
-    WarningCard("Heatwaves", 0, "High temperature alerts", Icons.Default.DeviceThermostat),
-)
-
-
 @Composable
 fun Home(scrollState: ScrollState, appModel: AppViewModel) {
+    val statsInfo = appModel.statsInfo.collectAsState().value
 
+    // Extract stats data or use default values if not available
+    val stats = when (statsInfo) {
+        is StatsInfoResponse.Success -> statsInfo.stats
+        else -> Stats(earthquakes = 0, tsunamis = 0, floods = 0, heatwaves = 0)
+    }
+
+    // Create cards with actual data
+    val warningCards = listOf(
+        WarningCard(
+            title = "Earthquakes",
+            number = stats.earthquakes,
+            description = "Active seismic zones",
+            icon = Icons.Default.Public
+        ),
+        WarningCard(
+            title = "Tsunamis",
+            number = stats.tsunamis,
+            description = "Coastal warnings active",
+            icon = Icons.Default.Waves
+        ),
+        WarningCard(
+            title = "Floods",
+            number = stats.floods,
+            description = "Regions affected",
+            icon = Icons.Default.Flood
+        ),
+        WarningCard(
+            title = "Heatwaves",
+            number = stats.heatwaves,
+            description = "High temperature alerts",
+            icon = Icons.Default.DeviceThermostat
+        )
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,7 +74,7 @@ fun Home(scrollState: ScrollState, appModel: AppViewModel) {
             .padding(horizontal = 8.dp)
     ) {
         LazyRow {
-            items(myCards) { item ->
+            items(warningCards) { item ->
                 CurrentWarningCardRow(
                     modifier = Modifier
                         .padding(horizontal = 8.dp)

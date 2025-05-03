@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.models.emergency_contacts
+package com.ranamahadahmer.ringnet.models
 
 
 sealed class EmergencyContactsResponse {
