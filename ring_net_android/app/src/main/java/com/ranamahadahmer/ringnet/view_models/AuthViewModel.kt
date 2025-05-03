@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -103,19 +104,28 @@ class AuthViewModel(context: Context) : ViewModel() {
 
 
     init {
-        viewModelScope.launch {
+//        viewModelScope.launch {
+//            combine(dataStoreManager.token, dataStoreManager.userId) { token, userId ->
+//                _token.value = token.orEmpty()
+//                _userId.value = userId.orEmpty()
+//                !token.isNullOrEmpty() && !userId.isNullOrEmpty()
+//            }.collect {
+//                _isUserLoggedIn.value = it
+//            }
+//        }
 
+        // Load session info immediately
+        viewModelScope.launch(Dispatchers.IO) {
+            val savedToken = dataStoreManager.token.first()
+            val savedUserId = dataStoreManager.userId.first()
 
-            combine(dataStoreManager.token, dataStoreManager.userId) { token, userId ->
-                _token.value = token.orEmpty()
-                _userId.value = userId.orEmpty()
-                !token.isNullOrEmpty() && !userId.isNullOrEmpty()
-            }.collect {
-                _isUserLoggedIn.value = it
+            withContext(Dispatchers.Main) {
+                _token.value = savedToken.orEmpty()
+                _userId.value = savedUserId.orEmpty()
+                _isUserLoggedIn.value = !savedToken.isNullOrEmpty() && !savedUserId.isNullOrEmpty()
             }
-
-
         }
+    
     }
 
 

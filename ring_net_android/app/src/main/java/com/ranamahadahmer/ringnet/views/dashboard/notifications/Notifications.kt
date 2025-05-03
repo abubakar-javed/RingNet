@@ -81,7 +81,7 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                         if (notifications.value.isEmpty()) {
                             item { emptyDataPlaceholder() }
                         }
-                        
+
                         items(notifications.value) { notification ->
                             NotificationCard(
                                 notification,

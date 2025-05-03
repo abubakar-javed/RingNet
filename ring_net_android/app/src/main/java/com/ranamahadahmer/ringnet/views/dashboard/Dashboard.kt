@@ -144,7 +144,7 @@ fun Dashboard(viewModel: AppViewModel) {
                     }
 
                     2 -> {
-                        Map()
+                        Map(viewModel)
 
                     }
 
