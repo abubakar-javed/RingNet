@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -38,6 +40,25 @@ fun formatDateTime(isoDateTime: String): String {
         val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy - h:mm a")
         localDateTime.format(formatter)
     } catch (e: Exception) {
-        isoDateTime // Return original string if parsing fails
+        isoDateTime
+    }
+}
+
+fun formatDateToDay(date: String): String {
+    return try {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val localDate = LocalDate.parse(date, formatter)
+        val outputFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
+        localDate.format(outputFormatter)
+    } catch (e: Exception) {
+        date
+    }
+}
+
+fun String.toTitleCase(): String {
+    return this.split(" ").joinToString(" ") { word ->
+        word.lowercase().replaceFirstChar { char ->
+            char.uppercase()
+        }
     }
 }

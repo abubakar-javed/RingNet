@@ -20,9 +20,9 @@ import com.ranamahadahmer.ringnet.api.StatsInfoService
 import com.ranamahadahmer.ringnet.api.UpdateLocationService
 import com.ranamahadahmer.ringnet.api.UserAlertsService
 import com.ranamahadahmer.ringnet.api.UserNotificationService
+import com.ranamahadahmer.ringnet.api.WeatherForecastService
 import com.ranamahadahmer.ringnet.api.unused.FloodDataService
 import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
-import com.ranamahadahmer.ringnet.api.unused.WeatherForecastService
 import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
 import com.ranamahadahmer.ringnet.models.LocationCoordinates
 import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
@@ -32,9 +32,9 @@ import com.ranamahadahmer.ringnet.models.ProfileResponse
 import com.ranamahadahmer.ringnet.models.StatsInfoResponse
 import com.ranamahadahmer.ringnet.models.UserAlertsResponse
 import com.ranamahadahmer.ringnet.models.UserNotificationResponse
+import com.ranamahadahmer.ringnet.models.WeatherForecastResponse
 import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
 import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
-import com.ranamahadahmer.ringnet.models.unused.WeatherForecastResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -480,50 +480,6 @@ class AppViewModel(
     }
 
 
-//    fun verifyUpdates() {
-//        viewModelScope.launch {
-//            if (_name.value.isEmpty()) {
-//                _profile.value = ProfileResponse.Error("Name cannot be empty")
-//                delay(1000)
-//                getProfile()
-//                return@launch
-//            }
-//
-//            if (_email.value.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(_email.value).matches()) {
-//                _profile.value = ProfileResponse.Error("Invalid email format")
-//                delay(1000)
-//                getProfile()
-//                return@launch
-//            }
-//
-//            try {
-//                val currentProfile = (_profile.value as? ProfileResponse.Success)
-//                if (currentProfile != null) {
-//                    updateProfile(
-//                        ProfileData(
-//                            id = currentProfile.id,
-//                            name = _name.value,
-//                            email = _email.value,
-//                            phone = _phone.value,
-//                            description = currentProfile.description,
-//                            locationString = currentProfile.locationString,
-//                            alertPreferences = _selectedAlerts.value,
-//                            location = currentProfile.location,
-//                            createdAt = currentProfile.createdAt,
-//                            updatedAt = currentProfile.updatedAt,
-//                            v = currentProfile.v
-//                        )
-//                    )
-//                    _isEditingProfile.value = false
-//                    delay(1000)
-//                    getProfile()
-//                }
-//            } catch (e: Exception) {
-//                _profile.value = ProfileResponse.Error(e.message ?: "Failed to update profile")
-//            }
-//        }
-//    }
-
     fun verifyUpdates() {
         _isEditingProfile.value = false
         viewModelScope.launch {
@@ -596,6 +552,7 @@ class AppViewModel(
                 async { getStatsInfo() },
                 async { getUserAlerts() },
 
+                async { getWeatherForecast() },
                 async { getProfile() },
                 async { getUserNotifications() },
 
@@ -624,6 +581,31 @@ class AppViewModel(
             }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    fun getWeatherForecast() {
+        viewModelScope.launch {
+            _weatherForecast.value = WeatherForecastResponse.Loading
+            repeat(MAX_RETRIES) { attempt ->
+                try {
+                    val result = withContext(Dispatchers.IO) {
+                        _weatherForecastService.getWeatherForecast(
+                            token = "Bearer ${authViewModel.token.value}",
+                        )
+                    }
+                    _weatherForecast.value = result
+                    println(_weatherForecast.value)
+                    return@launch
+                } catch (e: Exception) {
+                    if (attempt == MAX_RETRIES - 1) {
+                        _weatherForecast.value =
+                            WeatherForecastResponse.Error(e.message ?: "An unknown error occurred")
+                    } else {
+                        delay(RETRY_DELAY_MS)
+                    }
+                }
+            }
         }
     }
 
@@ -681,27 +663,3 @@ class AppViewModel(
 //    }
 //}
 //
-//fun getWeatherForecast() {
-//    viewModelScope.launch {
-//        _weatherForecast.value = WeatherForecastResponse.Loading
-//        repeat(MAX_RETRIES) { attempt ->
-//            try {
-//                val result = withContext(Dispatchers.IO) {
-//                    _weatherForecastService.getWeatherForecast(
-//                        token = "Bearer ${authViewModel.token.value}",
-//                    )
-//                }
-//                _weatherForecast.value = result
-//                println(_weatherForecast.value)
-//                return@launch
-//            } catch (e: Exception) {
-//                if (attempt == MAX_RETRIES - 1) {
-//                    _weatherForecast.value =
-//                        WeatherForecastResponse.Error(e.message ?: "An unknown error occurred")
-//                } else {
-//                    delay(RETRY_DELAY_MS)
-//                }
-//            }
-//        }
-//    }
-//}
