@@ -144,8 +144,7 @@ const Notifications = () => {
         prevNotifications.filter(notif => notif._id !== id)
       );
       
-      // Note: This assumes you have an endpoint to delete notifications
-      // If you don't have one yet, you'll need to implement it on the backend
+      // Call the backend API to delete the notification
       await axios.delete(
         `${import.meta.env.VITE_BACKEND_URL}/api/notifications/${id}`,
         {
@@ -153,15 +152,22 @@ const Notifications = () => {
             'Authorization': `Bearer ${token}`
           }
         }
-      ).catch(err => {
-        console.warn('Error deleting notification (may not be supported yet):', err);
-        // If the API call fails, we don't need to revert the UI since it's just a visual removal
-      });
+      );
       
-      setSuccessMessage('Notification removed');
+      setSuccessMessage('Notification removed successfully');
     } catch (error) {
       console.error('Error deleting notification:', error);
-      // Even if there's an error, we keep the notification removed from the UI
+      
+      // Re-fetch notifications to ensure UI is in sync with backend
+      fetchNotifications();
+      
+      // Show error message
+      if (axios.isAxiosError(error) && error.response) {
+        // Use the specific error message from the backend if available
+        setError(error.response.data.message || 'Failed to delete notification');
+      } else {
+        setError('Failed to delete notification');
+      }
     }
   };
 
