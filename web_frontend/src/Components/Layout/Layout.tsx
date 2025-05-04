@@ -92,6 +92,7 @@ const Layout = ({ children }: LayoutProps) => {
         console.error("Geolocation error:", error.message);
       },
       {
+        
         enableHighAccuracy: true,
         timeout: 20000,
         maximumAge: 0,

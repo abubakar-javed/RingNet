@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -11,7 +11,9 @@ import {
   Divider,
   IconButton,
   Tab,
-  Tabs
+  Tabs,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Notifications as NotificationsIcon,
@@ -21,7 +23,8 @@ import {
   WaterDrop as FloodIcon,
   Thermostat as HeatwaveIcon,
   Delete as DeleteIcon,
-  CheckCircle as ReadIcon
+  CheckCircle as ReadIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -39,29 +42,52 @@ const Notifications = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setLoading(true);
-        
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications/user-notifications`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-        setNotifications(response.data.notifications);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setLoading(false);
+  // Function to fetch notifications
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
       }
-    };
-
-    fetchNotifications();
+      
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/notifications/user-notifications`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      console.log('Fetched notifications:', response.data);
+      setNotifications(response.data.notifications || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setError('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Initial fetch on component mount
+  useEffect(() => {
+    fetchNotifications();
+    
+    // Set up polling to refresh notifications every minute
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, 60000); // 60 seconds
+    
+    // Clean up the interval when component unmounts
+    return () => clearInterval(intervalId);
+  }, [fetchNotifications]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -75,23 +101,78 @@ const Notifications = () => {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      await axios.patch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`,
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+      
+      await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/notifications/${id}/read`,
+        {}, // Empty body
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
-      setNotifications(notifications.map(notif => 
-        notif._id === id ? {...notif, status: 'Read'} : notif
-      ));
+      
+      // Update the local state
+      setNotifications(prevNotifications => 
+        prevNotifications.map(notif => 
+          notif._id === id ? {...notif, status: 'Read'} : notif
+        )
+      );
+      
+      setSuccessMessage('Notification marked as read');
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      setError('Failed to mark notification as read');
     }
   };
 
-  const handleDelete = (id: string) => {
-    setNotifications(notifications.filter(notif => notif._id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+      
+      // Remove from local state first for immediate UI feedback
+      setNotifications(prevNotifications => 
+        prevNotifications.filter(notif => notif._id !== id)
+      );
+      
+      // Note: This assumes you have an endpoint to delete notifications
+      // If you don't have one yet, you'll need to implement it on the backend
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/notifications/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      ).catch(err => {
+        console.warn('Error deleting notification (may not be supported yet):', err);
+        // If the API call fails, we don't need to revert the UI since it's just a visual removal
+      });
+      
+      setSuccessMessage('Notification removed');
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      // Even if there's an error, we keep the notification removed from the UI
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchNotifications();
+    setSuccessMessage('Notifications refreshed');
+  };
+
+  const handleCloseSnackbar = () => {
+    setSuccessMessage(null);
+    setError(null);
   };
 
   const filteredNotifications = !notifications ? [] : 
@@ -103,11 +184,21 @@ const Notifications = () => {
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <NotificationsIcon sx={{ color: '#bc1a1a', fontSize: 28 }} />
-        <Typography variant="h5" fontWeight={600} color="#1f2937">
-          Notifications
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <NotificationsIcon sx={{ color: '#bc1a1a', fontSize: 28 }} />
+          <Typography variant="h5" fontWeight={600} color="#1f2937">
+            Notifications
+          </Typography>
+        </Box>
+        <IconButton 
+          onClick={handleRefresh} 
+          color="primary" 
+          size="small"
+          disabled={loading}
+        >
+          <RefreshIcon />
+        </IconButton>
       </Box>
 
       <Paper
@@ -141,6 +232,8 @@ const Notifications = () => {
             <ListItem><ListItemText primary="Loading notifications..." /></ListItem>
           ) : !notifications || notifications.length === 0 ? (
             <ListItem><ListItemText primary="No notifications" /></ListItem>
+          ) : filteredNotifications.length === 0 ? (
+            <ListItem><ListItemText primary={`No ${activeTab === 1 ? 'unread' : 'read'} notifications`} /></ListItem>
           ) : (
             filteredNotifications.map((notification, index) => (
               <React.Fragment key={notification._id}>
@@ -148,7 +241,7 @@ const Notifications = () => {
                 <ListItem
                   sx={{
                     p: 2,
-                    backgroundColor: notification.status !== 'Read' ? 'transparent' : '#fff5f5',
+                    backgroundColor: notification.status !== 'Read' ? 'transparent' : '#f8f9fa',
                     '&:hover': {
                       backgroundColor: '#f8fafc'
                     }
@@ -183,12 +276,12 @@ const Notifications = () => {
                         </Typography>
                         <Chip
                           size="small"
-                          label={notification.severity.toUpperCase()}
+                          label={(notification.severity=="error"?"Severe":notification.severity).toUpperCase()}
                           sx={{
-                            bgcolor: notification.severity === 'high' ? '#fef2f2' : 
-                                    notification.severity === 'medium' ? '#fffbeb' : '#f0fdf4',
-                            color: notification.severity === 'high' ? '#ef4444' : 
-                                  notification.severity === 'medium' ? '#f59e0b' : '#22c55e',
+                            bgcolor: notification.severity === 'error' ? '#fef2f2' : 
+                                    notification.severity === 'warning' ? '#fffbeb' : '#f0fdf4',
+                            color: notification.severity === 'error' ? '#ef4444' : 
+                                  notification.severity === 'warning' ? '#f59e0b' : '#22c55e',
                             fontWeight: 500
                           }}
                         />
@@ -211,6 +304,21 @@ const Notifications = () => {
           )}
         </List>
       </Paper>
+      
+      {/* Snackbar for success and error messages */}
+      <Snackbar
+        open={!!successMessage || !!error}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={error ? "error" : "success"} 
+          sx={{ width: '100%' }}
+        >
+          {error || successMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

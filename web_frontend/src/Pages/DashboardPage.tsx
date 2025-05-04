@@ -81,11 +81,16 @@ const DashboardPage = () => {
           {
             headers: {
               Authorization: `Bearer ${token}`
+            },
+            params: {
+              limit: 5 // Explicitly request only 5 alerts
             }
           }
         );
         console.log("here are recent alerts",response.data);
-        setUserAlerts(response.data.alerts);
+        // Take only the first 5 alerts as a safety measure in case the backend doesn't respect the limit
+        const recentAlerts = response.data.alerts.slice(0, 5);
+        setUserAlerts(recentAlerts);
       } catch (error) {
         console.error('Error fetching alerts:', error);
       } finally {

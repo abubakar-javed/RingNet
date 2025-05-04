@@ -7,6 +7,7 @@ const Tsunami = require('../models/tsunamiModel');
 const Earthquake = require('../models/earthquakeModel');
 const Weather = require('../models/weatherModel');
 const mongoose = require('mongoose');
+const { getUserWeather } = require('../services/weatherService');
 
 // Constants for distance calculations
 const MAX_EARTHQUAKE_DISTANCE_KM = 300; // Consider earthquakes within 300km
@@ -56,7 +57,7 @@ router.get('/stats', auth, async (req, res) => {
     const earthquakeCollection = await Earthquake.findOne({
       'metadata.type': 'earthquake_collection'
     }).sort({ 'metadata.timestamp': -1 });
-    
+    console.log(earthquakeCollection)
     if (earthquakeCollection && earthquakeCollection.metadata && earthquakeCollection.metadata.events) {
       // Count earthquakes near user location
       const nearbyEarthquakes = earthquakeCollection.metadata.events.filter(event => {
@@ -192,44 +193,80 @@ router.get('/stats', auth, async (req, res) => {
     }
     // console.log("user flood cluster", userFloodCluster);
     // console.log("flood alerts count:", stats.floods);
-    // 4. Get heatwave stats
-    const userWeather = await Weather.findOne({
-      'metadata.userIds': userId
-    }).sort({ timestamp: -1 });
-
-    if (userWeather) {
-      // console.log("user weather", userWeather);
+    // 4. Get heatwave stats - Get fresh weather data for current location
+    try {
+      // Call weather service to get fresh weather data for user's current location
+      const weatherData = await getUserWeather(userId);
       
-      // Check if there's a heatwave alert flag
-      if (userWeather.metadata && userWeather.metadata.heatwaveAlert) {
-        stats.heatwaves = 1;
-        // console.log("Heatwave alert flag is set to true");
-      } 
-      // If no flag, check current temperature
-      else if (userWeather.temperature > 35) {
-        stats.heatwaves = 1;
-        // console.log("Heatwave alert: Current temperature is above 35°C");
-      } 
-      // If still no alert, check forecast days
-      else if (userWeather.metadata && userWeather.metadata.forecast) {
-        const heatwaveDays = userWeather.metadata.forecast.filter(day => 
-          day.temperature > 35
-        ).length;
+      if (weatherData) {
+        console.log("Fresh weather data fetched for stats:", weatherData.location.placeName);
         
-        if (heatwaveDays > 0) {
-          stats.heatwaves = heatwaveDays;
-          // console.log(`Heatwave alert: ${heatwaveDays} days with temperature above 35°C in forecast`);
+        // Check if there's a heatwave alert flag
+        if (weatherData.metadata && weatherData.metadata.heatwaveAlert) {
+          stats.heatwaves = 1;
+          console.log("Heatwave alert flag is set to true");
+        } 
+        // If no flag, check current temperature
+        else if (weatherData.temperature > 35) {
+          stats.heatwaves = 1;
+          console.log("Heatwave alert: Current temperature is above 35°C");
+        } 
+        // If still no alert, check forecast days
+        else if (weatherData.metadata && weatherData.metadata.forecast) {
+          const heatwaveDays = weatherData.metadata.forecast.filter(day => 
+            day.temperature > 35
+          ).length;
+          
+          if (heatwaveDays > 0) {
+            stats.heatwaves = heatwaveDays;
+            console.log(`Heatwave alert: ${heatwaveDays} days with temperature above 35°C in forecast`);
+          }
+        }
+      } else {
+        console.log("No weather data available for the user's location");
+      }
+    } catch (weatherError) {
+      console.error("Error fetching weather data for stats:", weatherError);
+      
+      // Fallback to database query if weather service fails
+      const userWeather = await Weather.findOne({
+        'metadata.userIds': userId
+      }).sort({ timestamp: -1 });
+  
+      if (userWeather) {
+        console.log("Fallback to stored weather data:", userWeather.location.placeName);
+        
+        // Check if there's a heatwave alert flag
+        if (userWeather.metadata && userWeather.metadata.heatwaveAlert) {
+          stats.heatwaves = 1;
+          console.log("Heatwave alert flag is set to true");
+        } 
+        // If no flag, check current temperature
+        else if (userWeather.temperature > 35) {
+          stats.heatwaves = 1;
+          console.log("Heatwave alert: Current temperature is above 35°C");
+        } 
+        // If still no alert, check forecast days
+        else if (userWeather.metadata && userWeather.metadata.forecast) {
+          const heatwaveDays = userWeather.metadata.forecast.filter(day => 
+            day.temperature > 35
+          ).length;
+          
+          if (heatwaveDays > 0) {
+            stats.heatwaves = heatwaveDays;
+            console.log(`Heatwave alert: ${heatwaveDays} days with temperature above 35°C in forecast`);
+          }
         }
       }
     }
-    // console.log("stats",stats);
+    console.log("stats",stats);
     res.json({
       stats,
       location: userLocation
     });
     
   } catch (error) {
-    // console.error('Error fetching dashboard stats:', error);
+    console.error('Error fetching dashboard stats:', error);
     res.status(500).json({ message: 'Error fetching dashboard stats' });
   }
 });
