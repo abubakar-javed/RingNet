@@ -823,7 +823,11 @@ async function getUserFloodAlerts(userId, updatedLocation = null) {
       
       // Process user-specific alerts if hazardous conditions exist
       if (floodData.metadata.alertInfo.hasAlert) {
+        console.log(`Processing flood alerts for user ${userId} as hazardous conditions exist`);
         await processUserFloodAlerts(userId, floodData);
+        console.log(`Finished processing flood alerts for user ${userId}`);
+      } else {
+        console.log(`No hazardous flood conditions for user ${userId}, skipping alerts processing`);
       }
       
       // Return the alert info from the cluster
@@ -939,6 +943,7 @@ async function getUserFloodAlerts(userId, updatedLocation = null) {
     
     // After updating the cluster with new alert information
     if (hasAlert) {
+      console.log(`Processing flood alerts for user ${userId} with newly fetched data`);
       await processUserFloodAlerts(userId, {
         location: {
           latitude: floodData.location.latitude,
@@ -949,6 +954,9 @@ async function getUserFloodAlerts(userId, updatedLocation = null) {
           alertInfo: alertInfo
         }
       });
+      console.log(`Finished processing flood alerts for user ${userId} with newly fetched data`);
+    } else {
+      console.log(`No hazardous flood conditions in newly fetched data for user ${userId}, skipping alerts processing`);
     }
     
     // Return the updated alert info
@@ -994,6 +1002,20 @@ async function processUserFloodAlerts(userId, floodData) {
     if (highestAlert) {
       // Check if there's already a recent alert (within last 3 hours) for this user
       const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      
+      // First check for recent notifications directly targeted to this user
+      const recentNotification = await Notification.findOne({
+        type: 'Flood',
+        recipients: userId.toString(), // Convert to string to ensure consistent comparison
+        sentAt: { $gte: threeHoursAgo }
+      });
+      
+      if (recentNotification) {
+        console.log(`Skipping flood alert for user ${userId} - already notified within last 3 hours (notification id: ${recentNotification._id})`);
+        return;
+      }
+      
+      // If no direct notification found, check for alerts in the area
       const recentAlert = await Alert.findOne({
         type: 'Flood',
         hazardModel: 'Flood',
@@ -1010,7 +1032,7 @@ async function processUserFloodAlerts(userId, floodData) {
         });
         
         if (notification) {
-          console.log(`Skipping flood alert for user ${userId} - already notified within last 3 hours`);
+          console.log(`Skipping flood alert for user ${userId} - already notified within last 3 hours for alert ${recentAlert._id}`);
           return;
         }
       }
