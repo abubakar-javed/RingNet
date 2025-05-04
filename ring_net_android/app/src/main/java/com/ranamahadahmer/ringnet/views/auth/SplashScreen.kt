@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.R
 
+
 @Composable
 fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit) {
     Scaffold(modifier = modifier.fillMaxSize()) {

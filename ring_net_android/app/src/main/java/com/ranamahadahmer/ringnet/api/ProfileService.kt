@@ -1,10 +1,7 @@
 package com.ranamahadahmer.ringnet.api
 
-import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
-import com.ranamahadahmer.ringnet.models.LocationUpdateResponse
 import com.ranamahadahmer.ringnet.models.ProfileData
 import com.ranamahadahmer.ringnet.models.ProfileResponse
-
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header

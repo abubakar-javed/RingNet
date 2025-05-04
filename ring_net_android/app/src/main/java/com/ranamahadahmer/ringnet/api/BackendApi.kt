@@ -5,6 +5,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
+
 object BackendApi {
     val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("https://ring-net.vercel.app/api/")

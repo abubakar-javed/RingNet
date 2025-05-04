@@ -1,8 +1,6 @@
 package com.ranamahadahmer.ringnet.views.dashboard
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Warning
+
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -11,14 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
-
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Settings
-
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -42,9 +40,9 @@ import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.hazard_monitoring.HazardMonitor
 import com.ranamahadahmer.ringnet.views.dashboard.home.Home
+import com.ranamahadahmer.ringnet.views.dashboard.map.Map
 import com.ranamahadahmer.ringnet.views.dashboard.notifications.Notifications
 import com.ranamahadahmer.ringnet.views.dashboard.profile.UserProfile
-import com.ranamahadahmer.ringnet.views.dashboard.map.Map
 
 
 val tabs = listOf(
