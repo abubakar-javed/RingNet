@@ -1,6 +1,7 @@
 package com.ranamahadahmer.ringnet.models
 
 import com.google.gson.annotations.SerializedName
+import com.ranamahadahmer.ringnet.models.common.Location
 
 
 sealed class UserAlertsResponse {
@@ -19,13 +20,9 @@ sealed class UserAlertsResponse {
     ) : UserAlertsResponse()
 }
 
-data class Coordinates(
-    val latitude: Double,
-    val longitude: Double
-)
 
 data class HazardAlertInfo(
-    val coordinates: Coordinates,
+    val coordinates: Location,
     @SerializedName("_id") val id: String,
     val type: String,
     val severity: String,
@@ -40,12 +37,3 @@ data class HazardAlertInfo(
     @SerializedName("__v") val version: Int,
     val distance: Int
 )
-
-//data class HazardAlertInfo(
-//    val severity: String,
-//    val detail: String,
-//    val type: String,
-//    val timestamp: String,
-//    val location: String,
-//
-//    )

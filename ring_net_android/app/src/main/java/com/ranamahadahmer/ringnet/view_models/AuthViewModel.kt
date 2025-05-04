@@ -41,10 +41,9 @@ class AuthViewModel(context: Context) : ViewModel() {
 
     private val _email: MutableStateFlow<String> = MutableStateFlow("")
     val email: StateFlow<String> get() = _email
-    private val _firstName: MutableStateFlow<String> = MutableStateFlow("")
-    val firstName: StateFlow<String> get() = _firstName
-    private val _lastName: MutableStateFlow<String> = MutableStateFlow("")
-    val lastName: StateFlow<String> get() = _lastName
+    private val _name: MutableStateFlow<String> = MutableStateFlow("")
+    val name: StateFlow<String> get() = _name
+
     private val _passwordOne: MutableStateFlow<String> = MutableStateFlow("")
     val passwordOne: StateFlow<String> get() = _passwordOne
     private val _passwordTwo: MutableStateFlow<String> = MutableStateFlow("")
@@ -59,13 +58,10 @@ class AuthViewModel(context: Context) : ViewModel() {
     val isUserLoggedIn: StateFlow<Boolean> get() = _isUserLoggedIn
 
 
-    fun changeFirstName(value: String) {
-        _firstName.value = value.trim()
+    fun changeName(value: String) {
+        _name.value = value.trim()
     }
 
-    fun changeLastName(value: String) {
-        _lastName.value = value.trim()
-    }
 
     fun changeEmail(value: String) {
         _email.value = value.trim()
@@ -98,7 +94,7 @@ class AuthViewModel(context: Context) : ViewModel() {
     }
 
     fun signUpValid(): Boolean {
-        return _firstName.value.isNotEmpty() && _lastName.value.isNotEmpty() && _email.value.isNotEmpty() && _passwordOne.value.isNotEmpty() && _passwordTwo.value.isNotEmpty()
+        return _name.value.isNotEmpty() && _email.value.isNotEmpty() && _passwordOne.value.isNotEmpty() && _passwordTwo.value.isNotEmpty()
     }
 
 
@@ -111,7 +107,7 @@ class AuthViewModel(context: Context) : ViewModel() {
             withContext(Dispatchers.Main) {
                 _token.value = savedToken.orEmpty()
                 _userId.value = savedUserId.orEmpty()
-                
+
                 _isUserLoggedIn.value = !savedToken.isNullOrEmpty() && !savedUserId.isNullOrEmpty()
             }
         }
@@ -158,7 +154,7 @@ class AuthViewModel(context: Context) : ViewModel() {
             _signUpResponse.value = AuthResponse.Loading
             try {
                 val request = SignUpRequestBody(
-                    name = "$firstName $lastName",
+                    name = name.value,
                     email = email.value,
                     password = passwordOne.value
                 )

@@ -2,6 +2,7 @@ package com.ranamahadahmer.ringnet.view_models
 
 
 import android.location.Location
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.notifications.Notification
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.ranamahadahmer.ringnet.api.BackendApi
 import com.ranamahadahmer.ringnet.api.EmergencyContactsService
+import com.ranamahadahmer.ringnet.api.ProfileService
 import com.ranamahadahmer.ringnet.api.unused.FloodDataService
 import com.ranamahadahmer.ringnet.api.StatsInfoService
 import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
@@ -18,10 +20,11 @@ import com.ranamahadahmer.ringnet.api.UpdateLocationService
 import com.ranamahadahmer.ringnet.api.UserAlertsService
 import com.ranamahadahmer.ringnet.api.unused.WeatherForecastService
 import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
-import com.ranamahadahmer.ringnet.models.HazardAlertInfo
 import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
 import com.ranamahadahmer.ringnet.models.LocationCoordinates
 import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
+import com.ranamahadahmer.ringnet.models.ProfileData
+import com.ranamahadahmer.ringnet.models.ProfileResponse
 import com.ranamahadahmer.ringnet.models.StatsInfoResponse
 import com.ranamahadahmer.ringnet.models.UserAlertsResponse
 import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
@@ -37,6 +40,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.SocketTimeoutException
 
 import java.util.concurrent.TimeUnit
 
@@ -84,6 +88,89 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
 
     private val _updateLocationService: UpdateLocationService =
         BackendApi.retrofit.create(UpdateLocationService::class.java)
+
+    private val _profileService: ProfileService =
+        BackendApi.retrofit.create(ProfileService::class.java)
+
+
+    private val _profile = MutableStateFlow<ProfileResponse>(ProfileResponse.Initial)
+
+    val profile: StateFlow<ProfileResponse> = _profile
+
+
+    private val _isEditingProfile = MutableStateFlow<Boolean>(false)
+    val isEditingProfile: StateFlow<Boolean> = _isEditingProfile
+
+    private val _name = MutableStateFlow<String>("")
+    val name: StateFlow<String> = _name
+
+    private val _email = MutableStateFlow<String>("")
+    val email: StateFlow<String> = _email
+
+    private val _phone = MutableStateFlow<String>("")
+    val phone: StateFlow<String> = _phone
+
+
+    val alertTypes = setOf<String>("Earthquake", "Flood", "Tsunami", "Heatwave")
+
+
+    private val _selectedAlerts = MutableStateFlow<List<String>>(
+        emptyList()
+    )
+    val selectedAlerts: StateFlow<List<String>> = _selectedAlerts
+
+
+    fun setSelectedAlertClickRow(alert: String) {
+        _selectedAlerts.value = if (_selectedAlerts.value.contains(alert)) {
+            _selectedAlerts.value - alert
+        } else {
+            _selectedAlerts.value + alert
+        }
+    }
+
+    fun setSelectedAlertClickBox(checked: Boolean, alert: String) {
+        _selectedAlerts.value = if (checked) {
+            _selectedAlerts.value + alert
+        } else {
+            _selectedAlerts.value - alert
+        }
+    }
+
+
+    private val _showAlertDialog = MutableStateFlow<Boolean>(false)
+    val showAlertDialog: StateFlow<Boolean> = _showAlertDialog
+
+    fun setShowAlertDialog(show: Boolean) {
+        _showAlertDialog.value = show
+    }
+
+
+    fun setEditingProfile(isEditing: Boolean) {
+        _isEditingProfile.value = isEditing
+    }
+
+    fun setName(name: String) {
+        _name.value = name
+    }
+
+    fun setEmail(email: String) {
+        _email.value = email
+    }
+
+    fun setPhone(phone: String) {
+        _phone.value = phone
+    }
+
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage
+
+    fun showSnackbar(message: String) {
+        _snackbarMessage.value = message
+        viewModelScope.launch {
+            delay(1000)
+            _snackbarMessage.value = null
+        }
+    }
 
     private val _notifications = MutableStateFlow(
         emptyList<Notification>(
@@ -142,29 +229,6 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
     }
 
 
-    //    private val _hazardAlerts = MutableStateFlow(
-//        listOf<HazardAlertInfo>(
-//            HazardAlertInfo(
-//
-//                detail = "Magnitude 6.2 earthquake detected",
-//                location = "Nepal, Kathmandu",
-//                severity = "HIGH",
-//                type = "Earthquake",
-//                timestamp = "3/15/2024, 1:30:00 PM",
-//
-//                ),
-//            HazardAlertInfo(
-//
-//                severity = "HIGH",
-//                detail = "Potential tsunami threat detected",
-//                type = "Tsunami",
-//                timestamp = "3/14/2024, 8:45:00 PM",
-//                location = "Indonesia, Jakarta",
-//            )
-//
-//
-//        )
-//    )
     private val _hazardAlerts = MutableStateFlow<UserAlertsResponse>(UserAlertsResponse.Initial)
     val hazardAlert: StateFlow<UserAlertsResponse> = _hazardAlerts
 
@@ -259,7 +323,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                 } catch (e: Exception) {
                     if (attempt == MAX_RETRIES - 1) {
                         val errorMessage = when (e) {
-                            is java.net.SocketTimeoutException -> "Connection timed out. Please check your internet connection."
+                            is SocketTimeoutException -> "Connection timed out. Please check your internet connection."
                             else -> e.message ?: "An unknown error occurred"
                         }
                         _emergencyContacts.value = EmergencyContactsResponse.Error(errorMessage)
@@ -322,7 +386,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                 } catch (e: Exception) {
                     if (attempt == MAX_RETRIES - 1) {
                         val errorMessage = when (e) {
-                            is java.net.SocketTimeoutException -> "Connection timed out. Please check your internet connection."
+                            is SocketTimeoutException -> "Connection timed out. Please check your internet connection."
                             else -> e.message ?: "An unknown error occurred"
                         }
                         _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
@@ -335,6 +399,132 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         }
     }
 
+    fun getProfile() {
+        viewModelScope.launch {
+            _profile.value = ProfileResponse.Loading
+            try {
+                val result = withContext(Dispatchers.Default) {
+                    _profileService.getProfile(
+                        token = "Bearer ${authViewModel.token.value}"
+                    )
+                }
+                _profile.value = result
+                setName((_profile.value as ProfileResponse.Success).name)
+                setEmail((_profile.value as ProfileResponse.Success).email)
+                setPhone((_profile.value as ProfileResponse.Success).phone ?: "")
+                _selectedAlerts.value = (_profile.value as ProfileResponse.Success).alertPreferences
+
+            } catch (e: Exception) {
+                _profile.value = ProfileResponse.Error(e.message ?: "Failed to load profile")
+            }
+        }
+    }
+
+
+//    fun verifyUpdates() {
+//        viewModelScope.launch {
+//            if (_name.value.isEmpty()) {
+//                _profile.value = ProfileResponse.Error("Name cannot be empty")
+//                delay(1000)
+//                getProfile()
+//                return@launch
+//            }
+//
+//            if (_email.value.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(_email.value).matches()) {
+//                _profile.value = ProfileResponse.Error("Invalid email format")
+//                delay(1000)
+//                getProfile()
+//                return@launch
+//            }
+//
+//            try {
+//                val currentProfile = (_profile.value as? ProfileResponse.Success)
+//                if (currentProfile != null) {
+//                    updateProfile(
+//                        ProfileData(
+//                            id = currentProfile.id,
+//                            name = _name.value,
+//                            email = _email.value,
+//                            phone = _phone.value,
+//                            description = currentProfile.description,
+//                            locationString = currentProfile.locationString,
+//                            alertPreferences = _selectedAlerts.value,
+//                            location = currentProfile.location,
+//                            createdAt = currentProfile.createdAt,
+//                            updatedAt = currentProfile.updatedAt,
+//                            v = currentProfile.v
+//                        )
+//                    )
+//                    _isEditingProfile.value = false
+//                    delay(1000)
+//                    getProfile()
+//                }
+//            } catch (e: Exception) {
+//                _profile.value = ProfileResponse.Error(e.message ?: "Failed to update profile")
+//            }
+//        }
+//    }
+
+    fun verifyUpdates() {
+        _isEditingProfile.value = false
+        viewModelScope.launch {
+            if (_name.value.isEmpty()) {
+                showSnackbar("Name cannot be empty")
+                getProfile()
+                return@launch
+            }
+
+            if (_email.value.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(_email.value).matches()) {
+                showSnackbar("Invalid email format")
+                getProfile()
+                return@launch
+            }
+
+            try {
+                val currentProfile = (_profile.value as? ProfileResponse.Success)
+                if (currentProfile != null) {
+                    updateProfile(
+                        ProfileData(
+                            id = currentProfile.id,
+                            name = _name.value,
+                            email = _email.value,
+                            phone = _phone.value,
+                            description = currentProfile.description,
+                            locationString = currentProfile.locationString,
+                            alertPreferences = _selectedAlerts.value,
+                            location = currentProfile.location,
+                            createdAt = currentProfile.createdAt,
+                            updatedAt = currentProfile.updatedAt,
+                            v = currentProfile.v
+                        )
+                    )
+
+                    showSnackbar("Profile updated successfully")
+                    getProfile()
+                }
+            } catch (e: Exception) {
+                showSnackbar(e.message ?: "Failed to update profile")
+                getProfile()
+            }
+        }
+    }
+
+    fun updateProfile(request: ProfileData) {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    _profileService.updateProfile(
+                        token = "Bearer ${authViewModel.token.value}",
+                        request = request
+                    )
+                }
+                _profile.value = result
+            } catch (e: Exception) {
+                println("Error while updating profile: ${e.message}")
+            }
+        }
+    }
+
     fun loadData() {
         viewModelScope.launch {
 
@@ -342,6 +532,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                 async { getEmergencyContacts() },
                 async { getStatsInfo() },
                 async { getUserAlerts() },
+                async { getProfile() },
 
                 )
             jobs.awaitAll()

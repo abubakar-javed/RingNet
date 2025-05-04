@@ -1,7 +1,8 @@
 package com.ranamahadahmer.ringnet.models
 
 import com.google.gson.annotations.SerializedName
-import com.ranamahadahmer.ringnet.models.unused.Location
+import com.ranamahadahmer.ringnet.models.common.Location
+
 
 sealed class StatsInfoResponse {
     data object Initial : StatsInfoResponse()
