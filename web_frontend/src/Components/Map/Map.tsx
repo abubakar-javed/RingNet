@@ -7,10 +7,10 @@ import {
   Warning as HazardIcon,
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
-  Tsunami as TsunamiIcon,
-  WaterDrop as FloodIcon,
-  Thermostat as HeatwaveIcon,
-  Public as EarthquakeIcon
+  // Tsunami as TsunamiIcon,
+  // WaterDrop as FloodIcon,
+  // Thermostat as HeatwaveIcon,
+  // Public as EarthquakeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -50,16 +50,16 @@ const alertToHazard = (alert: Alert): Hazard => ({
 });
 
 // Function to check if two coordinates are very close to each other
-const areCoordinatesClose = (coord1: [number, number], coord2: [number, number], threshold = 0.005): boolean => {
-  const [lon1, lat1] = coord1;
-  const [lon2, lat2] = coord2;
+// const areCoordinatesClose = (coord1: [number, number], coord2: [number, number], threshold = 0.005): boolean => {
+//   const [lon1, lat1] = coord1;
+//   const [lon2, lat2] = coord2;
   
-  // Calculate the approximate distance
-  const latDiff = Math.abs(lat1 - lat2);
-  const lonDiff = Math.abs(lon1 - lon2);
+//   // Calculate the approximate distance
+//   const latDiff = Math.abs(lat1 - lat2);
+//   const lonDiff = Math.abs(lon1 - lon2);
   
-  return latDiff < threshold && lonDiff < threshold;
-};
+//   return latDiff < threshold && lonDiff < threshold;
+// };
 
 // Function to create a spiral pattern for spreading out markers
 const spiralOffset = (index: number, spiralSpread = 0.0005): [number, number] => {
@@ -104,15 +104,15 @@ const Map = () => {
   };
 
   // Function to get hazard icon based on type
-  const getHazardIcon = (type: string) => {
-    switch (type) {
-      case 'Earthquake': return <EarthquakeIcon sx={{ color: '#ef4444' }} />;
-      case 'Tsunami': return <TsunamiIcon sx={{ color: '#f59e0b' }} />;
-      case 'Flood': return <FloodIcon sx={{ color: '#3b82f6' }} />;
-      case 'Heatwave': return <HeatwaveIcon sx={{ color: '#f59e0b' }} />;
-      default: return <HazardIcon />;
-    }
-  };
+  // const getHazardIcon = (type: string) => {
+  //   switch (type) {
+  //     case 'Earthquake': return <EarthquakeIcon sx={{ color: '#ef4444' }} />;
+  //     case 'Tsunami': return <TsunamiIcon sx={{ color: '#f59e0b' }} />;
+  //     case 'Flood': return <FloodIcon sx={{ color: '#3b82f6' }} />;
+  //     case 'Heatwave': return <HeatwaveIcon sx={{ color: '#f59e0b' }} />;
+  //     default: return <HazardIcon />;
+  //   }
+  // };
 
   // Fetch all alerts for the map
   useEffect(() => {
