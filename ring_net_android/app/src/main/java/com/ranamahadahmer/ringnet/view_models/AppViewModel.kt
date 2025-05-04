@@ -11,16 +11,22 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.ranamahadahmer.ringnet.api.BackendApi
 import com.ranamahadahmer.ringnet.api.EmergencyContactsService
-import com.ranamahadahmer.ringnet.api.FloodDataService
+import com.ranamahadahmer.ringnet.api.unused.FloodDataService
 import com.ranamahadahmer.ringnet.api.StatsInfoService
-import com.ranamahadahmer.ringnet.api.TsunamiAlertService
-import com.ranamahadahmer.ringnet.api.WeatherForecastService
+import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
+import com.ranamahadahmer.ringnet.api.UpdateLocationService
+import com.ranamahadahmer.ringnet.api.UserAlertsService
+import com.ranamahadahmer.ringnet.api.unused.WeatherForecastService
 import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
-import com.ranamahadahmer.ringnet.models.FloodDataResponse
+import com.ranamahadahmer.ringnet.models.HazardAlertInfo
+import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
+import com.ranamahadahmer.ringnet.models.LocationCoordinates
+import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
 import com.ranamahadahmer.ringnet.models.StatsInfoResponse
-import com.ranamahadahmer.ringnet.models.TsunamiAlertResponse
-import com.ranamahadahmer.ringnet.models.WeatherForecastResponse
-import com.ranamahadahmer.ringnet.views.dashboard.hazard_monitoring.HazardAlertInfo
+import com.ranamahadahmer.ringnet.models.UserAlertsResponse
+import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
+import com.ranamahadahmer.ringnet.models.unused.WeatherForecastResponse
+
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,6 +37,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
 import java.util.concurrent.TimeUnit
 
 class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
@@ -73,6 +80,10 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
     val weatherForecast: StateFlow<WeatherForecastResponse> = _weatherForecast
 
     val statsInfo: StateFlow<StatsInfoResponse> = _statsInfo
+
+
+    private val _updateLocationService: UpdateLocationService =
+        BackendApi.retrofit.create(UpdateLocationService::class.java)
 
     private val _notifications = MutableStateFlow(
         emptyList<Notification>(
@@ -131,31 +142,31 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
     }
 
 
-    private val _hazardAlerts = MutableStateFlow(
-        emptyList<HazardAlertInfo>(
+    //    private val _hazardAlerts = MutableStateFlow(
+//        listOf<HazardAlertInfo>(
 //            HazardAlertInfo(
-//                title = "Earthquake Alert",
-//                description = "Magnitude 6.2 earthquake detected",
+//
+//                detail = "Magnitude 6.2 earthquake detected",
 //                location = "Nepal, Kathmandu",
 //                severity = "HIGH",
 //                type = "Earthquake",
-//                time = "3/15/2024, 1:30:00 PM",
+//                timestamp = "3/15/2024, 1:30:00 PM",
 //
 //                ),
 //            HazardAlertInfo(
-//                title = "Tsunami Alert",
+//
 //                severity = "HIGH",
-//                description = "Potential tsunami threat detected",
+//                detail = "Potential tsunami threat detected",
 //                type = "Tsunami",
-//                time = "3/14/2024, 8:45:00 PM",
+//                timestamp = "3/14/2024, 8:45:00 PM",
 //                location = "Indonesia, Jakarta",
 //            )
-
-
-        )
-    )
-
-    val hazardAlert: StateFlow<List<HazardAlertInfo>> = _hazardAlerts
+//
+//
+//        )
+//    )
+    private val _hazardAlerts = MutableStateFlow<UserAlertsResponse>(UserAlertsResponse.Initial)
+    val hazardAlert: StateFlow<UserAlertsResponse> = _hazardAlerts
 
     fun setHazardTab(page: Int) {
         viewModelScope.launch {
@@ -168,6 +179,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         _currentLocation.value = LatLng(location.latitude, location.longitude)
     }
 
+
     fun startLocationMonitoring(isAuthenticated: Boolean, getLocation: () -> Unit) {
         if (!isAuthenticated) {
             locationMonitoringJob?.cancel()
@@ -175,13 +187,53 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         }
 
         locationMonitoringJob = viewModelScope.launch {
-            loadData()
             while (true) {
                 getLocation()
-                delay(TimeUnit.MINUTES.toMillis(1))
+                if (_currentLocation.value == null) {
+                    delay(
+                        TimeUnit.SECONDS.toMillis(
+                            1
+                        )
+                    )
+                    continue
+                }
+                viewModelScope.launch {
+                    val response = withContext(Dispatchers.IO) {
+                        _updateLocationService.updateLocation(
+                            token = "Bearer ${authViewModel.token.value}",
+                            location = LocationUpdateRequest(
+                                location = LocationCoordinates(
+                                    latitude = _currentLocation.value!!.latitude,
+                                    longitude = _currentLocation.value!!.longitude
+                                )
+                            )
+                        )
+                    }
+
+                    if (response.message == "Location updated successfully") {
+                        println("Location Updated successfully")
+                    } else {
+                        println("Failed to update location: ${response.message}")
+                        delay(
+                            TimeUnit.SECONDS.toMillis(
+                                2
+                            )
+                        )
+                        return@launch
+                    }
+                }
+
+
+                loadData()
+                delay(
+                    TimeUnit.MINUTES.toMillis(
+                        5
+                    )
+                )
             }
         }
     }
+
 
     override fun onCleared() {
         super.onCleared()
@@ -197,9 +249,8 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                     val result = withContext(Dispatchers.IO) {
                         _emergencyContactsService.getContacts(
                             token = "Bearer ${authViewModel.token.value}",
-                            latitude = _currentLocation.value?.latitude ?: 0.0,
-                            longitude = _currentLocation.value?.longitude ?: 0.0
-                        )
+
+                            )
                     }
                     _emergencyContacts.value = EmergencyContactsResponse.Success(result)
 
@@ -221,86 +272,6 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         }
     }
 
-    fun getFloodData() {
-        viewModelScope.launch {
-            _floodData.value = FloodDataResponse.Loading
-            repeat(MAX_RETRIES) { attempt ->
-                try {
-                    val result = withContext(Dispatchers.IO) {
-                        _floodDataService.getFloodData(
-                            token = "Bearer ${authViewModel.token.value}",
-                            latitude = _currentLocation.value?.latitude ?: 0.0,
-                            longitude = _currentLocation.value?.longitude ?: 0.0
-                        )
-                    }
-                    _floodData.value = result
-
-                    return@launch
-                } catch (e: Exception) {
-                    if (attempt == MAX_RETRIES - 1) {
-                        _floodData.value =
-                            FloodDataResponse.Error(e.message ?: "An unknown error occurred")
-                    } else {
-                        delay(RETRY_DELAY_MS)
-                    }
-                }
-            }
-        }
-    }
-
-    fun getTsunamiAlert() {
-        viewModelScope.launch {
-            _tsunamiAlert.value = TsunamiAlertResponse.Loading
-            repeat(MAX_RETRIES) { attempt ->
-                try {
-                    val result = withContext(Dispatchers.IO) {
-                        _tsunamiAlertService.getTsunamiData(
-                            token = "Bearer ${authViewModel.token.value}",
-                            latitude = _currentLocation.value?.latitude ?: 0.0,
-                            longitude = _currentLocation.value?.longitude ?: 0.0
-                        )
-                    }
-                    _tsunamiAlert.value = result
-
-                    return@launch
-                } catch (e: Exception) {
-                    if (attempt == MAX_RETRIES - 1) {
-                        _tsunamiAlert.value =
-                            TsunamiAlertResponse.Error(e.message ?: "An unknown error occurred")
-                    } else {
-                        delay(RETRY_DELAY_MS)
-                    }
-                }
-            }
-        }
-    }
-
-    fun getWeatherForecast() {
-        viewModelScope.launch {
-            _weatherForecast.value = WeatherForecastResponse.Loading
-            repeat(MAX_RETRIES) { attempt ->
-                try {
-                    val result = withContext(Dispatchers.IO) {
-                        _weatherForecastService.getWeatherForecast(
-                            token = "Bearer ${authViewModel.token.value}",
-                            latitude = _currentLocation.value?.latitude ?: 0.0,
-                            longitude = _currentLocation.value?.longitude ?: 0.0
-                        )
-                    }
-                    _weatherForecast.value = result
-                    println(_weatherForecast.value)
-                    return@launch
-                } catch (e: Exception) {
-                    if (attempt == MAX_RETRIES - 1) {
-                        _weatherForecast.value =
-                            WeatherForecastResponse.Error(e.message ?: "An unknown error occurred")
-                    } else {
-                        delay(RETRY_DELAY_MS)
-                    }
-                }
-            }
-        }
-    }
 
     fun getStatsInfo() {
         viewModelScope.launch {
@@ -310,8 +281,6 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                     val result = withContext(Dispatchers.IO) {
                         _statsInfoService.getStatsInfo(
                             token = "Bearer ${authViewModel.token.value}",
-                            latitude = _currentLocation.value?.latitude ?: 0.0,
-                            longitude = _currentLocation.value?.longitude ?: 0.0
                         )
                     }
                     _statsInfo.value = StatsInfoResponse.Success(
@@ -333,19 +302,128 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         }
     }
 
+    // Add this property at the top of AppViewModel with other service declarations
+    private val _userAlertsService: UserAlertsService =
+        BackendApi.retrofit.create(UserAlertsService::class.java)
+
+    fun getUserAlerts() {
+        viewModelScope.launch {
+            _hazardAlerts.value = UserAlertsResponse.Loading
+            repeat(MAX_RETRIES) { attempt ->
+                try {
+                    val result = withContext(Dispatchers.IO) {
+                        _userAlertsService.getAlerts(
+                            token = "Bearer ${authViewModel.token.value}"
+                        )
+                    }
+                    _hazardAlerts.value = result
+                    println("User Alerts Response: $result")
+                    return@launch
+                } catch (e: Exception) {
+                    if (attempt == MAX_RETRIES - 1) {
+                        val errorMessage = when (e) {
+                            is java.net.SocketTimeoutException -> "Connection timed out. Please check your internet connection."
+                            else -> e.message ?: "An unknown error occurred"
+                        }
+                        _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
+                        println("Error fetching user alerts: $errorMessage")
+                    } else {
+                        delay(RETRY_DELAY_MS)
+                    }
+                }
+            }
+        }
+    }
+
     fun loadData() {
         viewModelScope.launch {
+
             val jobs = listOf(
                 async { getEmergencyContacts() },
-                async { getStatsInfo() }
-//                async { getFloodData() },
-//                async { getTsunamiAlert() },
-//                async { getWeatherForecast() }
-//                TODO: Lat Long are 0.0 for all the API calls, need to fix this
-            )
+                async { getStatsInfo() },
+                async { getUserAlerts() },
+
+                )
             jobs.awaitAll()
+
         }
     }
 
 
 }
+
+
+//fun getFloodData() {
+//    viewModelScope.launch {
+//        _floodData.value = FloodDataResponse.Loading
+//        repeat(MAX_RETRIES) { attempt ->
+//            try {
+//                val result = withContext(Dispatchers.IO) {
+//                    _floodDataService.getFloodData(
+//                        token = "Bearer ${authViewModel.token.value}",
+//                    )
+//                }
+//                _floodData.value = result
+//
+//                return@launch
+//            } catch (e: Exception) {
+//                if (attempt == MAX_RETRIES - 1) {
+//                    _floodData.value =
+//                        FloodDataResponse.Error(e.message ?: "An unknown error occurred")
+//                } else {
+//                    delay(RETRY_DELAY_MS)
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//fun getTsunamiAlert() {
+//    viewModelScope.launch {
+//        _tsunamiAlert.value = TsunamiAlertResponse.Loading
+//        repeat(MAX_RETRIES) { attempt ->
+//            try {
+//                val result = withContext(Dispatchers.IO) {
+//                    _tsunamiAlertService.getTsunamiData(
+//                        token = "Bearer ${authViewModel.token.value}",
+//                    )
+//                }
+//                _tsunamiAlert.value = result
+//
+//                return@launch
+//            } catch (e: Exception) {
+//                if (attempt == MAX_RETRIES - 1) {
+//                    _tsunamiAlert.value =
+//                        TsunamiAlertResponse.Error(e.message ?: "An unknown error occurred")
+//                } else {
+//                    delay(RETRY_DELAY_MS)
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//fun getWeatherForecast() {
+//    viewModelScope.launch {
+//        _weatherForecast.value = WeatherForecastResponse.Loading
+//        repeat(MAX_RETRIES) { attempt ->
+//            try {
+//                val result = withContext(Dispatchers.IO) {
+//                    _weatherForecastService.getWeatherForecast(
+//                        token = "Bearer ${authViewModel.token.value}",
+//                    )
+//                }
+//                _weatherForecast.value = result
+//                println(_weatherForecast.value)
+//                return@launch
+//            } catch (e: Exception) {
+//                if (attempt == MAX_RETRIES - 1) {
+//                    _weatherForecast.value =
+//                        WeatherForecastResponse.Error(e.message ?: "An unknown error occurred")
+//                } else {
+//                    delay(RETRY_DELAY_MS)
+//                }
+//            }
+//        }
+//    }
+//}

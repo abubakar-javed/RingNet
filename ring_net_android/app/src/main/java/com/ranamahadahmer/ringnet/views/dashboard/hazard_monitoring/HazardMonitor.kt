@@ -33,10 +33,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
+import com.ranamahadahmer.ringnet.models.HazardAlertInfo
+import com.ranamahadahmer.ringnet.models.UserAlertsResponse
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 
 import com.ranamahadahmer.ringnet.views.dashboard.HazardDecorations
 import com.ranamahadahmer.ringnet.views.dashboard.common.emptyDataPlaceholder
+import com.ranamahadahmer.ringnet.views.dashboard.home.components.EmergencyContactCard
 
 
 @Composable
@@ -78,16 +82,55 @@ fun HazardMonitor(viewModel: AppViewModel) {
                             .fillMaxSize()
                             .padding(horizontal = 8.dp)
                     ) {
-                        if (hazardAlertInfo.value.isEmpty()) {
-                            item {
-                                emptyDataPlaceholder()
+
+                        when (hazardAlertInfo.value) {
+                            is UserAlertsResponse.Loading -> {
+                                item {
+                                    Text(
+                                        text = "Loading Alerts...",
+                                        fontSize = 16.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+
                             }
+
+                            is UserAlertsResponse.Error -> {
+                                item {
+                                    Text(
+                                        text = "Error Loading Alerts..",
+                                        fontSize = 16.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
+
+                            is UserAlertsResponse.Success -> {
+                                val alerts =
+                                    (hazardAlertInfo.value as UserAlertsResponse.Success).alerts
+                                if (alerts.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = "No Alerts found for your Location",
+                                            fontSize = 16.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                } else {
+                                    items(alerts) { alert ->
+                                        AlertCard(alert)
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+
+                                }
+                            }
+
+                            UserAlertsResponse.Initial -> TODO()
                         }
 
-                        items(hazardAlertInfo.value) { alert ->
-                            AlertCard(alert)
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
                     }
                 }
 
@@ -120,16 +163,16 @@ fun HazardMonitor(viewModel: AppViewModel) {
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }
-                        if (hazardAlertInfo.value.isEmpty()) {
-                            item {
-                                emptyDataPlaceholder()
-                            }
-                        }
-                        items(hazardAlertInfo.value) { alert ->
-                            TableRow(alert)
-                            HorizontalDivider(thickness = 1.dp)
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
+//                        if (hazardAlertInfo.value.isEmpty()) {
+//                            item {
+//                                emptyDataPlaceholder()
+//                            }
+//                        }
+//                        items(hazardAlertInfo.value) { alert ->
+//                            TableRow(alert)
+//                            HorizontalDivider(thickness = 1.dp)
+//                            Spacer(modifier = Modifier.height(8.dp))
+//                        }
                     }
 
                 }
@@ -160,7 +203,7 @@ fun TableRow(hazard: HazardAlertInfo) {
         Text(hazard.type, modifier = Modifier.weight(1.5f))
 
         Text(hazard.location.split(",")[0], modifier = Modifier.weight(2f))
-        Text(hazard.time.split(",")[0], modifier = Modifier.weight(1.5f))
+        Text(hazard.timestamp.split(",")[0], modifier = Modifier.weight(1.5f))
 
 
     }
@@ -200,13 +243,13 @@ fun AlertCard(alert: HazardAlertInfo) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        alert.title,
+                        alert.type + " Alert",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        alert.severity,
+                        alert.severity.uppercase(),
                         fontSize = 12.sp,
                         color = Color.Red,
                         fontWeight = FontWeight.Bold,
@@ -217,7 +260,7 @@ fun AlertCard(alert: HazardAlertInfo) {
                 }
 
                 Text(
-                    alert.description,
+                    alert.details,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -230,7 +273,7 @@ fun AlertCard(alert: HazardAlertInfo) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "Time: ${alert.time}",
+                    "Time: ${alert.timestamp}",
                     fontSize = 12.sp,
                     color = Color.DarkGray
                 )
@@ -240,12 +283,3 @@ fun AlertCard(alert: HazardAlertInfo) {
     }
 }
 
-data class HazardAlertInfo(
-    val title: String,
-    val severity: String,
-    val description: String,
-    val type: String,
-    val time: String,
-    val location: String,
-
-    )

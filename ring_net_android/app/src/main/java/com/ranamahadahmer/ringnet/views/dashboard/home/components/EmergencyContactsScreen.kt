@@ -88,38 +88,43 @@ fun EmergencyContactCard(contact: EmergencyContact) {
             .fillMaxWidth()
             .padding(vertical = 6.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
+
+            Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .padding(16.dp),
+
+            ) {
                 Text(
                     text = contact.dept,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Call: ${contact.contact}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-            }
-
-            Text(
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Call: ${contact.contact}",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Text(
                 text = contact.status,
-                color = Color(0xFF22C55E), // Green for "Available"
+                color = Color(0xFF22C55E),
                 fontSize = 14.sp,
                 modifier = Modifier
                     .background(Color(0xE6ECFDF5), RoundedCornerShape(8.dp))
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             )
+                }
+            }
 
-        }
+
     }
 }
 
@@ -127,9 +132,10 @@ fun EmergencyContactCard(contact: EmergencyContact) {
 @Composable
 fun EmergencyContactCardPreview() {
     val contact = EmergencyContact(
-        dept = "Fire Department",
-        contact = "123-456-7890",
+        dept = "National Disaster Management Authority (NDMA)",
+        contact = "+92-51-9106032",
         status = "Available"
     )
     EmergencyContactCard(contact)
+
 }
