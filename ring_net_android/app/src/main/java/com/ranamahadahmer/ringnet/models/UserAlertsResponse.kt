@@ -37,3 +37,6 @@ data class HazardAlertInfo(
     @SerializedName("__v") val version: Int,
     val distance: Int
 )
+
+
+

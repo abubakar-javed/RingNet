@@ -3,7 +3,7 @@ package com.ranamahadahmer.ringnet.api
 import com.ranamahadahmer.ringnet.models.EmergencyContact
 import retrofit2.http.GET
 import retrofit2.http.Header
-import retrofit2.http.Query
+
 
 interface EmergencyContactsService {
     @GET("emergency-contacts")

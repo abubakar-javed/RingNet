@@ -6,12 +6,9 @@ import android.content.Context
 import android.location.Geocoder
 import android.location.Location
 import android.util.Patterns
-import androidx.lifecycle.ViewModel
-
-import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.ranamahadahmer.ringnet.api.BackendApi
@@ -19,15 +16,14 @@ import com.ranamahadahmer.ringnet.api.DeleteUserNotificationService
 import com.ranamahadahmer.ringnet.api.EmergencyContactsService
 import com.ranamahadahmer.ringnet.api.ProfileService
 import com.ranamahadahmer.ringnet.api.ReadUserNotificationService
-import com.ranamahadahmer.ringnet.api.unused.FloodDataService
 import com.ranamahadahmer.ringnet.api.StatsInfoService
-import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
 import com.ranamahadahmer.ringnet.api.UpdateLocationService
 import com.ranamahadahmer.ringnet.api.UserAlertsService
 import com.ranamahadahmer.ringnet.api.UserNotificationService
+import com.ranamahadahmer.ringnet.api.unused.FloodDataService
+import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
 import com.ranamahadahmer.ringnet.api.unused.WeatherForecastService
 import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
-import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
 import com.ranamahadahmer.ringnet.models.LocationCoordinates
 import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
 import com.ranamahadahmer.ringnet.models.NotificationInfo
@@ -36,22 +32,20 @@ import com.ranamahadahmer.ringnet.models.ProfileResponse
 import com.ranamahadahmer.ringnet.models.StatsInfoResponse
 import com.ranamahadahmer.ringnet.models.UserAlertsResponse
 import com.ranamahadahmer.ringnet.models.UserNotificationResponse
+import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
 import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
 import com.ranamahadahmer.ringnet.models.unused.WeatherForecastResponse
-
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
-
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
 import java.util.Locale
-
 import java.util.concurrent.TimeUnit
 
 class AppViewModel(
@@ -231,10 +225,13 @@ class AppViewModel(
 
     fun deleteNotification(notification: NotificationInfo) {
         viewModelScope.launch {
+
             _deleteUserNotificationService.deleteNotification(
                 token = "Bearer ${authViewModel.token.value}",
                 notificationId = notification.id
             )
+
+
         }
 
         val updatedNotifications =
@@ -252,6 +249,7 @@ class AppViewModel(
 
     private val _hazardAlerts = MutableStateFlow<UserAlertsResponse>(UserAlertsResponse.Initial)
     val hazardAlert: StateFlow<UserAlertsResponse> = _hazardAlerts
+
 
     fun setHazardTab(page: Int) {
         viewModelScope.launch {
@@ -426,6 +424,7 @@ class AppViewModel(
     private val _userAlertsService: UserAlertsService =
         BackendApi.retrofit.create(UserAlertsService::class.java)
 
+
     fun getUserAlerts() {
         viewModelScope.launch {
             _hazardAlerts.value = UserAlertsResponse.Loading
@@ -455,6 +454,7 @@ class AppViewModel(
         }
     }
 
+
     fun getProfile() {
         viewModelScope.launch {
             _profile.value = ProfileResponse.Loading
@@ -465,9 +465,9 @@ class AppViewModel(
                     )
                 }
                 _profile.value = result
-                println("Before ${_selectedAlerts.value}")
+
                 _selectedAlerts.value = (_profile.value as ProfileResponse.Success).alertPreferences
-                println("After ${_selectedAlerts.value}")
+
                 setName((_profile.value as ProfileResponse.Success).name)
                 setEmail((_profile.value as ProfileResponse.Success).email)
                 setPhone((_profile.value as ProfileResponse.Success).phone ?: "")
@@ -595,9 +595,11 @@ class AppViewModel(
                 async { getEmergencyContacts() },
                 async { getStatsInfo() },
                 async { getUserAlerts() },
+
                 async { getProfile() },
                 async { getUserNotifications() },
-            )
+
+                )
             jobs.awaitAll()
 
         }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
 
+
 enum class TextFieldType {
     Name,
     Email,

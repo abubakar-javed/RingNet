@@ -12,7 +12,7 @@ object HazardDecorations {
     val hazardBgColors = mapOf<String, Color>(
         "Earthquake" to Color(0xFFF87171),
         "Flood" to Color(0xFF60A5FA),
-        "Heatwave" to Color(0xFFFACC15),
+        "Heatwave" to Color(0xFFFDCE10),
         "Tsunami" to Color(0x952D5686)
     )
     val hazardIcons = mapOf<String, ImageVector>(
@@ -23,8 +23,8 @@ object HazardDecorations {
     )
     val hazardSeverityColor = mapOf<String, Color>(
         "error" to Color(0xFFF87171),
-        "warning" to Color(0xFFFACC15),
-        "info" to Color(0xFF60A5FA),
+        "warning" to Color(0xFF60A5FA),
+        "info" to Color(0xFF24AC01),
     )
 
     val hazardSeverityText = mapOf<String, String>(

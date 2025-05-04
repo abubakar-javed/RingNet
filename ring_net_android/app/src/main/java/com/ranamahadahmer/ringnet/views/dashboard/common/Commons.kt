@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+
 @Composable
 fun emptyDataPlaceholder() {
     Box(
@@ -23,5 +24,20 @@ fun emptyDataPlaceholder() {
             color = Color.Gray,
             modifier = Modifier.padding(16.dp)
         )
+    }
+}
+
+fun formatDateTime(isoDateTime: String): String {
+    return try {
+        val instant = java.time.Instant.parse(isoDateTime)
+        val localDateTime = java.time.LocalDateTime.ofInstant(
+            instant,
+            java.time.ZoneId.systemDefault()
+        )
+
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy - h:mm a")
+        localDateTime.format(formatter)
+    } catch (e: Exception) {
+        isoDateTime // Return original string if parsing fails
     }
 }

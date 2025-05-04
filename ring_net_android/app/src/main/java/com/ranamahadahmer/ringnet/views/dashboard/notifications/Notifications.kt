@@ -1,5 +1,6 @@
 package com.ranamahadahmer.ringnet.views.dashboard.notifications
 
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,18 +35,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ranamahadahmer.ringnet.models.NotificationInfo
-import com.ranamahadahmer.ringnet.models.ProfileResponse
 import com.ranamahadahmer.ringnet.models.UserNotificationResponse
-
-import com.ranamahadahmer.ringnet.views.dashboard.common.emptyDataPlaceholder
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.HazardDecorations
+import com.ranamahadahmer.ringnet.views.dashboard.common.formatDateTime
 
 @Composable
 fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
@@ -303,8 +301,8 @@ fun NotificationCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (notification.status != "Read") Color(0xFFFFEEEE)
-            else Color(0xFAE3F2FD)
+            containerColor = if (notification.status != "Read") Color(0xFAE3F2FD)
+            else Color(0xFFDDFADD)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -338,7 +336,7 @@ fun NotificationCard(
 
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(notification.createdAt, fontSize = 12.sp, color = Color.Gray)
+                Text(formatDateTime(notification.createdAt), fontSize = 12.sp, color = Color.Gray)
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -377,7 +375,7 @@ fun SeverityBadge(severity: String) {
     Box(
         modifier = Modifier
             .background(
-                color = Color(0xFFFFE5E5),
+                color = Color(0xFFFDD9D9),
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 8.dp, vertical = 4.dp)

@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,21 +22,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.Granularity
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.Loading
-
-
 import com.ranamahadahmer.ringnet.views.auth.SplashScreen
-
-
 import com.ranamahadahmer.ringnet.views.auth.forget_password.ForgetPasswordEmailScreen
 import com.ranamahadahmer.ringnet.views.auth.forget_password.ForgetPasswordPasswordScreen
 import com.ranamahadahmer.ringnet.views.auth.shared_elements.ConfirmationScreen
@@ -48,7 +37,6 @@ import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpNameScreen
 import com.ranamahadahmer.ringnet.views.dashboard.Dashboard
 import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : ComponentActivity() {
@@ -117,7 +105,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Permission handling methods
+
     private fun checkPermissions(): Boolean {
         return requiredPermissions.all { permission ->
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
