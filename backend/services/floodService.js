@@ -1015,13 +1015,22 @@ async function processUserFloodAlerts(userId, floodData) {
         }
       }
       
-      // Create user-specific alert entry
+      // Log the date string for debugging
+      console.log(`Alert date string: ${highestAlert.date}`);
+      
+      // Create a valid date object using the current date
+      // The highestAlert.date can be in the future based on forecast
+      const alertDate = new Date(highestAlert.date);
+      console.log(`Parsed alert date: ${alertDate.toISOString()}`);
+      
+      // Create user-specific alert entry - use current date for timestamp
       const newAlert = new Alert({
         type: 'Flood',
         severity: getSeverity(highestAlert.discharge, avgDischarge) === 'Severe' ? 'error' : 
                  getSeverity(highestAlert.discharge, avgDischarge) === 'High' ? 'warning' : 'info',
         location: floodData.location.placeName || 'River basin area',
-        timestamp: new Date(highestAlert.date),
+        timestamp: new Date(), // Use current date for timestamp, not the forecast date
+        forecastDate: alertDate, // Store the forecast date separately
         hazardId: new mongoose.Types.ObjectId(),
         hazardModel: 'Flood',
         coordinates: {
@@ -1046,7 +1055,7 @@ async function processUserFloodAlerts(userId, floodData) {
         impactRadius: 50, // Default or calculate based on discharge
         sentAt: new Date(),
         status: 'Sent',
-        message: `Flood alert: ${getSeverity(highestAlert.discharge, avgDischarge)} risk of flooding on ${new Date(highestAlert.date).toLocaleDateString()}`,
+        message: `Flood alert: ${getSeverity(highestAlert.discharge, avgDischarge)} risk of flooding on ${alertDate.toLocaleDateString()}`,
         recipients: [userId] // Add the specific user
       });
       

@@ -5,6 +5,32 @@ const auth = require('../middlewares/auth');
 const mongoose = require('mongoose');
 const { calculateDistance } = require('../utils/geoUtils');
 
+// Get all recent alerts for map view (past 3 days)
+router.get('/map-alerts', auth, async (req, res) => {
+  try {
+    // Get alerts from the last 3 days
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 3);
+    
+    // Find all alerts without filtering by user location
+    const alerts = await Alert.find({
+      timestamp: { $gte: startDate },
+      isActive: true,
+      // Only include alerts with valid coordinates
+      'coordinates.latitude': { $exists: true },
+      'coordinates.longitude': { $exists: true }
+    }).sort({ timestamp: -1 });
+    
+    res.json({
+      alerts: alerts,
+      total: alerts.length
+    });
+  } catch (error) {
+    console.error('Error fetching map alerts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get alerts for logged in user based on location
 router.get('/user-alerts', auth, async (req, res) => {
   try {

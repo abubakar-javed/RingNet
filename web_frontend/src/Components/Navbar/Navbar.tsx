@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { clearToken } from '../../State/authSlice';
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined';
 import { persistor } from '../../State/store';
+import axios from 'axios';
 import {
   AppBar,
   Toolbar,
@@ -18,7 +19,8 @@ import {
   MenuItem,
   Typography,
   Button,
-  ListItemIcon
+  ListItemIcon,
+  CircularProgress
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -78,23 +80,72 @@ const NotificationMenu = styled(Menu)(() => ({
   }
 }));
 
-const Navbar = () => {
+interface Notification {
+  _id: string;
+  type: string;
+  severity: string;
+  location: string;
+  message: string;
+  sentAt: string;
+  status: string;
+}
 
+const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
- const [notifications] = useState([
-  {
-    id: '1',
-    type: 'Flood',
-    title: 'Flood Alert',
-    message: 'River discharge: 2.2 m³/s',
-    severity: 'medium',
-    timestamp: '2025-03-13T00:00:00Z',
-    isRead: false
-  }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
+  // Fetch notifications when the component mounts
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return;
+        }
+        
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/notifications/user-notifications`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            params: {
+              limit: 10 // Fetch more than we need to show for unread count
+            }
+          }
+        );
+        
+        const allNotifications = response.data.notifications || [];
+        setNotifications(allNotifications);
+        
+        // Count unread notifications
+        const unread = allNotifications.filter(
+          (notification: Notification) => notification.status !== 'Read'
+        ).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        setError('Failed to load notifications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+    
+    // Set up an interval to periodically check for new notifications
+    const intervalId = setInterval(fetchNotifications, 60000); // Every minute
+    
+    return () => clearInterval(intervalId);
+  }, []);
   
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -102,8 +153,6 @@ const Navbar = () => {
     persistor.purge();
     navigate('/login');
   };
-
- 
 
   const handleNotificationClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -128,7 +177,7 @@ const Navbar = () => {
     }
   };
 
- const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleProfileMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
     setProfileAnchorEl(event.currentTarget);
@@ -142,6 +191,9 @@ const Navbar = () => {
     navigate(path);
     setProfileAnchorEl(null);
   };
+
+  // Get only the most recent 2 notifications
+  const recentNotifications = notifications.slice(0, 2);
 
   return (
     <AppBar
@@ -179,7 +231,7 @@ const Navbar = () => {
 
         <Stack direction="row" spacing={2} alignItems="center">
           <IconButton size="large" onClick={handleNotificationClick}>
-            <Badge badgeContent={notifications.filter(n => !n.isRead).length} color="error">
+            <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
@@ -197,50 +249,78 @@ const Navbar = () => {
               horizontal: 'right',
             }}
           >
-            <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0' }}>
+            <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight={600}>Notifications</Typography>
+              {unreadCount > 0 && (
+                <Typography variant="caption" sx={{ 
+                  bgcolor: '#ef4444', 
+                  color: 'white', 
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 10,
+                  fontWeight: 'bold' 
+                }}>
+                  {unreadCount} new
+                </Typography>
+              )}
             </Box>
             
-            <Box sx={{ maxHeight: '320px', overflow:'visible' }}>
-              {notifications.map((notification) => (
-                <MenuItem 
-                  key={notification.id} 
-                  sx={{
-                    py: 2,
-                    borderBottom: '1px solid #f0f0f0',
-                    backgroundColor: notification.isRead ? 'transparent' : '#fff5f5',
-                    '&:hover': {
-                      backgroundColor: '#f8fafc'
-                    }
-                  }}
-                >
-                  <Box sx={{ width: '100%' }}>
-                    <Box sx={{ display: 'flex', gap: 1.5, mb: 1 }}>
-                      <Box sx={{ 
-                        p: 1, 
-                        borderRadius: '50%', 
-                        bgcolor: 'rgba(207, 19, 34, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        {getNotificationIcon(notification.type)}
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          {notification.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          {notification.message}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(notification.timestamp).toLocaleString()}
-                        </Typography>
+            <Box sx={{ maxHeight: '320px', overflow: 'visible' }}>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : error ? (
+                <Box sx={{ p: 2 }}>
+                  <Typography color="error">{error}</Typography>
+                </Box>
+              ) : recentNotifications.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography color="text.secondary">No notifications</Typography>
+                </Box>
+              ) : (
+                recentNotifications.map((notification) => (
+                  <MenuItem 
+                    key={notification._id} 
+                    sx={{
+                      py: 2,
+                      borderBottom: '1px solid #f0f0f0',
+                      backgroundColor: notification.status !== 'Read' ? '#fffbeb' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: '#f8fafc'
+                      }
+                    }}
+                  >
+                    <Box sx={{ width: '100%' }}>
+                      <Box sx={{ display: 'flex', gap: 1.5, mb: 1 }}>
+                        <Box sx={{ 
+                          p: 1, 
+                          borderRadius: '50%', 
+                          bgcolor: notification.severity === 'error' ? 'rgba(239, 68, 68, 0.1)' : 
+                                  notification.severity === 'warning' ? 'rgba(245, 158, 11, 0.1)' : 
+                                  'rgba(16, 185, 129, 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {getNotificationIcon(notification.type)}
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            {notification.type} Alert
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            {notification.message}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(notification.sentAt).toLocaleString()}
+                          </Typography>
+                        </Box>
                       </Box>
                     </Box>
-                  </Box>
-                </MenuItem>
-              ))}
+                  </MenuItem>
+                ))
+              )}
             </Box>
 
             <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
