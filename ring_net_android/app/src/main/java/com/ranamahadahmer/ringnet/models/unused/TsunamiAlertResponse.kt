@@ -1,6 +1,7 @@
 package com.ranamahadahmer.ringnet.models.unused
 
 import com.google.gson.annotations.SerializedName
+import com.ranamahadahmer.ringnet.models.common.Location
 
 
 sealed class TsunamiAlertResponse {
@@ -19,13 +20,6 @@ sealed class TsunamiAlertResponse {
     ) : TsunamiAlertResponse()
 }
 
-
-data class Location(
-    @SerializedName("latitude")
-    val latitude: Double,
-    @SerializedName("longitude")
-    val longitude: Double
-)
 
 data class TsunamiAlert(
     @SerializedName("title")

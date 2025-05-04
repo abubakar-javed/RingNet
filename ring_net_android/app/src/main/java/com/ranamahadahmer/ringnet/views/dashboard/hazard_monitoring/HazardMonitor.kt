@@ -163,16 +163,7 @@ fun HazardMonitor(viewModel: AppViewModel) {
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }
-//                        if (hazardAlertInfo.value.isEmpty()) {
-//                            item {
-//                                emptyDataPlaceholder()
-//                            }
-//                        }
-//                        items(hazardAlertInfo.value) { alert ->
-//                            TableRow(alert)
-//                            HorizontalDivider(thickness = 1.dp)
-//                            Spacer(modifier = Modifier.height(8.dp))
-//                        }
+
                     }
 
                 }
@@ -249,9 +240,9 @@ fun AlertCard(alert: HazardAlertInfo) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        alert.severity.uppercase(),
+                        HazardDecorations.hazardSeverityText.getValue(alert.severity),
                         fontSize = 12.sp,
-                        color = Color.Red,
+                        color = HazardDecorations.hazardSeverityColor.getValue(alert.severity),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .background(Color(0xFFFFE5E5), shape = RoundedCornerShape(6.dp))
@@ -264,6 +255,7 @@ fun AlertCard(alert: HazardAlertInfo) {
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
+
 
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

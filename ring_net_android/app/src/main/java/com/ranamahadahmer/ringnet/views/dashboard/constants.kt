@@ -22,8 +22,14 @@ object HazardDecorations {
         "Tsunami" to Icons.Default.Waves
     )
     val hazardSeverityColor = mapOf<String, Color>(
-        "HIGH" to Color(0xFFF87171),
-        "MEDIUM" to Color(0xFFFACC15),
-        "LOW" to Color(0xFF60A5FA),
+        "error" to Color(0xFFF87171),
+        "warning" to Color(0xFFFACC15),
+        "info" to Color(0xFF60A5FA),
+    )
+
+    val hazardSeverityText = mapOf<String, String>(
+        "error" to "High",
+        "warning" to "Medium",
+        "info" to "Low",
     )
 }

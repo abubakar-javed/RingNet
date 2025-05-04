@@ -110,25 +110,16 @@ fun SignUpNameScreen(
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("First Name", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Name", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(
                     Icons.Outlined.ContactEmergency,
-                    "First Name",
-                    valueState = viewModel.firstName,
-                    onChange = viewModel::changeFirstName,
+                    "Name",
+                    valueState = viewModel.name,
+                    onChange = viewModel::changeName,
                     type = TextFieldType.Name
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Last Name", color = Color.Black, fontWeight = FontWeight.Bold)
-                CustomTextField(
-                    Icons.Outlined.ContactEmergency,
-                    "Last Name",
-                    valueState = viewModel.lastName,
-                    onChange = viewModel::changeLastName,
-                    type = TextFieldType.Name
-                )
-            }
+
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Enter Password", color = Color.Black, fontWeight = FontWeight.Bold)
                 CustomTextField(

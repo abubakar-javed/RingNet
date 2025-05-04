@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Tab
@@ -37,14 +39,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ranamahadahmer.ringnet.models.NotificationInfo
+import com.ranamahadahmer.ringnet.models.ProfileResponse
+import com.ranamahadahmer.ringnet.models.UserNotificationResponse
 
 import com.ranamahadahmer.ringnet.views.dashboard.common.emptyDataPlaceholder
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
+import com.ranamahadahmer.ringnet.views.dashboard.HazardDecorations
 
 @Composable
 fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
     val tabs = listOf("ALL", "UNREAD", "READ")
-    val notifications = viewModel.notifications.collectAsState()
+    val notifications = viewModel.userNotifications.collectAsState()
     val pagerState = viewModel.notificationsPagerState.collectAsState()
 
     Column(modifier = modifier) {
@@ -78,19 +84,66 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                             .fillMaxSize()
                             .padding(horizontal = 8.dp)
                     ) {
-                        if (notifications.value.isEmpty()) {
-                            item { emptyDataPlaceholder() }
+                        when (notifications.value) {
+                            is UserNotificationResponse.Initial -> {
+
+                            }
+
+                            is UserNotificationResponse.Loading -> {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            }
+
+                            is UserNotificationResponse.Error -> {
+                                item {
+                                    val data =
+                                        (notifications.value as UserNotificationResponse.Error)
+                                    Text(
+                                        text = data.message,
+                                        fontSize = 16.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
+
+                            is UserNotificationResponse.Success -> {
+                                val data =
+                                    (notifications.value as UserNotificationResponse.Success).notifications
+                                if (data.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = "No Alerts for your Preference",
+                                            fontSize = 16.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                }
+                                items(data) { notification ->
+                                    NotificationCard(
+                                        notification,
+                                        onReadToggle = {
+                                            viewModel.changeNotificationReadStatus(
+                                                notification
+                                            )
+                                        },
+                                        onDelete = { viewModel.deleteNotification(notification) }
+
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+
+                            }
                         }
 
-                        items(notifications.value) { notification ->
-                            NotificationCard(
-                                notification,
-                                onReadToggle = { viewModel.changeNotificationReadStatus(notification) },
-                                onDelete = { viewModel.deleteNotification(notification) }
 
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
                     }
                 }
 
@@ -100,22 +153,67 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                             .fillMaxSize()
                             .padding(horizontal = 8.dp)
                     ) {
-                        if (notifications.value.isEmpty()) {
-                            item { emptyDataPlaceholder() }
-                        }
-                        items(notifications.value) { notification ->
-                            if (notification.isRead == false) {
-                                NotificationCard(
-                                    notification,
-                                    onReadToggle = {
-                                        viewModel.changeNotificationReadStatus(notification)
-                                    },
-                                    onDelete = { viewModel.deleteNotification(notification) }
+                        when (notifications.value) {
+                            is UserNotificationResponse.Initial -> {
 
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            is UserNotificationResponse.Loading -> {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            }
+
+                            is UserNotificationResponse.Error -> {
+                                item {
+                                    val data =
+                                        (notifications.value as UserNotificationResponse.Error)
+                                    Text(
+                                        text = data.message,
+                                        fontSize = 16.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
+
+                            is UserNotificationResponse.Success -> {
+                                val data =
+                                    (notifications.value as UserNotificationResponse.Success).notifications
+                                if (data.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = "No Alerts for your Preference",
+                                            fontSize = 16.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                }
+                                items(data) { notification ->
+                                    if (notification.status != "Read") {
+                                        NotificationCard(
+                                            notification,
+                                            onReadToggle = {
+                                                viewModel.changeNotificationReadStatus(
+                                                    notification
+                                                )
+                                            },
+                                            onDelete = { viewModel.deleteNotification(notification) }
+
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                }
+
                             }
                         }
+
                     }
 
                 }
@@ -126,19 +224,68 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                             .fillMaxSize()
                             .padding(horizontal = 8.dp)
                     ) {
-                        if (notifications.value.isEmpty()) {
-                            item { emptyDataPlaceholder() }
-                        }
-                        items(notifications.value) { notification ->
-                            if (notification.isRead == true) {
-                                NotificationCard(
-                                    notification,
-                                    onReadToggle = { },
-                                    onDelete = { viewModel.deleteNotification(notification) }
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
+
+                        when (notifications.value) {
+                            is UserNotificationResponse.Initial -> {
+
+                            }
+
+                            is UserNotificationResponse.Loading -> {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            }
+
+                            is UserNotificationResponse.Error -> {
+                                item {
+                                    val data =
+                                        (notifications.value as UserNotificationResponse.Error)
+                                    Text(
+                                        text = data.message,
+                                        fontSize = 16.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
+
+                            is UserNotificationResponse.Success -> {
+                                val data =
+                                    (notifications.value as UserNotificationResponse.Success).notifications
+                                if (data.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = "No Alerts for your Preference",
+                                            fontSize = 16.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    }
+                                }
+                                items(data) { notification ->
+                                    if (notification.status == "Read") {
+                                        NotificationCard(
+                                            notification,
+                                            onReadToggle = {
+                                                viewModel.changeNotificationReadStatus(
+                                                    notification
+                                                )
+                                            },
+                                            onDelete = { viewModel.deleteNotification(notification) }
+
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                }
+
                             }
                         }
+
                     }
                 }
             }
@@ -147,63 +294,77 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
 }
 
 @Composable
-fun NotificationCard(notification: Notification, onReadToggle: () -> Unit, onDelete: () -> Unit) {
+fun NotificationCard(
+    notification: NotificationInfo,
+    onReadToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (notification.isRead == false) Color(0xFFFFEEEE)
+            containerColor = if (notification.status != "Read") Color(0xFFFFEEEE)
             else Color(0xFAE3F2FD)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = notification.icon,
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(32.dp)
-            )
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        HazardDecorations.hazardBgColors.getValue(notification.type),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = HazardDecorations.hazardIcons.getValue(notification.type),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(notification.title, fontWeight = FontWeight.Bold)
+                    Text(notification.location, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(8.dp))
-
                 }
                 Text(
-                    notification.description,
+                    notification.message,
                     fontSize = 14.sp,
                     color = Color.Gray,
-                    maxLines = 1,
+
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(notification.timestamp, fontSize = 12.sp, color = Color.Gray)
+                Text(notification.createdAt, fontSize = 12.sp, color = Color.Gray)
             }
 
             Spacer(modifier = Modifier.width(8.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 SeverityBadge(notification.severity)
-                Row {
-                    if (!notification.isRead) {
-                        IconButton(
-                            onClick = onReadToggle
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Mark as Read",
-                                tint = Color.Red
-                            )
-                        }
-                    }
-                    IconButton(onClick = onDelete) {
+                if (notification.status != "Read") {
+                    IconButton(
+                        onClick = onReadToggle
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = Color.Gray
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Mark as Read",
+                            tint = Color.Red
                         )
                     }
                 }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.Gray
+                    )
+                }
+//                Row {
+//
+//                }
 
             }
         }
@@ -212,36 +373,22 @@ fun NotificationCard(notification: Notification, onReadToggle: () -> Unit, onDel
 
 @Composable
 fun SeverityBadge(severity: String) {
-    val backgroundColor = when (severity) {
-        "HIGH" -> Color(0xFFFFCDD2)
-        "MEDIUM" -> Color(0xFFFFF9C4)
-        else -> Color.LightGray
-    }
-    val textColor = when (severity) {
-        "HIGH" -> Color.Red
-        "MEDIUM" -> Color(0xFFFFA000)
-        else -> Color.DarkGray
-    }
 
     Box(
         modifier = Modifier
-            .background(backgroundColor, shape = RoundedCornerShape(8.dp))
+            .background(
+                color = Color(0xFFFFE5E5),
+                shape = RoundedCornerShape(8.dp)
+            )
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Text(severity, color = textColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(
+
+            HazardDecorations.hazardSeverityText.getValue(severity),
+            color = HazardDecorations.hazardSeverityColor.getValue(severity),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+
     }
 }
-
-
-data class Notification(
-    val title: String,
-    val description: String,
-    val timestamp: String,
-    val severity: String,
-    val icon: ImageVector,
-    var isRead: Boolean
-)
-
-
-
-
