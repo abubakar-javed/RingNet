@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
     private fun initializeApp() {
         enableEdgeToEdge()
         authViewModel = AuthViewModel(this)
-        appViewModel = AppViewModel(authViewModel = authViewModel)
+        appViewModel = AppViewModel(authViewModel = authViewModel, context = this)
 //        P2PModel(this)
     }
 

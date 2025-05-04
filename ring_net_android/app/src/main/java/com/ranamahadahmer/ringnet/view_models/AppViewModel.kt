@@ -1,32 +1,41 @@
 package com.ranamahadahmer.ringnet.view_models
 
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Geocoder
 import android.location.Location
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
-import com.ranamahadahmer.ringnet.views.dashboard.notifications.Notification
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.ranamahadahmer.ringnet.api.BackendApi
+import com.ranamahadahmer.ringnet.api.DeleteUserNotificationService
 import com.ranamahadahmer.ringnet.api.EmergencyContactsService
 import com.ranamahadahmer.ringnet.api.ProfileService
+import com.ranamahadahmer.ringnet.api.ReadUserNotificationService
 import com.ranamahadahmer.ringnet.api.unused.FloodDataService
 import com.ranamahadahmer.ringnet.api.StatsInfoService
 import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
 import com.ranamahadahmer.ringnet.api.UpdateLocationService
 import com.ranamahadahmer.ringnet.api.UserAlertsService
+import com.ranamahadahmer.ringnet.api.UserNotificationService
 import com.ranamahadahmer.ringnet.api.unused.WeatherForecastService
 import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
 import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
 import com.ranamahadahmer.ringnet.models.LocationCoordinates
 import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
+import com.ranamahadahmer.ringnet.models.NotificationInfo
 import com.ranamahadahmer.ringnet.models.ProfileData
 import com.ranamahadahmer.ringnet.models.ProfileResponse
 import com.ranamahadahmer.ringnet.models.StatsInfoResponse
 import com.ranamahadahmer.ringnet.models.UserAlertsResponse
+import com.ranamahadahmer.ringnet.models.UserNotificationResponse
 import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
 import com.ranamahadahmer.ringnet.models.unused.WeatherForecastResponse
 
@@ -41,10 +50,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.SocketTimeoutException
+import java.util.Locale
 
 import java.util.concurrent.TimeUnit
 
-class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
+class AppViewModel(
+    val authViewModel: AuthViewModel,
+    @SuppressLint("StaticFieldLeak") val context: Context
+) : ViewModel() {
     var mainBottomBarState = MutableStateFlow(PagerState(pageCount = { 5 }, currentPage = 0))
     var notificationsPagerState = MutableStateFlow(PagerState(pageCount = { 3 }, currentPage = 0))
     var hazardMonitorPagerState = MutableStateFlow(PagerState(pageCount = { 2 }, currentPage = 0))
@@ -88,6 +101,12 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
 
     private val _updateLocationService: UpdateLocationService =
         BackendApi.retrofit.create(UpdateLocationService::class.java)
+    private val _userNotificationService: UserNotificationService =
+        BackendApi.retrofit.create(UserNotificationService::class.java)
+
+    private val _userNotifications =
+        MutableStateFlow<UserNotificationResponse>(UserNotificationResponse.Initial)
+    val userNotifications: StateFlow<UserNotificationResponse> = _userNotifications
 
     private val _profileService: ProfileService =
         BackendApi.retrofit.create(ProfileService::class.java)
@@ -172,36 +191,6 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         }
     }
 
-    private val _notifications = MutableStateFlow(
-        emptyList<Notification>(
-//            Notification(
-//                "Earthquake Alert",
-//                "Magnitude 6.2 earthquake detected in Nepal region",
-//                "3/20/2024, 3:30:00 PM",
-//                "HIGH",
-//                Icons.Default.Public, // Use appropriate icon
-//                false
-//            ),
-//            Notification(
-//                "Tsunami Warning",
-//                "Potential tsunami threat detected in Indonesian waters",
-//                "3/20/2024, 2:15:00 PM",
-//                "HIGH",
-//                Icons.Default.Waves,
-//                true
-//            ),
-//            Notification(
-//                "Flood Alert",
-//                "Rising water levels in Bangladesh coastal areas",
-//                "3/20/2024, 4:45:00 AM",
-//                "MEDIUM",
-//                Icons.Default.Flood, // Use appropriate icon
-//                false
-//            )
-        )
-    )
-    val notifications: StateFlow<List<Notification>> = _notifications
-
 
     fun setMainPage(page: Int) {
         viewModelScope.launch {
@@ -215,17 +204,49 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
         }
     }
 
+    val _readUserNotificationService: ReadUserNotificationService =
+        BackendApi.retrofit.create(ReadUserNotificationService::class.java)
+    val _deleteUserNotificationService: DeleteUserNotificationService =
+        BackendApi.retrofit.create(DeleteUserNotificationService::class.java)
 
-    fun changeNotificationReadStatus(notification: Notification) {
-        val updatedNotifications = _notifications.value.map {
-            if (it == notification) it.copy(isRead = !it.isRead) else it
+    fun changeNotificationReadStatus(notification: NotificationInfo) {
+        viewModelScope.launch {
+            _readUserNotificationService.readNotification(
+                token = "Bearer ${authViewModel.token.value}",
+                notificationId = notification.id
+            )
         }
-        _notifications.value = updatedNotifications
+        val updatedNotifications =
+            (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
+                if (it == notification) it.copy(status = "Read") else it
+            }
+        _userNotifications.value = UserNotificationResponse.Success(
+            notifications = updatedNotifications,
+            total = (userNotifications.value as UserNotificationResponse.Success).total,
+            page = (userNotifications.value as UserNotificationResponse.Success).page,
+            totalPages = (userNotifications.value as UserNotificationResponse.Success).totalPages
+        )
+
     }
 
-    fun deleteNotification(notification: Notification) {
-        val updatedNotifications = _notifications.value.filter { it != notification }
-        _notifications.value = updatedNotifications
+    fun deleteNotification(notification: NotificationInfo) {
+        viewModelScope.launch {
+            _deleteUserNotificationService.deleteNotification(
+                token = "Bearer ${authViewModel.token.value}",
+                notificationId = notification.id
+            )
+        }
+
+        val updatedNotifications =
+            (_userNotifications.value as UserNotificationResponse.Success).notifications.filter {
+                it != notification
+            }
+        _userNotifications.value = UserNotificationResponse.Success(
+            notifications = updatedNotifications,
+            total = (userNotifications.value as UserNotificationResponse.Success).total,
+            page = (userNotifications.value as UserNotificationResponse.Success).page,
+            totalPages = (userNotifications.value as UserNotificationResponse.Success).totalPages
+        )
     }
 
 
@@ -242,6 +263,10 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
     fun updateLocation(location: Location) {
         _currentLocation.value = LatLng(location.latitude, location.longitude)
     }
+
+
+    private val _locationDetails = MutableStateFlow<List<String>>(emptyList())
+    val locationDetails: StateFlow<List<String>> = _locationDetails
 
 
     fun startLocationMonitoring(isAuthenticated: Boolean, getLocation: () -> Unit) {
@@ -289,6 +314,12 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
 
 
                 loadData()
+
+                _locationDetails.value = getLocationDetails(
+                    context,
+                    _currentLocation.value!!.latitude,
+                    _currentLocation.value!!.longitude
+                )
                 delay(
                     TimeUnit.MINUTES.toMillis(
                         5
@@ -318,7 +349,6 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                     }
                     _emergencyContacts.value = EmergencyContactsResponse.Success(result)
 
-
                     return@launch
                 } catch (e: Exception) {
                     if (attempt == MAX_RETRIES - 1) {
@@ -327,7 +357,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                             else -> e.message ?: "An unknown error occurred"
                         }
                         _emergencyContacts.value = EmergencyContactsResponse.Error(errorMessage)
-                        println("Error fetching emergency contacts: $errorMessage")
+
                     } else {
                         delay(RETRY_DELAY_MS)
                     }
@@ -351,13 +381,39 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                         stats = result.stats,
                         location = result.location
                     )
-                    println("Stats Info Response: $result")
+
                     return@launch
                 } catch (e: Exception) {
                     if (attempt == MAX_RETRIES - 1) {
                         _statsInfo.value =
                             StatsInfoResponse.Error(e.message ?: "An unknown error occurred")
-                        println("Stats Info API error: ${e.message}")
+
+                    } else {
+                        delay(RETRY_DELAY_MS)
+                    }
+                }
+            }
+        }
+    }
+
+    fun getUserNotifications() {
+        viewModelScope.launch {
+            _userNotifications.value = UserNotificationResponse.Loading
+            repeat(MAX_RETRIES) { attempt ->
+                try {
+                    val result = withContext(Dispatchers.IO) {
+                        _userNotificationService.getNotifications(
+                            token = "Bearer ${authViewModel.token.value}",
+                        )
+                    }
+                    _userNotifications.value = result
+
+                    return@launch
+                } catch (e: Exception) {
+                    if (attempt == MAX_RETRIES - 1) {
+                        _userNotifications.value =
+                            UserNotificationResponse.Error(e.message ?: "An unknown error occurred")
+
                     } else {
                         delay(RETRY_DELAY_MS)
                     }
@@ -381,7 +437,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                         )
                     }
                     _hazardAlerts.value = result
-                    println("User Alerts Response: $result")
+
                     return@launch
                 } catch (e: Exception) {
                     if (attempt == MAX_RETRIES - 1) {
@@ -390,7 +446,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                             else -> e.message ?: "An unknown error occurred"
                         }
                         _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
-                        println("Error fetching user alerts: $errorMessage")
+
                     } else {
                         delay(RETRY_DELAY_MS)
                     }
@@ -409,10 +465,13 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                     )
                 }
                 _profile.value = result
+                println("Before ${_selectedAlerts.value}")
+                _selectedAlerts.value = (_profile.value as ProfileResponse.Success).alertPreferences
+                println("After ${_selectedAlerts.value}")
                 setName((_profile.value as ProfileResponse.Success).name)
                 setEmail((_profile.value as ProfileResponse.Success).email)
                 setPhone((_profile.value as ProfileResponse.Success).phone ?: "")
-                _selectedAlerts.value = (_profile.value as ProfileResponse.Success).alertPreferences
+
 
             } catch (e: Exception) {
                 _profile.value = ProfileResponse.Error(e.message ?: "Failed to load profile")
@@ -499,11 +558,15 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                         )
                     )
 
+                    _profile.value = ProfileResponse.Loading
                     showSnackbar("Profile updated successfully")
+                    delay(3000)
                     getProfile()
                 }
             } catch (e: Exception) {
+                _profile.value = ProfileResponse.Loading
                 showSnackbar(e.message ?: "Failed to update profile")
+                delay(3000)
                 getProfile()
             }
         }
@@ -520,7 +583,7 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                 }
                 _profile.value = result
             } catch (e: Exception) {
-                println("Error while updating profile: ${e.message}")
+
             }
         }
     }
@@ -533,10 +596,32 @@ class AppViewModel(val authViewModel: AuthViewModel) : ViewModel() {
                 async { getStatsInfo() },
                 async { getUserAlerts() },
                 async { getProfile() },
-
-                )
+                async { getUserNotifications() },
+            )
             jobs.awaitAll()
 
+        }
+    }
+
+    fun getLocationDetails(context: Context, latitude: Double, longitude: Double): List<String> {
+        return try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+
+            @Suppress("DEPRECATION")
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+
+            if (addresses?.isNotEmpty() == true) {
+                val address = addresses[0]
+                listOf(
+                    address.subLocality ?: address.locality ?: "", // Area/District
+                    address.locality ?: "", // City
+                    address.countryName ?: "" // Country
+                ).filter { it.isNotEmpty() }
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

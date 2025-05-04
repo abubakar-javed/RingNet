@@ -57,21 +57,17 @@ private fun getInitials(name: String): String {
 fun UserProfile(viewModel: AppViewModel) {
     val state = rememberScrollState()
     val profile = viewModel.profile.collectAsState()
+    val locationDetails = viewModel.locationDetails.collectAsState()
 
 
 
     when (profile.value) {
         is ProfileResponse.Loading -> {
-//            // Show loading indicator
+
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-//            Text(
-//                text = "Loading Profile...",
-//                fontSize = 16.sp,
-//                color = Color.Gray,
-//                modifier = Modifier.padding(16.dp)
-//            )
+
         }
 
         is ProfileResponse.Success -> {
@@ -104,15 +100,16 @@ fun UserProfile(viewModel: AppViewModel) {
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    // Name and Role
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(data.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row {
-                            listOf("H-12", "Islamabad", "Pakistan").forEach {
-                                RegionChip(it)
-                                Spacer(modifier = Modifier.width(4.dp))
+                    Text(data.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    
+                    if (locationDetails.value.isNotEmpty()) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row {
+                                locationDetails.value.forEach { location ->
+                                    RegionChip(location)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                }
                             }
                         }
                     }
@@ -232,7 +229,7 @@ fun SelectedAlerts(viewModel: AppViewModel) {
 
     if (showAlertDialog.value) {
         AlertDialog(
-            onDismissRequest = { viewModel.setShowAlertDialog(false) },
+            onDismissRequest = { },
             title = { Text("Add Alerts") },
             text = {
                 Column {
@@ -259,26 +256,14 @@ fun SelectedAlerts(viewModel: AppViewModel) {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    // Update alert preferences
-//                    val currentProfile = (profile.value as? ProfileResponse.Success)
-//                    if (currentProfile != null) {
-//                        viewModel.updateProfile(
-//                            currentProfile.copy(
-//                                alertPreferences = selectedAlerts.toList()
-//                            )
-//                        )
-//                    }
+
                     viewModel.setShowAlertDialog(false)
                 }) {
                     Text("Save")
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { viewModel.setShowAlertDialog(false) }) {
-                    Text("Cancel")
-                }
-            }
-        )
+
+            )
     }
 }
 

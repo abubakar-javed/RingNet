@@ -163,16 +163,7 @@ fun HazardMonitor(viewModel: AppViewModel) {
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }
-//                        if (hazardAlertInfo.value.isEmpty()) {
-//                            item {
-//                                emptyDataPlaceholder()
-//                            }
-//                        }
-//                        items(hazardAlertInfo.value) { alert ->
-//                            TableRow(alert)
-//                            HorizontalDivider(thickness = 1.dp)
-//                            Spacer(modifier = Modifier.height(8.dp))
-//                        }
+
                     }
 
                 }
@@ -264,6 +255,7 @@ fun AlertCard(alert: HazardAlertInfo) {
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
+
 
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
