@@ -134,7 +134,7 @@ fun Dashboard(viewModel: AppViewModel) {
             ) { page ->
                 when (page) {
                     0 -> {
-                        Home(dashboardScrollState)
+                        Home(dashboardScrollState, appModel = viewModel)
                     }
 
                     1 -> {
