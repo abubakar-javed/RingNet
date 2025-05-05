@@ -56,8 +56,6 @@ import java.util.concurrent.TimeUnit
 class AppViewModel(
     val authViewModel: AuthViewModel,
     @SuppressLint("StaticFieldLeak") val context: Context
-
-
 ) : ViewModel() {
     var mainBottomBarState = MutableStateFlow(PagerState(pageCount = { 5 }, currentPage = 0))
     var notificationsPagerState = MutableStateFlow(PagerState(pageCount = { 3 }, currentPage = 0))
@@ -171,13 +169,11 @@ class AppViewModel(
     val selectedAlerts: StateFlow<List<String>> = _selectedAlerts
 
     init {
-
         val broadcastFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Context.RECEIVER_NOT_EXPORTED
         } else {
             0
         }
-
         context.registerReceiver(
             notificationReceiver,
             IntentFilter("com.ranamahadahmer.ringnet.NOTIFICATION_READ"),
@@ -277,15 +273,11 @@ class AppViewModel(
 
     fun deleteNotification(notification: NotificationInfo) {
         viewModelScope.launch {
-
             _deleteUserNotificationService.deleteNotification(
                 token = "Bearer ${authViewModel.token.value}",
                 notificationId = notification.id
             )
-
-
         }
-
         val updatedNotifications =
             (_userNotifications.value as UserNotificationResponse.Success).notifications.filter {
                 it != notification
@@ -324,7 +316,6 @@ class AppViewModel(
             locationMonitoringJob?.cancel()
             return
         }
-
         locationMonitoringJob = viewModelScope.launch {
             while (true) {
                 getLocation()
@@ -348,7 +339,6 @@ class AppViewModel(
                             )
                         )
                     }
-
                     if (response.message == "Location updated successfully") {
                         println("Location Updated successfully")
                     } else {
@@ -361,10 +351,7 @@ class AppViewModel(
                         return@launch
                     }
                 }
-
-
                 loadData()
-
                 _locationDetails.value = getLocationDetails(
                     context,
                     _currentLocation.value!!.latitude,
@@ -492,7 +479,7 @@ class AppViewModel(
                                 if (
                                     result.notifications != (_userNotifications.value as UserNotificationResponse.Success).notifications
                                 ) {
-                                    
+
                                     _userNotifications.value = result
 
                                 }
@@ -528,10 +515,9 @@ class AppViewModel(
         }
     }
 
-    // Add this property at the top of AppViewModel with other service declarations
+
     private val _userAlertsService: UserAlertsService =
         BackendApi.retrofit.create(UserAlertsService::class.java)
-
 
     fun getUserAlerts() {
         viewModelScope.launch {
@@ -555,23 +541,16 @@ class AppViewModel(
                                     result.alerts != (_hazardAlerts.value as UserAlertsResponse.Success).alerts
                                 ) {
                                     _hazardAlerts.value = result
-
-
                                 }
-
                             }
 
                             is UserAlertsResponse.Loading -> {
                                 _hazardAlerts.value = result
                             }
 
-
-                            else -> {
-
-                            }
+                            else -> {}
 
                         }
-
                         delay(1000)
 
                     } catch (e: Exception) {
@@ -591,63 +570,6 @@ class AppViewModel(
         }
     }
 
-//    fun getUserAlerts() {
-//        viewModelScope.launch {
-//            while (true) {
-//                if (_hazardAlerts.value == UserAlertsResponse.Initial) {
-//                    _hazardAlerts.value = UserAlertsResponse.Loading
-//                }
-//
-//                repeat(MAX_RETRIES) { attempt ->
-//                    try {
-//                        val result = withContext(Dispatchers.IO) {
-//                            _userAlertsService.getAlerts(
-//                                token = "Bearer ${authViewModel.token.value}"
-//                            )
-//                        }
-//
-//                        // Compare with previous state
-//                        when (val currentState = _hazardAlerts.value) {
-//                            is UserAlertsResponse.Success -> {
-//                                if (
-//                                    result.alerts != currentState.alerts
-//                                ) {
-//                                    _hazardAlerts.value = result
-//                                    delay(1000) // Wait 1 second before next update
-//                                }
-//                            }
-//
-//                            UserAlertsResponse.Initial -> {
-//                                _hazardAlerts.value = result
-//                            }
-//
-//                            else -> {
-//                                // No state update needed
-//                            }
-//                        }
-//
-//                        delay(5000)
-//
-//
-//                    } catch (e: Exception) {
-//                        if (attempt == MAX_RETRIES - 1) {
-//                            val errorMessage = when (e) {
-//                                is SocketTimeoutException -> "Connection timed out. Please check your internet connection."
-//                                else -> e.message ?: "An unknown error occurred"
-//                            }
-//                            if (_hazardAlerts.value == UserAlertsResponse.Initial) {
-//                                _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
-//                            }
-//                        } else {
-//                            delay(RETRY_DELAY_MS)
-//                        }
-//                    }
-//                }
-//
-//                // Wait 5 seconds before next check
-//            }
-//        }
-//    }
 
     fun getProfile() {
         viewModelScope.launch {
@@ -809,7 +731,6 @@ class AppViewModel(
             }
         }
     }
-
 
 }
 

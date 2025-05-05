@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var appViewModel: AppViewModel
     private lateinit var authViewModel: AuthViewModel
 
-    // Permission handling
+
     private val requiredPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -59,9 +59,7 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.POST_NOTIFICATIONS,
         Manifest.permission.FOREGROUND_SERVICE,
         Manifest.permission.WAKE_LOCK,
-
-
-        )
+    )
 
 
     companion object {
@@ -104,19 +102,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-//    private fun observeAuthState() {
-//        lifecycleScope.launch {
-//            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                authViewModel.isUserLoggedIn.collect { isLoggedIn ->
-//                    if (isLoggedIn && checkPermissions()) {
-//                        startLocationUpdates()
-//                        startNotificationService()
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     internal fun observeAuthState() {
         lifecycleScope.launch {
