@@ -19,7 +19,7 @@ describe('RingNet Backend Tests', () => {
   });
   
   test('database connectivity', () => {
-    const isConnected = true; // Mocked value
+    const isConnected = true; 
     expect(isConnected).toBe(true);
   });
 }); 

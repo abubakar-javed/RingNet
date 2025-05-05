@@ -6,7 +6,6 @@ describe('Earthquake Controller', () => {
   });
   
   test('earthquake data structure', () => {
-    // Simple test with mock data
     const mockEarthquake = {
       id: '123',
       magnitude: 5.6,
@@ -20,7 +19,6 @@ describe('Earthquake Controller', () => {
   });
   
   test('earthquake severity classification', () => {
-    // Mock classification function
     const classifySeverity = (magnitude) => {
       if (magnitude < 4.0) return 'Minor';
       if (magnitude < 5.0) return 'Light';
@@ -35,13 +33,11 @@ describe('Earthquake Controller', () => {
   });
   
   test('earthquake coordinates formatting', () => {
-    // Mock formatting function
     const formatCoordinates = (lat, lon) => `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
     expect(formatCoordinates(37.7749, -122.4194)).toBe('37.77, -122.42');
   });
   
   test('recent earthquakes filtering', () => {
-    // Mock filtering function
     const isRecent = (timestamp) => {
       const now = new Date();
       const eventTime = new Date(timestamp);
@@ -49,7 +45,6 @@ describe('Earthquake Controller', () => {
       return diffHours <= 24;
     };
     
-    // Using a timestamp from "now" will always be recent
     expect(isRecent(new Date().toISOString())).toBe(true);
   });
 }); 
