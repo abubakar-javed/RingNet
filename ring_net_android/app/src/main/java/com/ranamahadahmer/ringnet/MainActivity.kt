@@ -4,9 +4,7 @@ package com.ranamahadahmer.ringnet
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,7 +25,6 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.ranamahadahmer.ringnet.services.WeatherNotificationService
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.Loading
@@ -56,7 +53,8 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.INTERNET,
         Manifest.permission.ACCESS_NETWORK_STATE,
-        Manifest.permission.POST_NOTIFICATIONS,
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
+            Manifest.permission.POST_NOTIFICATIONS else TODO(),
         Manifest.permission.FOREGROUND_SERVICE,
         Manifest.permission.WAKE_LOCK,
     )
@@ -73,6 +71,7 @@ class MainActivity : ComponentActivity() {
         setupUI()
         observeAuthState()
     }
+
 
     private fun initializeApp() {
         enableEdgeToEdge()
@@ -92,6 +91,7 @@ class MainActivity : ComponentActivity() {
     private fun initializeLocationClient() {
         if (!::fusedLocationClient.isInitialized) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         }
     }
 
@@ -105,30 +105,18 @@ class MainActivity : ComponentActivity() {
 
     internal fun observeAuthState() {
         lifecycleScope.launch {
+
+
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 authViewModel.isUserLoggedIn.collect { isLoggedIn ->
                     if (isLoggedIn && checkPermissions()) {
                         startLocationUpdates()
-                        startBackgroundService()
                     }
                 }
             }
         }
     }
 
-    private fun startNotificationService() {
-        if (checkPermissions()) {
-            appViewModel.startNotificationService()
-        }
-    }
-
-    private fun startBackgroundService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(Intent(this, WeatherNotificationService::class.java))
-        } else {
-            startService(Intent(this, WeatherNotificationService::class.java))
-        }
-    }
 
     private fun checkPermissions(): Boolean {
         return requiredPermissions.all { permission ->
@@ -177,6 +165,7 @@ class MainActivity : ComponentActivity() {
     private fun startLocationUpdates() {
         try {
             initializeLocationClient()
+
             appViewModel.startLocationMonitoring(authViewModel.isUserLoggedIn.value) {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     location?.let { appViewModel.updateLocation(it) }
@@ -235,7 +224,6 @@ fun RingNetApp(authViewModel: AuthViewModel, appModel: AppViewModel) {
                     navController.popBackStack()
                     authViewModel.saveUser()
                     scope.launch {
-
                         (context as? MainActivity)?.observeAuthState()
                         delay(2000)
                     }
