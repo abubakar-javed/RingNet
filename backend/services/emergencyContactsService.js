@@ -136,7 +136,7 @@ const getEmergencyContactsForLocation = async (location = null, userId) => {
     }
 
     // Call Gemini API
-    const GEMINI_API_KEY = "AIzaSyCrL4XRHOvJnVUP46YbS5R3B_POAU31J8I";
+    const GEMINI_API_KEY = "AIzaSyCC5S_k-fdZKfm5uW3AixwHsyeYRZL3utg";
 
     if (!GEMINI_API_KEY) {
       throw new Error('Gemini API key is not configured');

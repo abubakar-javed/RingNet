@@ -114,7 +114,7 @@ const Settings = () => {
                   }
                   label="Push Notifications"
                 />
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Switch
                       checked={settings.notifications.sms}
@@ -123,7 +123,7 @@ const Settings = () => {
                     />
                   }
                   label="SMS Alerts"
-                />
+                /> */}
                 
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" color="#4b5563" mb={1}>
@@ -162,7 +162,7 @@ const Settings = () => {
               </Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Switch
                       checked={settings.display.darkMode}
@@ -171,7 +171,7 @@ const Settings = () => {
                     />
                   }
                   label="Dark Mode"
-                />
+                /> */}
                 
                 <Box>
                   <Typography variant="subtitle2" color="#4b5563" mb={1}>
@@ -184,8 +184,6 @@ const Settings = () => {
                     onChange={handleSettingChange('display', 'language')}
                   >
                     <MenuItem value="en">English</MenuItem>
-                    <MenuItem value="es">Spanish</MenuItem>
-                    <MenuItem value="fr">French</MenuItem>
                   </Select>
                 </Box>
 
