@@ -27,38 +27,19 @@ class WeatherNotificationService : Service() {
         startForeground(FOREGROUND_SERVICE_ID, createForegroundNotification())
     }
 
-    //    private fun createForegroundNotification(): android.app.Notification {
-//        val notificationIntent = Intent(this, MainActivity::class.java)
-//        val pendingIntent = PendingIntent.getActivity(
-//            this, 0, notificationIntent,
-//            PendingIntent.FLAG_IMMUTABLE
-//        )
-//
-//        return NotificationCompat.Builder(this, CHANNEL_ID)
-//            .setContentTitle("Weather Monitoring Active")
-//            .setContentText("Monitoring for weather alerts")
-//            .setSmallIcon(R.drawable.icon)
-//            .setContentIntent(pendingIntent)
-//            .build()
-//    }
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Weather Notifications",
-                importance
-            ).apply {
-                description = "Channel for weather alerts and notifications"
-                enableVibration(true)
-                enableLights(true)
-            }
+    private fun createForegroundNotification(): android.app.Notification {
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
 
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Weather Monitoring Active")
+            .setContentText("Monitoring for weather alerts")
+            .setSmallIcon(R.drawable.icon)
+            .setContentIntent(pendingIntent)
+            .build()
     }
 
 
@@ -95,86 +76,44 @@ class WeatherNotificationService : Service() {
     }
 
 
-    private fun createForegroundNotification(): android.app.Notification {
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, notificationIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Weather Notifications",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Channel for weather alerts and notifications"
+            }
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Weather Monitoring Active")
-            .setContentText("Monitoring for weather alerts")
-            .setSmallIcon(R.drawable.icon)
-            .setContentIntent(pendingIntent)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
-//    private fun createNotificationChannel() {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            val channel = NotificationChannel(
-//                CHANNEL_ID,
-//                "Weather Notifications",
-//                NotificationManager.IMPORTANCE_DEFAULT
-//            ).apply {
-//                description = "Channel for weather alerts and notifications"
-//            }
-//
-//            val notificationManager =
-//                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//            notificationManager.createNotificationChannel(channel)
-//        }
-//    }
-
-
-//    private fun showNotification(notification: NotificationInfo) {
-//        val intent = Intent(this, MainActivity::class.java).apply {
-//            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-//        }
-//
-//        // Create a delete intent for handling notification dismissal
-//        val deleteIntent = Intent(this, WeatherNotificationService::class.java).apply {
-//            action = "NOTIFICATION_DISMISSED"
-//            putExtra("notification_id", notification.id)
-//        }
-//        val deletePendingIntent = PendingIntent.getService(
-//            this,
-//            notification.hashCode(),
-//            deleteIntent,
-//            PendingIntent.FLAG_IMMUTABLE
-//        )
-//
-//        val pendingIntent = PendingIntent.getActivity(
-//            this,
-//            0,
-//            intent,
-//            PendingIntent.FLAG_IMMUTABLE
-//        )
-//
-//        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-//            .setSmallIcon(R.drawable.icon)
-//            .setContentTitle(notification.type)
-//            .setContentText(notification.message)
-//            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//            .setAutoCancel(true)
-//            .setContentIntent(pendingIntent)
-//            .setDeleteIntent(deletePendingIntent) // Add delete intent for dismissal
-//
-//        val notificationManager =
-//            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//        notificationManager.notify(notification.hashCode(), builder.build())
-//    }
 
     private fun showNotification(notification: NotificationInfo) {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
+        // Create a delete intent for handling notification dismissal
+        val deleteIntent = Intent(this, WeatherNotificationService::class.java).apply {
+            action = "NOTIFICATION_DISMISSED"
+            putExtra("notification_id", notification.id)
+        }
+        val deletePendingIntent = PendingIntent.getService(
+            this,
+            notification.hashCode(),
+            deleteIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
         val pendingIntent = PendingIntent.getActivity(
-            this, notification.hashCode(), intent,
+            this,
+            0,
+            intent,
             PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -182,24 +121,17 @@ class WeatherNotificationService : Service() {
             .setSmallIcon(R.drawable.icon)
             .setContentTitle(notification.type)
             .setContentText(notification.message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setDeleteIntent(deletePendingIntent) // Add delete intent for dismissal
 
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(notification.hashCode(), builder.build())
     }
 
-    //    private fun updateNotifications(notifications: List<NotificationInfo>) {
-//        notifications.forEach { notification ->
-//            if (notification.status != "Read") {
-//                showNotification(notification)
-//            }
-//        }
-//    }
+
     private fun updateNotifications(notifications: List<NotificationInfo>) {
         notifications.forEach { notification ->
             if (notification.status != "Read") {
@@ -207,4 +139,5 @@ class WeatherNotificationService : Service() {
             }
         }
     }
+
 }
