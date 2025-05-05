@@ -4,7 +4,9 @@ package com.ranamahadahmer.ringnet
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +14,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -23,6 +27,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.ranamahadahmer.ringnet.services.WeatherNotificationService
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.Loading
@@ -36,6 +41,7 @@ import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpEmailScreen
 import com.ranamahadahmer.ringnet.views.auth.sign_up.SignUpNameScreen
 import com.ranamahadahmer.ringnet.views.dashboard.Dashboard
 import com.ranamahadahmer.ringnet.views.theme.RingNetTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -49,8 +55,14 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.INTERNET,
-        Manifest.permission.ACCESS_NETWORK_STATE
-    )
+        Manifest.permission.ACCESS_NETWORK_STATE,
+        Manifest.permission.POST_NOTIFICATIONS,
+        Manifest.permission.FOREGROUND_SERVICE,
+        Manifest.permission.WAKE_LOCK,
+
+
+        )
+
 
     companion object {
         private const val PERMISSIONS_REQUEST_CODE = 100
@@ -93,18 +105,45 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun observeAuthState() {
+//    private fun observeAuthState() {
+//        lifecycleScope.launch {
+//            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                authViewModel.isUserLoggedIn.collect { isLoggedIn ->
+//                    if (isLoggedIn && checkPermissions()) {
+//                        startLocationUpdates()
+//                        startNotificationService()
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    internal fun observeAuthState() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 authViewModel.isUserLoggedIn.collect { isLoggedIn ->
                     if (isLoggedIn && checkPermissions()) {
                         startLocationUpdates()
+                        startBackgroundService()
                     }
                 }
             }
         }
     }
 
+    private fun startNotificationService() {
+        if (checkPermissions()) {
+            appViewModel.startNotificationService()
+        }
+    }
+
+    private fun startBackgroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(Intent(this, WeatherNotificationService::class.java))
+        } else {
+            startService(Intent(this, WeatherNotificationService::class.java))
+        }
+    }
 
     private fun checkPermissions(): Boolean {
         return requiredPermissions.all { permission ->
@@ -169,7 +208,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RingNetApp(authViewModel: AuthViewModel, appModel: AppViewModel) {
     val navController = rememberNavController()
-
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
 
@@ -205,9 +245,16 @@ fun RingNetApp(authViewModel: AuthViewModel, appModel: AppViewModel) {
                 )
             }
             composable("success") {
+
                 SignInSuccessScreen {
                     navController.popBackStack()
                     authViewModel.saveUser()
+                    scope.launch {
+
+                        (context as? MainActivity)?.observeAuthState()
+                        delay(2000)
+                    }
+                    appModel.loadData()
                     navController.navigate("dashboard")
                 }
             }

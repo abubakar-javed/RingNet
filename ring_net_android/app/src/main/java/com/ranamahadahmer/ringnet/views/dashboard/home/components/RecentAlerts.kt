@@ -81,7 +81,15 @@ fun RecentAlerts(modifier: Modifier, viewModel: AppViewModel) {
                 }
             }
 
-            UserAlertsResponse.Initial -> TODO()
+            UserAlertsResponse.Initial -> {
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
 

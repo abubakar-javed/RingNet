@@ -364,9 +364,7 @@ fun NotificationCard(
                         tint = Color.Gray
                     )
                 }
-//                Row {
-//
-//                }
+
 
             }
         }

@@ -86,7 +86,11 @@ fun FiveDayWeatherForecasts(modifier: Modifier, viewModel: AppViewModel) {
                 }
             }
 
-            WeatherForecastResponse.Initial -> TODO()
+            WeatherForecastResponse.Initial -> {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
         }
     }
 }

@@ -118,6 +118,9 @@ class AuthViewModel(context: Context) : ViewModel() {
     fun saveUser() {
         viewModelScope.launch {
             if (_signInResponse.value is AuthResponse.Success) {
+                _token.value = (_signInResponse.value as AuthResponse.Success).token
+                _userId.value = (_signInResponse.value as AuthResponse.Success).userId
+                _isUserLoggedIn.value = true
                 dataStoreManager.insertData(
                     mapOf(
                         "token" to (_signInResponse.value as AuthResponse.Success).token,

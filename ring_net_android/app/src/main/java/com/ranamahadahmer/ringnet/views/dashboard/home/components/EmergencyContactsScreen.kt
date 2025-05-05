@@ -76,7 +76,15 @@ fun EmergencyContactsScreen(modifier: Modifier, appModel: AppViewModel) {
                 }
             }
 
-            EmergencyContactsResponse.Initial -> TODO()
+            EmergencyContactsResponse.Initial -> {
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
     }

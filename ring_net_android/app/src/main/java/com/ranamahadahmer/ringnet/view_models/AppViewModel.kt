@@ -2,9 +2,13 @@ package com.ranamahadahmer.ringnet.view_models
 
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.location.Geocoder
 import android.location.Location
+import android.os.Build
 import android.util.Patterns
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
@@ -35,6 +39,7 @@ import com.ranamahadahmer.ringnet.models.UserNotificationResponse
 import com.ranamahadahmer.ringnet.models.WeatherForecastResponse
 import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
 import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
+import com.ranamahadahmer.ringnet.services.WeatherNotificationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -51,6 +56,8 @@ import java.util.concurrent.TimeUnit
 class AppViewModel(
     val authViewModel: AuthViewModel,
     @SuppressLint("StaticFieldLeak") val context: Context
+
+
 ) : ViewModel() {
     var mainBottomBarState = MutableStateFlow(PagerState(pageCount = { 5 }, currentPage = 0))
     var notificationsPagerState = MutableStateFlow(PagerState(pageCount = { 3 }, currentPage = 0))
@@ -65,6 +72,37 @@ class AppViewModel(
         private const val TIMEOUT_SECONDS = 30L
         private const val MAX_RETRIES = 3
         private const val RETRY_DELAY_MS = 1000L
+    }
+
+    private val notificationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "com.ranamahadahmer.ringnet.NOTIFICATION_READ") {
+                val notificationId = intent.getStringExtra("notification_id")
+                notificationId?.let { id ->
+                    viewModelScope.launch {
+                        _readUserNotificationService.readNotification(
+                            token = "Bearer ${authViewModel.token.value}",
+                            notificationId = id
+                        )
+
+                        // Update local state
+                        val currentNotifications =
+                            (_userNotifications.value as? UserNotificationResponse.Success)?.notifications
+                        currentNotifications?.let { notifications ->
+                            val updatedNotifications = notifications.map { notification ->
+                                if (notification.id == id) notification.copy(status = "Read") else notification
+                            }
+                            _userNotifications.value = UserNotificationResponse.Success(
+                                notifications = updatedNotifications,
+                                total = (_userNotifications.value as UserNotificationResponse.Success).total,
+                                page = (_userNotifications.value as UserNotificationResponse.Success).page,
+                                totalPages = (_userNotifications.value as UserNotificationResponse.Success).totalPages
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
@@ -132,6 +170,20 @@ class AppViewModel(
     )
     val selectedAlerts: StateFlow<List<String>> = _selectedAlerts
 
+    init {
+
+        val broadcastFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Context.RECEIVER_NOT_EXPORTED
+        } else {
+            0
+        }
+
+        context.registerReceiver(
+            notificationReceiver,
+            IntentFilter("com.ranamahadahmer.ringnet.NOTIFICATION_READ"),
+            broadcastFlags
+        )
+    }
 
     fun setSelectedAlertClickRow(alert: String) {
         _selectedAlerts.value = if (_selectedAlerts.value.contains(alert)) {
@@ -330,7 +382,9 @@ class AppViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        context.unregisterReceiver(notificationReceiver)
         locationMonitoringJob?.cancel()
+        stopNotificationService() // Stop service when ViewModel is cleared
     }
 
 
@@ -339,6 +393,7 @@ class AppViewModel(
             _emergencyContacts.value = EmergencyContactsResponse.Loading
             repeat(MAX_RETRIES) { attempt ->
                 try {
+
                     val result = withContext(Dispatchers.IO) {
                         _emergencyContactsService.getContacts(
                             token = "Bearer ${authViewModel.token.value}",
@@ -394,26 +449,79 @@ class AppViewModel(
         }
     }
 
+
+    fun startNotificationService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(
+                Intent(
+                    context,
+                    WeatherNotificationService::class.java
+                ).apply {
+                    action = "UPDATE_NOTIFICATIONS"
+                    putExtra("notifications", userNotifications.value)
+                })
+        } else {
+            context.startService(Intent(context, WeatherNotificationService::class.java).apply {
+                action = "UPDATE_NOTIFICATIONS"
+                putExtra("notifications", userNotifications.value)
+            })
+        }
+    }
+
+    fun stopNotificationService() {
+        context.stopService(Intent(context, WeatherNotificationService::class.java))
+    }
+
     fun getUserNotifications() {
         viewModelScope.launch {
-            _userNotifications.value = UserNotificationResponse.Loading
-            repeat(MAX_RETRIES) { attempt ->
-                try {
-                    val result = withContext(Dispatchers.IO) {
-                        _userNotificationService.getNotifications(
-                            token = "Bearer ${authViewModel.token.value}",
-                        )
-                    }
-                    _userNotifications.value = result
+            while (true) {
+                if (_userNotifications.value == UserNotificationResponse.Initial) {
+                    _userNotifications.value = UserNotificationResponse.Loading
+                }
 
-                    return@launch
-                } catch (e: Exception) {
-                    if (attempt == MAX_RETRIES - 1) {
-                        _userNotifications.value =
-                            UserNotificationResponse.Error(e.message ?: "An unknown error occurred")
+                repeat(MAX_RETRIES) { attempt ->
+                    try {
+                        val result = withContext(Dispatchers.IO) {
+                            _userNotificationService.getNotifications(
+                                token = "Bearer ${authViewModel.token.value}",
+                            )
+                        }
+                        when (_userNotifications.value) {
+                            is UserNotificationResponse.Success -> {
 
-                    } else {
-                        delay(RETRY_DELAY_MS)
+                                if (
+                                    result.notifications != (_userNotifications.value as UserNotificationResponse.Success).notifications
+                                ) {
+                                    
+                                    _userNotifications.value = result
+
+                                }
+
+
+                            }
+
+                            is UserNotificationResponse.Loading -> {
+                                _userNotifications.value = result
+                            }
+
+
+                            else -> {
+
+                            }
+                        }
+                        delay(1000)
+
+
+                    } catch (e: Exception) {
+                        if (attempt == MAX_RETRIES - 1) {
+                            _userNotifications.value =
+                                UserNotificationResponse.Error(
+                                    e.message ?: "An unknown error occurred"
+                                )
+
+                        } else {
+                            delay(RETRY_DELAY_MS)
+                        }
                     }
                 }
             }
@@ -427,33 +535,119 @@ class AppViewModel(
 
     fun getUserAlerts() {
         viewModelScope.launch {
-            _hazardAlerts.value = UserAlertsResponse.Loading
-            repeat(MAX_RETRIES) { attempt ->
-                try {
-                    val result = withContext(Dispatchers.IO) {
-                        _userAlertsService.getAlerts(
-                            token = "Bearer ${authViewModel.token.value}"
-                        )
-                    }
-                    _hazardAlerts.value = result
+            while (true) {
+                if (_hazardAlerts.value == UserAlertsResponse.Initial) {
+                    _hazardAlerts.value = UserAlertsResponse.Loading
+                }
 
-                    return@launch
-                } catch (e: Exception) {
-                    if (attempt == MAX_RETRIES - 1) {
-                        val errorMessage = when (e) {
-                            is SocketTimeoutException -> "Connection timed out. Please check your internet connection."
-                            else -> e.message ?: "An unknown error occurred"
+                repeat(MAX_RETRIES) { attempt ->
+                    try {
+                        val result = withContext(Dispatchers.IO) {
+                            _userAlertsService.getAlerts(
+                                token = "Bearer ${authViewModel.token.value}"
+                            )
                         }
-                        _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
 
-                    } else {
-                        delay(RETRY_DELAY_MS)
+                        when (_hazardAlerts.value) {
+                            is UserAlertsResponse.Success -> {
+
+                                if (
+                                    result.alerts != (_hazardAlerts.value as UserAlertsResponse.Success).alerts
+                                ) {
+                                    _hazardAlerts.value = result
+
+
+                                }
+
+                            }
+
+                            is UserAlertsResponse.Loading -> {
+                                _hazardAlerts.value = result
+                            }
+
+
+                            else -> {
+
+                            }
+
+                        }
+
+                        delay(1000)
+
+                    } catch (e: Exception) {
+                        if (attempt == MAX_RETRIES - 1) {
+                            val errorMessage = when (e) {
+                                is SocketTimeoutException -> "Connection timed out. Please check your internet connection."
+                                else -> e.message ?: "An unknown error occurred"
+                            }
+                            _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
+
+                        } else {
+                            delay(RETRY_DELAY_MS)
+                        }
                     }
                 }
             }
         }
     }
 
+//    fun getUserAlerts() {
+//        viewModelScope.launch {
+//            while (true) {
+//                if (_hazardAlerts.value == UserAlertsResponse.Initial) {
+//                    _hazardAlerts.value = UserAlertsResponse.Loading
+//                }
+//
+//                repeat(MAX_RETRIES) { attempt ->
+//                    try {
+//                        val result = withContext(Dispatchers.IO) {
+//                            _userAlertsService.getAlerts(
+//                                token = "Bearer ${authViewModel.token.value}"
+//                            )
+//                        }
+//
+//                        // Compare with previous state
+//                        when (val currentState = _hazardAlerts.value) {
+//                            is UserAlertsResponse.Success -> {
+//                                if (
+//                                    result.alerts != currentState.alerts
+//                                ) {
+//                                    _hazardAlerts.value = result
+//                                    delay(1000) // Wait 1 second before next update
+//                                }
+//                            }
+//
+//                            UserAlertsResponse.Initial -> {
+//                                _hazardAlerts.value = result
+//                            }
+//
+//                            else -> {
+//                                // No state update needed
+//                            }
+//                        }
+//
+//                        delay(5000)
+//
+//
+//                    } catch (e: Exception) {
+//                        if (attempt == MAX_RETRIES - 1) {
+//                            val errorMessage = when (e) {
+//                                is SocketTimeoutException -> "Connection timed out. Please check your internet connection."
+//                                else -> e.message ?: "An unknown error occurred"
+//                            }
+//                            if (_hazardAlerts.value == UserAlertsResponse.Initial) {
+//                                _hazardAlerts.value = UserAlertsResponse.Error(errorMessage)
+//                            }
+//                        } else {
+//                            delay(RETRY_DELAY_MS)
+//                        }
+//                    }
+//                }
+//
+//                // Wait 5 seconds before next check
+//            }
+//        }
+//    }
 
     fun getProfile() {
         viewModelScope.launch {
@@ -550,17 +744,24 @@ class AppViewModel(
             val jobs = listOf(
                 async { getEmergencyContacts() },
                 async { getStatsInfo() },
-                async { getUserAlerts() },
-
+                async {
+                    if (_hazardAlerts.value == UserAlertsResponse.Initial) {
+                        getUserAlerts()
+                    }
+                },
+                async {
+                    if (_userNotifications.value == UserNotificationResponse.Initial) {
+                        getUserNotifications()
+                    }
+                },
                 async { getWeatherForecast() },
                 async { getProfile() },
-                async { getUserNotifications() },
-
-                )
+            )
             jobs.awaitAll()
 
         }
     }
+
 
     fun getLocationDetails(context: Context, latitude: Double, longitude: Double): List<String> {
         return try {
@@ -595,7 +796,7 @@ class AppViewModel(
                         )
                     }
                     _weatherForecast.value = result
-                    println(_weatherForecast.value)
+
                     return@launch
                 } catch (e: Exception) {
                     if (attempt == MAX_RETRIES - 1) {
@@ -613,53 +814,3 @@ class AppViewModel(
 }
 
 
-//fun getFloodData() {
-//    viewModelScope.launch {
-//        _floodData.value = FloodDataResponse.Loading
-//        repeat(MAX_RETRIES) { attempt ->
-//            try {
-//                val result = withContext(Dispatchers.IO) {
-//                    _floodDataService.getFloodData(
-//                        token = "Bearer ${authViewModel.token.value}",
-//                    )
-//                }
-//                _floodData.value = result
-//
-//                return@launch
-//            } catch (e: Exception) {
-//                if (attempt == MAX_RETRIES - 1) {
-//                    _floodData.value =
-//                        FloodDataResponse.Error(e.message ?: "An unknown error occurred")
-//                } else {
-//                    delay(RETRY_DELAY_MS)
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//fun getTsunamiAlert() {
-//    viewModelScope.launch {
-//        _tsunamiAlert.value = TsunamiAlertResponse.Loading
-//        repeat(MAX_RETRIES) { attempt ->
-//            try {
-//                val result = withContext(Dispatchers.IO) {
-//                    _tsunamiAlertService.getTsunamiData(
-//                        token = "Bearer ${authViewModel.token.value}",
-//                    )
-//                }
-//                _tsunamiAlert.value = result
-//
-//                return@launch
-//            } catch (e: Exception) {
-//                if (attempt == MAX_RETRIES - 1) {
-//                    _tsunamiAlert.value =
-//                        TsunamiAlertResponse.Error(e.message ?: "An unknown error occurred")
-//                } else {
-//                    delay(RETRY_DELAY_MS)
-//                }
-//            }
-//        }
-//    }
-//}
-//
