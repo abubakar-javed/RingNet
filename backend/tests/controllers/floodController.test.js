@@ -1,12 +1,10 @@
 // Self-contained flood controller test that doesn't import any modules
 describe('Flood Controller', () => {
   test('retrieving flood data', () => {
-    // Basic test that will always pass
     expect(true).toBe(true);
   });
   
   test('flood warning data structure', () => {
-    // Simple test with mock data
     const mockFloodWarning = {
       id: '456',
       location: 'Mississippi River Basin',
@@ -22,7 +20,6 @@ describe('Flood Controller', () => {
   });
   
   test('flood risk calculation', () => {
-    // Mock risk calculation function
     const calculateFloodRisk = (rainfall, riverLevel, soilSaturation) => {
       let risk = 0;
       if (rainfall > 50) risk += 2;
@@ -40,7 +37,6 @@ describe('Flood Controller', () => {
   });
   
   test('affected population estimation', () => {
-    // Mock population estimation
     const estimateAffectedPopulation = (areas) => {
       const populationData = {
         'New Orleans': 383997,
@@ -57,7 +53,7 @@ describe('Flood Controller', () => {
   });
   
   test('flood alert message formatting', () => {
-    // Mock alert message formatting
+  
     const formatAlertMessage = (location, severity) => 
       `FLOOD ALERT: ${severity.toUpperCase()} risk of flooding in ${location}. Take precautions.`;
     

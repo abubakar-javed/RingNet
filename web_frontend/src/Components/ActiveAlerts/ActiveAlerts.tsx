@@ -8,7 +8,9 @@ import {
   Chip,
   IconButton,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import {
   Warning as HazardIcon,
@@ -52,7 +54,16 @@ const ActiveAlerts = () => {
             }
           }
         );
-        setAlerts(response.data.alerts);
+        
+        // Filter alerts to only include those from the last 3 hours
+        const threeHoursAgo = new Date();
+        threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
+        
+        const recentAlerts = response.data.alerts.filter((alert: Alert) => 
+          new Date(alert.timestamp) >= threeHoursAgo
+        );
+        
+        setAlerts(recentAlerts);
         setError(null);
       } catch (err) {
         console.error('Error fetching alerts:', err);
@@ -64,15 +75,18 @@ const ActiveAlerts = () => {
 
     fetchAlerts();
     
-    // Optional: Set up polling to refresh alerts every few minutes
-    const intervalId = setInterval(fetchAlerts, 5 * 60 * 1000); // 5 minutes
+    // Set up polling to refresh alerts every minute for more real-time updates
+    const intervalId = setInterval(fetchAlerts, 60 * 1000); // 1 minute
     
     return () => clearInterval(intervalId);
   }, []);
 
-  if (loading) return <div>Loading active alerts...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (alerts.length === 0) return <div>No active alerts in your area</div>;
+  // Filter alerts based on search term
+  const filteredAlerts = alerts.filter(alert => 
+    alert.type.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    alert.location.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    alert.details.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const getAlertIcon = (type: string) => {
     switch (type) {
@@ -89,7 +103,7 @@ const ActiveAlerts = () => {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <HazardIcon sx={{ color: '#bc1a1a', fontSize: 28 }} />
         <Typography variant="h5" fontWeight={600} color="#1f2937">
-          Active Alerts
+          Active Alerts (Last 3 Hours)
         </Typography>
       </Box>
 
@@ -106,7 +120,7 @@ const ActiveAlerts = () => {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Search alerts..."
+            placeholder="Search alerts by type, location or details..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
@@ -127,60 +141,80 @@ const ActiveAlerts = () => {
           </IconButton>
         </Box>
 
-        <Grid container spacing={2}>
-          {alerts.map((alert, index) => (
-            <Grid item xs={12} key={index}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2.5,
-                  borderRadius: 2,
-                  border: '1px solid #fad4d4',
-                  bgcolor: alert.severity === 'high' ? '#fff5f5' : 'white',
-                  display: 'flex',
-                  gap: 2,
-                  alignItems: 'flex-start'
-                }}
-              >
-                <Box sx={{
-                  p: 1,
-                  borderRadius: '50%',
-                  bgcolor: 'rgba(207, 19, 34, 0.1)'
-                }}>
-                  {getAlertIcon(alert.type)}
-                </Box>
-                
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600} color="#1f2937">
-                      {alert.type} Alert
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={alert.severity.toUpperCase()}
-                      sx={{
-                        bgcolor: alert.severity === 'high' ? '#fef2f2' : '#f0f9ff',
-                        color: alert.severity === 'high' ? '#ef4444' : '#3b82f6',
-                        fontWeight: 500
-                      }}
-                    />
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress color="error" />
+          </Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : filteredAlerts.length === 0 ? (
+          <Alert severity="info">
+            {searchTerm ? 'No alerts match your search criteria' : 'No active alerts in the last 3 hours'}
+          </Alert>
+        ) : (
+          <Grid container spacing={2}>
+            {filteredAlerts.map((alert, index) => (
+              <Grid item xs={12} key={index}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: 2,
+                    border: '1px solid #fad4d4',
+                    bgcolor: alert.severity === 'error' ? '#fff5f5' : 
+                             alert.severity === 'warning' ? '#fffbeb' : 'white',
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <Box sx={{
+                    p: 1,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(207, 19, 34, 0.1)'
+                  }}>
+                    {getAlertIcon(alert.type)}
                   </Box>
-                  <Typography variant="body2" color="#4b5563" mb={1}>
-                    {alert.details}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Typography variant="caption" color="#64748b">
-                      Location: {alert.location}
+                  
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Typography variant="subtitle1" fontWeight={600} color="#1f2937">
+                        {alert.type} Alert
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={alert.severity.toUpperCase()}
+                        sx={{
+                          bgcolor: alert.severity === 'error' ? '#fef2f2' : 
+                                  alert.severity === 'warning' ? '#fffbeb' : '#f0f9ff',
+                          color: alert.severity === 'error' ? '#ef4444' : 
+                                alert.severity === 'warning' ? '#f59e0b' : '#3b82f6',
+                          fontWeight: 500
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="body2" color="#4b5563" mb={1}>
+                      {alert.details}
                     </Typography>
-                    <Typography variant="caption" color="#64748b">
-                      Time: {new Date(alert.timestamp).toLocaleString()}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                      <Typography variant="caption" color="#64748b">
+                        Location: {alert.location}
+                      </Typography>
+                      <Typography variant="caption" color="#64748b">
+                        Time: {new Date(alert.timestamp).toLocaleString()}
+                      </Typography>
+                      {alert.distance !== undefined && (
+                        <Typography variant="caption" color="#64748b">
+                          Distance: {alert.distance} km
+                        </Typography>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Paper>
     </Box>
   );

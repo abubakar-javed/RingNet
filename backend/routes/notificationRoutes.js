@@ -63,6 +63,35 @@ router.patch('/:id/read', auth, async (req, res) => {
   }
 });
 
+// Delete a notification
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id);
+    
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    
+    // Check if user is allowed to delete this notification
+    const userId = req.user._id;
+    const canDelete = notification.recipients.length === 0 || 
+                     notification.recipients.some(recipient => 
+                       recipient.toString() === userId.toString()
+                     );
+    
+    if (!canDelete) {
+      return res.status(403).json({ message: 'Not authorized to delete this notification' });
+    }
+    
+    await Notification.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get unread notification count
 router.get('/unread-count', auth, async (req, res) => {
   try {

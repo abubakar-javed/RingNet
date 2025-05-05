@@ -382,7 +382,7 @@ async function getUserWeather(userId, updatedLocation = null) {
         
         // If user isn't in cluster yet, add them
         if (!userInCluster) {
-          // console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
+          console.log(`Adding user ${userId} to existing weather cluster ${cluster.clusterId}`);
           
           // Create updated record with user added to cluster
           const updatedWeatherData = new WeatherData({
@@ -410,17 +410,21 @@ async function getUserWeather(userId, updatedLocation = null) {
         }
         
         weatherData = cluster;
+        console.log(`User ${userId} found in existing weather cluster ${cluster.clusterId}`);
         break;
       }
     }
     
     // If no suitable cluster found, create a new one for this user
     if (!weatherData) {
+      console.log(`Creating new weather cluster for user ${userId}`);
       weatherData = await createNewClusterForUser(user.location, userId);
     }
     
     // Process user-specific weather alerts
+    console.log(`Processing weather alerts for user ${userId}`);
     await processUserWeatherAlerts(userId, weatherData);
+    console.log(`Finished processing weather alerts for user ${userId}`);
     
     return weatherData;
     
@@ -450,13 +454,26 @@ async function processUserWeatherAlerts(userId, weatherData) {
       
       // Check if there's already a recent alert (within last 3 hours) for this user
       const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      
+      // First check for recent notifications directly targeted to this user
+      const recentNotification = await Notification.findOne({
+        type: 'Heatwave',
+        recipients: userId.toString(),
+        sentAt: { $gte: threeHoursAgo }
+      });
+      
+      if (recentNotification) {
+        console.log(`Skipping heatwave alert for user ${userId} - already notified within last 3 hours (notification id: ${recentNotification._id})`);
+        return;
+      }
+      
+      // If no direct notification found, check for alerts in the area
       const recentAlert = await Alert.findOne({
         type: 'Heatwave',
         hazardModel: 'Heatwave',
         'coordinates.latitude': { $gte: weatherData.location.latitude - 0.01, $lte: weatherData.location.latitude + 0.01 },
         'coordinates.longitude': { $gte: weatherData.location.longitude - 0.01, $lte: weatherData.location.longitude + 0.01 },
-        timestamp: { $gte: threeHoursAgo },
-        // We need to also check if there's a notification linked to this alert for this specific user
+        timestamp: { $gte: threeHoursAgo }
       });
       
       if (recentAlert) {
@@ -467,7 +484,7 @@ async function processUserWeatherAlerts(userId, weatherData) {
         });
         
         if (notification) {
-          console.log(`Skipping heatwave alert for user ${userId} - already notified within last 3 hours`);
+          console.log(`Skipping heatwave alert for user ${userId} - already notified within last 3 hours for alert ${recentAlert._id}`);
           return;
         }
       }

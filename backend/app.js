@@ -28,6 +28,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const emergencyContactsRoutes = require('./routes/emergencyContactsRoutes');
+const historicalDataRoutes = require('./routes/historicalDataRoutes');
 
 // Create Express app
 const app = express();
@@ -55,6 +56,7 @@ app.use(passport.session());
 
 // Add this where you initialize your services
 const { initialize: initializeFloodService } = require('./services/floodService');
+const { initialize: initializeHistoricalDataService } = require('./services/historicalDataService');
 
 // Initialize flood service when the server starts
 initializeFloodService()
@@ -63,6 +65,15 @@ initializeFloodService()
   })
   .catch(err => {
     console.error('Failed to initialize flood service:', err);
+  });
+
+// Initialize historical data service when the server starts
+initializeHistoricalDataService()
+  .then(() => {
+    console.log('Historical data service initialized successfully');
+  })
+  .catch(err => {
+    console.error('Failed to initialize historical data service:', err);
   });
 
 app.get('/api/welcome', (req, res) => {
@@ -81,6 +92,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/emergency-contacts', emergencyContactsRoutes);
+app.use('/api/historical', historicalDataRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
@@ -129,6 +141,12 @@ const startServer = async () => {
               .then(() => console.log('Flood service initialized'))
               .catch(err => console.error('Failed to initialize flood service:', err));
               
+            // Initialize historical data service
+            const { initialize: initializeHistoricalDataService } = require('./services/historicalDataService');
+            initializeHistoricalDataService()
+              .then(() => console.log('Historical data service initialized'))
+              .catch(err => console.error('Failed to initialize historical data service:', err));
+            
             // Initialize other services here if needed
         } else {
             console.error('Failed to connect to MongoDB');
