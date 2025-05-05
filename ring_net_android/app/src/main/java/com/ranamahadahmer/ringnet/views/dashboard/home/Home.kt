@@ -25,7 +25,7 @@ import com.ranamahadahmer.ringnet.models.common.WarningCard
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.CurrentWarningCardRow
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.EmergencyContactsScreen
-import com.ranamahadahmer.ringnet.views.dashboard.home.components.FiveDayHazardForecasts
+import com.ranamahadahmer.ringnet.views.dashboard.home.components.FiveDayWeatherForecasts
 import com.ranamahadahmer.ringnet.views.dashboard.home.components.RecentAlerts
 
 
@@ -87,7 +87,7 @@ fun Home(scrollState: ScrollState, appModel: AppViewModel) {
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        FiveDayHazardForecasts(Modifier.padding(horizontal = 8.dp))
+        FiveDayWeatherForecasts(Modifier.padding(horizontal = 8.dp), viewModel = appModel)
         Spacer(modifier = Modifier.height(16.dp))
         RecentAlerts(Modifier.padding(horizontal = 8.dp), viewModel = appModel)
 //        Spacer(modifier = Modifier.height(16.dp))

@@ -1,13 +1,17 @@
 package com.ranamahadahmer.ringnet.views.dashboard.home.components
 
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -32,12 +36,9 @@ fun RecentAlerts(modifier: Modifier, viewModel: AppViewModel) {
 
         when (recentAlert.value) {
             is UserAlertsResponse.Loading -> {
-                Text(
-                    text = "Loading Alerts...",
-                    fontSize = 16.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
 
             is UserAlertsResponse.Error -> {
@@ -80,7 +81,15 @@ fun RecentAlerts(modifier: Modifier, viewModel: AppViewModel) {
                 }
             }
 
-            UserAlertsResponse.Initial -> TODO()
+            UserAlertsResponse.Initial -> {
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
 

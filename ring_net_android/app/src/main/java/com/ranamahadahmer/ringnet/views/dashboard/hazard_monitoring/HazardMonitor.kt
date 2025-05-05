@@ -1,6 +1,7 @@
 package com.ranamahadahmer.ringnet.views.dashboard.hazard_monitoring
 
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -115,7 +117,17 @@ fun HazardMonitor(viewModel: AppViewModel) {
                                 }
                             }
 
-                            UserAlertsResponse.Initial -> TODO()
+                            UserAlertsResponse.Initial -> {
+                                item {
+
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            }
                         }
 
                     }

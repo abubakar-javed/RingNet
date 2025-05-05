@@ -336,7 +336,11 @@ fun NotificationCard(
 
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(formatDateTime(notification.createdAt), fontSize = 12.sp, color = Color.Gray)
+                Text(
+                    formatDateTime(notification.createdAt),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -360,9 +364,7 @@ fun NotificationCard(
                         tint = Color.Gray
                     )
                 }
-//                Row {
-//
-//                }
+
 
             }
         }

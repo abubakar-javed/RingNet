@@ -1,4 +1,4 @@
-package com.ranamahadahmer.ringnet.models.unused
+package com.ranamahadahmer.ringnet.models
 
 import com.google.gson.annotations.SerializedName
 
@@ -28,8 +28,16 @@ sealed class WeatherForecastResponse {
         @SerializedName("timestamp")
         val timestamp: String,
         @SerializedName("metadata")
-        val metadata: WeatherMetadata
-    ) : WeatherForecastResponse()
+        val metadata: WeatherMetadata,
+        @SerializedName("_id")
+        val id: String,
+        @SerializedName("createdAt")
+        val createdAt: String,
+        @SerializedName("updatedAt")
+        val updatedAt: String,
+
+
+        ) : WeatherForecastResponse()
 
     data class Error(
         val message: String

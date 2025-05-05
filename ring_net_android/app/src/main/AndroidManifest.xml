@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission
+        android:name="android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
@@ -28,8 +31,11 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
@@ -80,6 +86,12 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAP_API_KEY}" />
+        <service
+            android:name=".services.WeatherNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
     </application>
 
 </manifest>
