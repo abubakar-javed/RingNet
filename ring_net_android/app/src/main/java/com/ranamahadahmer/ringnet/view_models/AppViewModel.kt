@@ -185,46 +185,6 @@ class AppViewModel(
     }
 
 
-//    fun changeNotificationReadStatus(notification: NotificationInfo) {
-//        viewModelScope.launch {
-//            _readUserNotificationService.readNotification(
-//                token = "Bearer ${authViewModel.token.value}",
-//                notificationId = notification.id
-//            )
-//        }
-//        val updatedNotifications =
-//            (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
-//                if (it == notification) it.copy(status = "Read") else it
-//            }
-//        _userNotifications.value = UserNotificationResponse.Success(
-//            notifications = updatedNotifications,
-//            total = (userNotifications.value as UserNotificationResponse.Success).total,
-//            page = (userNotifications.value as UserNotificationResponse.Success).page,
-//            totalPages = (userNotifications.value as UserNotificationResponse.Success).totalPages
-//        )
-//
-//    }
-//
-//    fun deleteNotification(notification: NotificationInfo) {
-//        viewModelScope.launch {
-//            _deleteUserNotificationService.deleteNotification(
-//                token = "Bearer ${authViewModel.token.value}",
-//                notificationId = notification.id
-//            )
-//        }
-//        val updatedNotifications =
-//            (_userNotifications.value as UserNotificationResponse.Success).notifications.filter {
-//                it != notification
-//            }
-//        _userNotifications.value = UserNotificationResponse.Success(
-//            notifications = updatedNotifications,
-//            total = (userNotifications.value as UserNotificationResponse.Success).total,
-//            page = (userNotifications.value as UserNotificationResponse.Success).page,
-//            totalPages = (userNotifications.value as UserNotificationResponse.Success).totalPages
-//        )
-//    }
-
-
     fun changeNotificationReadStatus(notification: NotificationInfo) {
         viewModelScope.launch {
             // Add to modified set
@@ -423,56 +383,6 @@ class AppViewModel(
         }
     }
 
-
-//    fun getUserNotifications() {
-//        viewModelScope.launch {
-//            while (true) {
-//                if (_userNotifications.value == UserNotificationResponse.Initial) {
-//                    _userNotifications.value = UserNotificationResponse.Loading
-//                }
-//
-//                repeat(MAX_RETRIES) { attempt ->
-//                    try {
-//                        val result = withContext(Dispatchers.IO) {
-//                            _userNotificationService.getNotifications(
-//                                token = "Bearer ${authViewModel.token.value}",
-//                            )
-//                        }
-//                        when (_userNotifications.value) {
-//                            is UserNotificationResponse.Success -> {
-//
-//                                if (
-//                                    result.notifications != (_userNotifications.value as UserNotificationResponse.Success).notifications
-//                                ) {
-//                                    _userNotifications.value = result
-//                                }
-//                            }
-//
-//                            is UserNotificationResponse.Loading -> {
-//                                _userNotifications.value = result
-//                            }
-//
-//
-//                            else -> {
-//
-//                            }
-//                        }
-//                        delay(1000)
-//                    } catch (e: Exception) {
-//                        if (attempt == MAX_RETRIES - 1) {
-//                            _userNotifications.value =
-//                                UserNotificationResponse.Error(
-//                                    e.message ?: "An unknown error occurred"
-//                                )
-//
-//                        } else {
-//                            delay(RETRY_DELAY_MS)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     fun getUserNotifications() {
         viewModelScope.launch {
@@ -746,7 +656,6 @@ class AppViewModel(
             }
         }
     }
-
 }
 
 
