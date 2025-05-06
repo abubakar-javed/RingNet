@@ -1,9 +1,13 @@
 package com.ranamahadahmer.ringnet.view_models
 
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.location.Geocoder
 import android.location.Location
+import android.os.IBinder
 import android.util.Patterns
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
@@ -30,6 +34,7 @@ import com.ranamahadahmer.ringnet.models.StatsInfoResponse
 import com.ranamahadahmer.ringnet.models.UserAlertsResponse
 import com.ranamahadahmer.ringnet.models.UserNotificationResponse
 import com.ranamahadahmer.ringnet.models.WeatherForecastResponse
+import com.ranamahadahmer.ringnet.services.NotificationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -185,35 +190,35 @@ class AppViewModel(
     }
 
 
-    fun changeNotificationReadStatus(notification: NotificationInfo) {
-        viewModelScope.launch {
-            // Add to modified set
-            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
-
-            try {
-                _readUserNotificationService.readNotification(
-                    token = "Bearer ${authViewModel.token.value}",
-                    notificationId = notification.id
-                )
-
-                val updatedNotifications =
-                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
-                        if (it == notification) it.copy(status = "Read") else it
-                    }
-                _userNotifications.value =
-                    (_userNotifications.value as UserNotificationResponse.Success).copy(
-                        notifications = updatedNotifications
-                    )
-
-
-                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
-            } catch (e: Exception) {
-                // Handle error
-                showSnackbar("Failed to update notification status")
-                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
-            }
-        }
-    }
+//    fun changeNotificationReadStatus(notification: NotificationInfo) {
+//        viewModelScope.launch {
+//            // Add to modified set
+//            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
+//
+//            try {
+//                _readUserNotificationService.readNotification(
+//                    token = "Bearer ${authViewModel.token.value}",
+//                    notificationId = notification.id
+//                )
+//
+//                val updatedNotifications =
+//                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
+//                        if (it == notification) it.copy(status = "Read") else it
+//                    }
+//                _userNotifications.value =
+//                    (_userNotifications.value as UserNotificationResponse.Success).copy(
+//                        notifications = updatedNotifications
+//                    )
+//
+//
+//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+//            } catch (e: Exception) {
+//                // Handle error
+//                showSnackbar("Failed to update notification status")
+//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+//            }
+//        }
+//    }
 
     fun deleteNotification(notification: NotificationInfo) {
         viewModelScope.launch {
@@ -242,6 +247,90 @@ class AppViewModel(
                 showSnackbar("Failed to delete notification")
                 _modifiedNotifications.value = _modifiedNotifications.value - notification.id
             }
+        }
+    }
+
+
+    fun changeNotificationReadStatus(notification: NotificationInfo, status: String) {
+        viewModelScope.launch {
+            // Add to modified set
+            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
+
+            try {
+                if (status == "Read") {
+                    _readUserNotificationService.readNotification(
+                        token = "Bearer ${authViewModel.token.value}",
+                        notificationId = notification.id
+                    )
+                }
+
+                val updatedNotifications =
+                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
+                        if (it == notification) it.copy(status = status) else it
+                    }
+                _userNotifications.value =
+                    (_userNotifications.value as UserNotificationResponse.Success).copy(
+                        notifications = updatedNotifications
+                    )
+
+                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+            } catch (e: Exception) {
+                // Handle error
+                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+            }
+        }
+    }
+
+    fun syncNotificationsWithService() {
+        viewModelScope.launch {
+            val serviceConnection = object : ServiceConnection {
+                override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                    // Service connected, we can now interact with it
+                    val notificationService =
+                        (service as NotificationService.LocalBinder).getService()
+
+                    viewModelScope.launch {
+                        notificationService.userNotifications.collect { serviceResponse ->
+                            if (serviceResponse is UserNotificationResponse.Success &&
+                                _userNotifications.value is UserNotificationResponse.Success
+                            ) {
+
+                                // Update our notifications with any read status changes from the service
+                                val ourNotifications =
+                                    (_userNotifications.value as UserNotificationResponse.Success).notifications
+                                val serviceNotifications = serviceResponse.notifications
+
+                                val updatedNotifications = ourNotifications.map { ourNotification ->
+                                    val serviceNotification =
+                                        serviceNotifications.find { it.id == ourNotification.id }
+                                    if (serviceNotification != null && serviceNotification.status != ourNotification.status) {
+                                        ourNotification.copy(status = serviceNotification.status)
+                                    } else {
+                                        ourNotification
+                                    }
+                                }
+
+                                if (updatedNotifications != ourNotifications) {
+                                    _userNotifications.value =
+                                        (_userNotifications.value as UserNotificationResponse.Success).copy(
+                                            notifications = updatedNotifications
+                                        )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                override fun onServiceDisconnected(name: ComponentName?) {
+                    // Service disconnected
+                }
+            }
+
+            context.bindService(
+                Intent(context, NotificationService::class.java),
+                serviceConnection,
+                Context.BIND_AUTO_CREATE
+            )
         }
     }
 

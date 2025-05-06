@@ -64,7 +64,21 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAP_API_KEY}" />
 
+        <service
+            android:name=".services.NotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
+        <!-- Add the BroadcastReceiver -->
+        <receiver
+            android:name=".services.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
