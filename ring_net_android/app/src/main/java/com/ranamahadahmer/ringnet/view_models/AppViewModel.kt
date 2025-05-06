@@ -1,14 +1,13 @@
 package com.ranamahadahmer.ringnet.view_models
 
 
-import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.location.Geocoder
 import android.location.Location
-import android.os.Build
+import android.os.IBinder
 import android.util.Patterns
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.pager.PagerState
@@ -25,8 +24,6 @@ import com.ranamahadahmer.ringnet.api.UpdateLocationService
 import com.ranamahadahmer.ringnet.api.UserAlertsService
 import com.ranamahadahmer.ringnet.api.UserNotificationService
 import com.ranamahadahmer.ringnet.api.WeatherForecastService
-import com.ranamahadahmer.ringnet.api.unused.FloodDataService
-import com.ranamahadahmer.ringnet.api.unused.TsunamiAlertService
 import com.ranamahadahmer.ringnet.models.EmergencyContactsResponse
 import com.ranamahadahmer.ringnet.models.LocationCoordinates
 import com.ranamahadahmer.ringnet.models.LocationUpdateRequest
@@ -37,9 +34,7 @@ import com.ranamahadahmer.ringnet.models.StatsInfoResponse
 import com.ranamahadahmer.ringnet.models.UserAlertsResponse
 import com.ranamahadahmer.ringnet.models.UserNotificationResponse
 import com.ranamahadahmer.ringnet.models.WeatherForecastResponse
-import com.ranamahadahmer.ringnet.models.unused.FloodDataResponse
-import com.ranamahadahmer.ringnet.models.unused.TsunamiAlertResponse
-import com.ranamahadahmer.ringnet.services.WeatherNotificationService
+import com.ranamahadahmer.ringnet.services.NotificationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -55,131 +50,84 @@ import java.util.concurrent.TimeUnit
 
 class AppViewModel(
     val authViewModel: AuthViewModel,
-    @SuppressLint("StaticFieldLeak") val context: Context
+    val context: Context
 ) : ViewModel() {
+
+    companion object {
+        private const val MAX_RETRIES = 3
+        private const val RETRY_DELAY_MS = 1000L
+    }
+
     var mainBottomBarState = MutableStateFlow(PagerState(pageCount = { 5 }, currentPage = 0))
     var notificationsPagerState = MutableStateFlow(PagerState(pageCount = { 3 }, currentPage = 0))
     var hazardMonitorPagerState = MutableStateFlow(PagerState(pageCount = { 2 }, currentPage = 0))
     val dashboardScrollState = ScrollState(0)
 
-    private val _currentLocation = MutableStateFlow<LatLng?>(null)
-    val currentLocation: StateFlow<LatLng?> = _currentLocation
     private var locationMonitoringJob: Job? = null
-
-    companion object {
-        private const val TIMEOUT_SECONDS = 30L
-        private const val MAX_RETRIES = 3
-        private const val RETRY_DELAY_MS = 1000L
-    }
-
-    private val notificationReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == "com.ranamahadahmer.ringnet.NOTIFICATION_READ") {
-                val notificationId = intent.getStringExtra("notification_id")
-                notificationId?.let { id ->
-                    viewModelScope.launch {
-                        _readUserNotificationService.readNotification(
-                            token = "Bearer ${authViewModel.token.value}",
-                            notificationId = id
-                        )
-
-                        // Update local state
-                        val currentNotifications =
-                            (_userNotifications.value as? UserNotificationResponse.Success)?.notifications
-                        currentNotifications?.let { notifications ->
-                            val updatedNotifications = notifications.map { notification ->
-                                if (notification.id == id) notification.copy(status = "Read") else notification
-                            }
-                            _userNotifications.value = UserNotificationResponse.Success(
-                                notifications = updatedNotifications,
-                                total = (_userNotifications.value as UserNotificationResponse.Success).total,
-                                page = (_userNotifications.value as UserNotificationResponse.Success).page,
-                                totalPages = (_userNotifications.value as UserNotificationResponse.Success).totalPages
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+    val alertTypes = setOf<String>("Earthquake", "Flood", "Tsunami", "Heatwave")
+    private val _modifiedNotifications = MutableStateFlow<Set<String>>(emptySet())
 
     private val _emergencyContactsService: EmergencyContactsService =
         BackendApi.retrofit.create(EmergencyContactsService::class.java)
-    private val _floodDataService: FloodDataService =
-        BackendApi.retrofit.create(FloodDataService::class.java)
-    private val _tsunamiAlertService: TsunamiAlertService =
-        BackendApi.retrofit.create(TsunamiAlertService::class.java)
+    private val _userAlertsService: UserAlertsService =
+        BackendApi.retrofit.create(UserAlertsService::class.java)
     private val _weatherForecastService: WeatherForecastService =
         BackendApi.retrofit.create(WeatherForecastService::class.java)
     private val _statsInfoService: StatsInfoService =
         BackendApi.retrofit.create(StatsInfoService::class.java)
-    private val _emergencyContacts =
-        MutableStateFlow<EmergencyContactsResponse>(EmergencyContactsResponse.Initial)
-    private val _floodData = MutableStateFlow<FloodDataResponse>(FloodDataResponse.Initial)
-    private val _tsunamiAlert = MutableStateFlow<TsunamiAlertResponse>(TsunamiAlertResponse.Initial)
-    private val _weatherForecast =
-        MutableStateFlow<WeatherForecastResponse>(WeatherForecastResponse.Initial)
-    private val _statsInfo = MutableStateFlow<StatsInfoResponse>(StatsInfoResponse.Initial)
-    val emergencyContacts: StateFlow<EmergencyContactsResponse> = _emergencyContacts
-    val floodData: StateFlow<FloodDataResponse> = _floodData
-    val tsunamiAlert: StateFlow<TsunamiAlertResponse> = _tsunamiAlert
-    val weatherForecast: StateFlow<WeatherForecastResponse> = _weatherForecast
-
-    val statsInfo: StateFlow<StatsInfoResponse> = _statsInfo
-
-
     private val _updateLocationService: UpdateLocationService =
         BackendApi.retrofit.create(UpdateLocationService::class.java)
     private val _userNotificationService: UserNotificationService =
         BackendApi.retrofit.create(UserNotificationService::class.java)
-
-    private val _userNotifications =
-        MutableStateFlow<UserNotificationResponse>(UserNotificationResponse.Initial)
-    val userNotifications: StateFlow<UserNotificationResponse> = _userNotifications
-
     private val _profileService: ProfileService =
         BackendApi.retrofit.create(ProfileService::class.java)
+    private val _readUserNotificationService: ReadUserNotificationService =
+        BackendApi.retrofit.create(ReadUserNotificationService::class.java)
+    private val _deleteUserNotificationService: DeleteUserNotificationService =
+        BackendApi.retrofit.create(DeleteUserNotificationService::class.java)
 
 
+    private val _emergencyContacts =
+        MutableStateFlow<EmergencyContactsResponse>(EmergencyContactsResponse.Initial)
+    private val _weatherForecast =
+        MutableStateFlow<WeatherForecastResponse>(WeatherForecastResponse.Initial)
+    private val _statsInfo = MutableStateFlow<StatsInfoResponse>(StatsInfoResponse.Initial)
+    private val _currentLocation = MutableStateFlow<LatLng?>(null)
+    private val _userNotifications =
+        MutableStateFlow<UserNotificationResponse>(UserNotificationResponse.Initial)
     private val _profile = MutableStateFlow<ProfileResponse>(ProfileResponse.Initial)
-
-    val profile: StateFlow<ProfileResponse> = _profile
-
-
     private val _isEditingProfile = MutableStateFlow<Boolean>(false)
-    val isEditingProfile: StateFlow<Boolean> = _isEditingProfile
-
     private val _name = MutableStateFlow<String>("")
-    val name: StateFlow<String> = _name
-
     private val _email = MutableStateFlow<String>("")
-    val email: StateFlow<String> = _email
-
     private val _phone = MutableStateFlow<String>("")
-    val phone: StateFlow<String> = _phone
-
-
-    val alertTypes = setOf<String>("Earthquake", "Flood", "Tsunami", "Heatwave")
-
-
     private val _selectedAlerts = MutableStateFlow<List<String>>(
         emptyList()
     )
-    val selectedAlerts: StateFlow<List<String>> = _selectedAlerts
+    private val _showAlertDialog = MutableStateFlow<Boolean>(false)
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    private val _hazardAlerts = MutableStateFlow<UserAlertsResponse>(UserAlertsResponse.Initial)
+    private val _locationDetails = MutableStateFlow<List<String>>(emptyList())
 
-    init {
-        val broadcastFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Context.RECEIVER_NOT_EXPORTED
-        } else {
-            0
-        }
-        context.registerReceiver(
-            notificationReceiver,
-            IntentFilter("com.ranamahadahmer.ringnet.NOTIFICATION_READ"),
-            broadcastFlags
-        )
-    }
+
+    val emergencyContacts: StateFlow<EmergencyContactsResponse> = _emergencyContacts
+    val weatherForecast: StateFlow<WeatherForecastResponse> = _weatherForecast
+    val statsInfo: StateFlow<StatsInfoResponse> = _statsInfo
+    val currentLocation: StateFlow<LatLng?> = _currentLocation
+    val userNotifications: StateFlow<UserNotificationResponse> = _userNotifications
+    val profile: StateFlow<ProfileResponse> = _profile
+    val isEditingProfile: StateFlow<Boolean> = _isEditingProfile
+
+    val name: StateFlow<String> = _name
+    val email: StateFlow<String> = _email
+
+    val phone: StateFlow<String> = _phone
+
+    val selectedAlerts: StateFlow<List<String>> = _selectedAlerts
+    val showAlertDialog: StateFlow<Boolean> = _showAlertDialog
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage
+    val locationDetails: StateFlow<List<String>> = _locationDetails
+    val hazardAlert: StateFlow<UserAlertsResponse> = _hazardAlerts
+
 
     fun setSelectedAlertClickRow(alert: String) {
         _selectedAlerts.value = if (_selectedAlerts.value.contains(alert)) {
@@ -197,9 +145,6 @@ class AppViewModel(
         }
     }
 
-
-    private val _showAlertDialog = MutableStateFlow<Boolean>(false)
-    val showAlertDialog: StateFlow<Boolean> = _showAlertDialog
 
     fun setShowAlertDialog(show: Boolean) {
         _showAlertDialog.value = show
@@ -222,8 +167,6 @@ class AppViewModel(
         _phone.value = phone
     }
 
-    private val _snackbarMessage = MutableStateFlow<String?>(null)
-    val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
     fun showSnackbar(message: String) {
         _snackbarMessage.value = message
@@ -246,54 +189,150 @@ class AppViewModel(
         }
     }
 
-    val _readUserNotificationService: ReadUserNotificationService =
-        BackendApi.retrofit.create(ReadUserNotificationService::class.java)
-    val _deleteUserNotificationService: DeleteUserNotificationService =
-        BackendApi.retrofit.create(DeleteUserNotificationService::class.java)
 
-    fun changeNotificationReadStatus(notification: NotificationInfo) {
-        viewModelScope.launch {
-            _readUserNotificationService.readNotification(
-                token = "Bearer ${authViewModel.token.value}",
-                notificationId = notification.id
-            )
-        }
-        val updatedNotifications =
-            (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
-                if (it == notification) it.copy(status = "Read") else it
-            }
-        _userNotifications.value = UserNotificationResponse.Success(
-            notifications = updatedNotifications,
-            total = (userNotifications.value as UserNotificationResponse.Success).total,
-            page = (userNotifications.value as UserNotificationResponse.Success).page,
-            totalPages = (userNotifications.value as UserNotificationResponse.Success).totalPages
-        )
-
-    }
+//    fun changeNotificationReadStatus(notification: NotificationInfo) {
+//        viewModelScope.launch {
+//            // Add to modified set
+//            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
+//
+//            try {
+//                _readUserNotificationService.readNotification(
+//                    token = "Bearer ${authViewModel.token.value}",
+//                    notificationId = notification.id
+//                )
+//
+//                val updatedNotifications =
+//                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
+//                        if (it == notification) it.copy(status = "Read") else it
+//                    }
+//                _userNotifications.value =
+//                    (_userNotifications.value as UserNotificationResponse.Success).copy(
+//                        notifications = updatedNotifications
+//                    )
+//
+//
+//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+//            } catch (e: Exception) {
+//                // Handle error
+//                showSnackbar("Failed to update notification status")
+//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+//            }
+//        }
+//    }
 
     fun deleteNotification(notification: NotificationInfo) {
         viewModelScope.launch {
-            _deleteUserNotificationService.deleteNotification(
-                token = "Bearer ${authViewModel.token.value}",
-                notificationId = notification.id
-            )
-        }
-        val updatedNotifications =
-            (_userNotifications.value as UserNotificationResponse.Success).notifications.filter {
-                it != notification
+            // Add to modified set
+            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
+
+            try {
+                _deleteUserNotificationService.deleteNotification(
+                    token = "Bearer ${authViewModel.token.value}",
+                    notificationId = notification.id
+                )
+
+                val updatedNotifications =
+                    (_userNotifications.value as UserNotificationResponse.Success).notifications.filter {
+                        it != notification
+                    }
+                _userNotifications.value =
+                    (_userNotifications.value as UserNotificationResponse.Success).copy(
+                        notifications = updatedNotifications
+                    )
+
+                // Remove from modified set after successful deletion
+                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+            } catch (e: Exception) {
+                // Handle error
+                showSnackbar("Failed to delete notification")
+                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
             }
-        _userNotifications.value = UserNotificationResponse.Success(
-            notifications = updatedNotifications,
-            total = (userNotifications.value as UserNotificationResponse.Success).total,
-            page = (userNotifications.value as UserNotificationResponse.Success).page,
-            totalPages = (userNotifications.value as UserNotificationResponse.Success).totalPages
-        )
+        }
     }
 
 
-    private val _hazardAlerts = MutableStateFlow<UserAlertsResponse>(UserAlertsResponse.Initial)
-    val hazardAlert: StateFlow<UserAlertsResponse> = _hazardAlerts
+    fun changeNotificationReadStatus(notification: NotificationInfo, status: String) {
+        viewModelScope.launch {
+            // Add to modified set
+            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
 
+            try {
+                if (status == "Read") {
+                    _readUserNotificationService.readNotification(
+                        token = "Bearer ${authViewModel.token.value}",
+                        notificationId = notification.id
+                    )
+                }
+
+                val updatedNotifications =
+                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
+                        if (it == notification) it.copy(status = status) else it
+                    }
+                _userNotifications.value =
+                    (_userNotifications.value as UserNotificationResponse.Success).copy(
+                        notifications = updatedNotifications
+                    )
+
+                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+            } catch (e: Exception) {
+                // Handle error
+                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
+            }
+        }
+    }
+
+    fun syncNotificationsWithService() {
+        viewModelScope.launch {
+            val serviceConnection = object : ServiceConnection {
+                override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                    // Service connected, we can now interact with it
+                    val notificationService =
+                        (service as NotificationService.LocalBinder).getService()
+
+                    viewModelScope.launch {
+                        notificationService.userNotifications.collect { serviceResponse ->
+                            if (serviceResponse is UserNotificationResponse.Success &&
+                                _userNotifications.value is UserNotificationResponse.Success
+                            ) {
+
+                                // Update our notifications with any read status changes from the service
+                                val ourNotifications =
+                                    (_userNotifications.value as UserNotificationResponse.Success).notifications
+                                val serviceNotifications = serviceResponse.notifications
+
+                                val updatedNotifications = ourNotifications.map { ourNotification ->
+                                    val serviceNotification =
+                                        serviceNotifications.find { it.id == ourNotification.id }
+                                    if (serviceNotification != null && serviceNotification.status != ourNotification.status) {
+                                        ourNotification.copy(status = serviceNotification.status)
+                                    } else {
+                                        ourNotification
+                                    }
+                                }
+
+                                if (updatedNotifications != ourNotifications) {
+                                    _userNotifications.value =
+                                        (_userNotifications.value as UserNotificationResponse.Success).copy(
+                                            notifications = updatedNotifications
+                                        )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                override fun onServiceDisconnected(name: ComponentName?) {
+                    // Service disconnected
+                }
+            }
+
+            context.bindService(
+                Intent(context, NotificationService::class.java),
+                serviceConnection,
+                Context.BIND_AUTO_CREATE
+            )
+        }
+    }
 
     fun setHazardTab(page: Int) {
         viewModelScope.launch {
@@ -307,15 +346,12 @@ class AppViewModel(
     }
 
 
-    private val _locationDetails = MutableStateFlow<List<String>>(emptyList())
-    val locationDetails: StateFlow<List<String>> = _locationDetails
-
-
     fun startLocationMonitoring(isAuthenticated: Boolean, getLocation: () -> Unit) {
         if (!isAuthenticated) {
             locationMonitoringJob?.cancel()
             return
         }
+
         locationMonitoringJob = viewModelScope.launch {
             while (true) {
                 getLocation()
@@ -369,9 +405,9 @@ class AppViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        context.unregisterReceiver(notificationReceiver)
+
         locationMonitoringJob?.cancel()
-        stopNotificationService() // Stop service when ViewModel is cleared
+
     }
 
 
@@ -437,28 +473,6 @@ class AppViewModel(
     }
 
 
-    fun startNotificationService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(
-                Intent(
-                    context,
-                    WeatherNotificationService::class.java
-                ).apply {
-                    action = "UPDATE_NOTIFICATIONS"
-                    putExtra("notifications", userNotifications.value)
-                })
-        } else {
-            context.startService(Intent(context, WeatherNotificationService::class.java).apply {
-                action = "UPDATE_NOTIFICATIONS"
-                putExtra("notifications", userNotifications.value)
-            })
-        }
-    }
-
-    fun stopNotificationService() {
-        context.stopService(Intent(context, WeatherNotificationService::class.java))
-    }
-
     fun getUserNotifications() {
         viewModelScope.launch {
             while (true) {
@@ -475,37 +489,41 @@ class AppViewModel(
                         }
                         when (_userNotifications.value) {
                             is UserNotificationResponse.Success -> {
+                                // Filter out notifications that are being modified
+                                val filteredNotifications =
+                                    result.notifications.filter { notification ->
+                                        !_modifiedNotifications.value.contains(notification.id)
+                                    }
 
-                                if (
-                                    result.notifications != (_userNotifications.value as UserNotificationResponse.Success).notifications
-                                ) {
+                                // Combine with current notifications that are being modified
+                                val currentNotifications =
+                                    (_userNotifications.value as UserNotificationResponse.Success).notifications
+                                val modifiedCurrentNotifications =
+                                    currentNotifications.filter { notification ->
+                                        _modifiedNotifications.value.contains(notification.id)
+                                    }
 
-                                    _userNotifications.value = result
+                                val updatedNotifications =
+                                    filteredNotifications + modifiedCurrentNotifications
 
+                                if (updatedNotifications != currentNotifications) {
+                                    _userNotifications.value =
+                                        result.copy(notifications = updatedNotifications)
                                 }
-
-
                             }
 
                             is UserNotificationResponse.Loading -> {
                                 _userNotifications.value = result
                             }
 
-
-                            else -> {
-
-                            }
+                            else -> {}
                         }
                         delay(1000)
-
-
                     } catch (e: Exception) {
                         if (attempt == MAX_RETRIES - 1) {
-                            _userNotifications.value =
-                                UserNotificationResponse.Error(
-                                    e.message ?: "An unknown error occurred"
-                                )
-
+                            _userNotifications.value = UserNotificationResponse.Error(
+                                e.message ?: "An unknown error occurred"
+                            )
                         } else {
                             delay(RETRY_DELAY_MS)
                         }
@@ -514,10 +532,6 @@ class AppViewModel(
             }
         }
     }
-
-
-    private val _userAlertsService: UserAlertsService =
-        BackendApi.retrofit.create(UserAlertsService::class.java)
 
     fun getUserAlerts() {
         viewModelScope.launch {
@@ -654,7 +668,7 @@ class AppViewModel(
                     )
                 }
                 _profile.value = result
-            } catch (e: Exception) {
+            } catch (_: Exception) {
 
             }
         }
@@ -702,7 +716,7 @@ class AppViewModel(
             } else {
                 emptyList()
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -731,7 +745,6 @@ class AppViewModel(
             }
         }
     }
-
 }
 
 

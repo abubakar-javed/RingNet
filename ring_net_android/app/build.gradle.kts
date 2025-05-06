@@ -85,7 +85,8 @@ dependencies {
     implementation("net.java.dev.jna:jna:5.12.1@aar")
     implementation(libs.adapter.guava)
     implementation(libs.converter.gson)
-
+    implementation("androidx.lifecycle:lifecycle-service:2.6.2")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

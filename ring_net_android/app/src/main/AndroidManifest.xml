@@ -3,15 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
 
-    <!-- TODO: Start-->
     <uses-permission
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -20,45 +17,25 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-
-    <!--    <uses-permission-->
-    <!--        android:required="true"-->
-    <!--        android:name="android.permission.ACCESS_WIFI_STATE"/>-->
-    <!--    <uses-permission-->
-    <!--        android:required="true"-->
-    <!--        android:name="android.permission.CHANGE_WIFI_STATE"/>-->
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-
-
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
-    <uses-permission
-        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
-        android:minSdkVersion="34" />
 
-
-    <!--BLUETOOTH PERMISSION-->
-    <!-- Request legacy Bluetooth permissions on older devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <!-- Needed only if your app looks for Bluetooth devices.
-             If your app doesn't use Bluetooth scan results to derive physical
-             location information, you can strongly assert that your app
-             doesn't derive physical location. -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <!-- Needed only if your app makes the device discoverable to Bluetooth
-      devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-    <!-- Needed only if your app communicates with already-paired Bluetooth
-           devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-
-    <!-- TODO: End-->
 
 
     <application
@@ -86,12 +63,22 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAP_API_KEY}" />
+
         <service
-            android:name=".services.WeatherNotificationService"
+            android:name=".services.NotificationService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Add the BroadcastReceiver -->
+        <receiver
+            android:name=".services.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

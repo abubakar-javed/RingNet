@@ -129,7 +129,8 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                                         notification,
                                         onReadToggle = {
                                             viewModel.changeNotificationReadStatus(
-                                                notification
+                                                notification,
+                                                "Read"
                                             )
                                         },
                                         onDelete = { viewModel.deleteNotification(notification) }
@@ -199,7 +200,8 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                                             notification,
                                             onReadToggle = {
                                                 viewModel.changeNotificationReadStatus(
-                                                    notification
+                                                    notification,
+                                                    "Read"
                                                 )
                                             },
                                             onDelete = { viewModel.deleteNotification(notification) }
@@ -271,7 +273,8 @@ fun Notifications(viewModel: AppViewModel, modifier: Modifier) {
                                             notification,
                                             onReadToggle = {
                                                 viewModel.changeNotificationReadStatus(
-                                                    notification
+                                                    notification,
+                                                    ""
                                                 )
                                             },
                                             onDelete = { viewModel.deleteNotification(notification) }

@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,7 +26,8 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.ranamahadahmer.ringnet.services.WeatherNotificationService
+import com.ranamahadahmer.ringnet.models.UserNotificationResponse
+import com.ranamahadahmer.ringnet.services.NotificationService
 import com.ranamahadahmer.ringnet.view_models.AppViewModel
 import com.ranamahadahmer.ringnet.view_models.AuthViewModel
 import com.ranamahadahmer.ringnet.views.Loading
@@ -56,10 +56,12 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.INTERNET,
         Manifest.permission.ACCESS_NETWORK_STATE,
+
         Manifest.permission.POST_NOTIFICATIONS,
         Manifest.permission.FOREGROUND_SERVICE,
         Manifest.permission.WAKE_LOCK,
-    )
+
+        )
 
 
     companion object {
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
         setupUI()
         observeAuthState()
     }
+
 
     private fun initializeApp() {
         enableEdgeToEdge()
@@ -92,6 +95,63 @@ class MainActivity : ComponentActivity() {
     private fun initializeLocationClient() {
         if (!::fusedLocationClient.isInitialized) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        }
+    }
+
+    // Add these methods to your MainActivity class
+
+
+    // Add these methods to your MainActivity class
+
+    private fun startNotificationService() {
+        // Start the notification service
+        NotificationService.startService(this)
+    }
+
+    // Add this to your observeAuthState() method
+    internal fun observeAuthState() {
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.isUserLoggedIn.collect { isLoggedIn ->
+                    if (isLoggedIn && checkPermissions()) {
+                        startLocationUpdates()
+                        // Start notification service when user is logged in
+                        startNotificationService()
+                        // Sync notifications with service
+                        appViewModel.syncNotificationsWithService()
+
+                        // Handle notification click from Intent
+                        intent?.getStringExtra("notification_id")?.let { notificationId ->
+                            handleNotificationClick(notificationId)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleNotificationClick(notificationId: String) {
+        // Find the notification and mark it as read
+        if (appViewModel.userNotifications.value is UserNotificationResponse.Success) {
+            val notifications =
+                (appViewModel.userNotifications.value as UserNotificationResponse.Success).notifications
+            val notification = notifications.find { it.id == notificationId }
+            notification?.let {
+                if (it.status != "Read") {
+                    appViewModel.changeNotificationReadStatus(it, "Read")
+                }
+                // Navigate to notification details or perform other actions
+                // For example: navController.navigate("notification_details/${it.id}")
+            }
+        }
+    }
+
+    // Handle new intent (when app is already running and notification is clicked)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra("notification_id")?.let { notificationId ->
+            handleNotificationClick(notificationId)
         }
     }
 
@@ -103,32 +163,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    internal fun observeAuthState() {
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                authViewModel.isUserLoggedIn.collect { isLoggedIn ->
-                    if (isLoggedIn && checkPermissions()) {
-                        startLocationUpdates()
-                        startBackgroundService()
-                    }
-                }
-            }
-        }
-    }
+//    internal fun observeAuthState() {
+//        lifecycleScope.launch {
+//
+//
+//            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                authViewModel.isUserLoggedIn.collect { isLoggedIn ->
+//                    if (isLoggedIn && checkPermissions()) {
+//                        startLocationUpdates()
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-    private fun startNotificationService() {
-        if (checkPermissions()) {
-            appViewModel.startNotificationService()
-        }
-    }
-
-    private fun startBackgroundService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(Intent(this, WeatherNotificationService::class.java))
-        } else {
-            startService(Intent(this, WeatherNotificationService::class.java))
-        }
-    }
 
     private fun checkPermissions(): Boolean {
         return requiredPermissions.all { permission ->
@@ -177,6 +225,7 @@ class MainActivity : ComponentActivity() {
     private fun startLocationUpdates() {
         try {
             initializeLocationClient()
+
             appViewModel.startLocationMonitoring(authViewModel.isUserLoggedIn.value) {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     location?.let { appViewModel.updateLocation(it) }
@@ -235,7 +284,6 @@ fun RingNetApp(authViewModel: AuthViewModel, appModel: AppViewModel) {
                     navController.popBackStack()
                     authViewModel.saveUser()
                     scope.launch {
-
                         (context as? MainActivity)?.observeAuthState()
                         delay(2000)
                     }
