@@ -148,7 +148,7 @@ class NotificationService : LifecycleService() {
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("RingNet")
-            .setContentText("Connected..")
+            .setContentText("RingNet is on guard..")
             .setSmallIcon(R.drawable.icon)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
@@ -183,13 +183,13 @@ class NotificationService : LifecycleService() {
                     // Find any new notifications not in the current list
                     val existingIds = currentState.notifications.map { it.id }.toSet()
                     result.notifications.filter { !existingIds.contains(it.id) }
-//                    result.notifications
+
                 }
 
                 else -> result.notifications
             }
 
-            // Display new notifications
+
             newNotifications.forEach { notification ->
                 if (notification.status != "Read") {
                     showNotification(notification)

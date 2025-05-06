@@ -171,6 +171,7 @@ class AuthViewModel(context: Context) : ViewModel() {
                     )
                 )
             } catch (e: Exception) {
+                println(e.message)
                 _signUpResponse.value = AuthResponse.Error(e.message ?: "An error occurred")
             }
         }

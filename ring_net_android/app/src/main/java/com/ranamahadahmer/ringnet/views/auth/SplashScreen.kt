@@ -73,12 +73,15 @@ fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit
                 fontSize = 32.sp,
                 lineHeight = 40.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.White
+
             )
             Text(
                 stringResource(R.string.explore_the_world_of_analyzing_news_and_sports_where_you_will_be_submerged_to_games),
                 modifier = Modifier.padding(horizontal = 54.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.LightGray
             )
 
 
@@ -104,10 +107,12 @@ fun SplashScreen(modifier: Modifier = Modifier, navigateToNextScreen: () -> Unit
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp,
                         fontFamily = FontFamily.SansSerif,
+                        color = Color.White
                     )
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForwardIos,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = Color.White
                     )
                 }
             }

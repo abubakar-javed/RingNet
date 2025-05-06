@@ -301,7 +301,7 @@ fun RingNetApp(authViewModel: AuthViewModel, appModel: AppViewModel) {
             composable("name_password") {
                 SignUpNameScreen(viewModel = authViewModel, navigate = {
                     navController.popBackStack()
-                    navController.navigate("sign_in/success")
+                    navController.navigate("sign_in")
                 })
             }
         }
