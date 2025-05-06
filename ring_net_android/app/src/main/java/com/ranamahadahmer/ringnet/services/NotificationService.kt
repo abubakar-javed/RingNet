@@ -53,7 +53,7 @@ class NotificationService : LifecycleService() {
         private const val FOREGROUND_SERVICE_ID = 101
         private const val NOTIFICATION_CHANNEL_ID = "ringnet_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "RingNet Notifications"
-        private const val POLLING_INTERVAL_MS = 5 * 60 * 1000L // 5 minutes
+        private const val POLLING_INTERVAL = 1000L
 
         private const val ACTION_NOTIFICATION_DISMISSED =
             "com.ranamahadahmer.ringnet.NOTIFICATION_DISMISSED"
@@ -128,16 +128,14 @@ class NotificationService : LifecycleService() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Notifications from RingNet app"
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            NOTIFICATION_CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Notifications from RingNet app"
         }
+        notificationManager.createNotificationChannel(channel)
     }
 
     private fun createForegroundNotification(): Notification {
@@ -150,10 +148,11 @@ class NotificationService : LifecycleService() {
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("RingNet")
-            .setContentText("Monitoring for notifications")
+            .setContentText("Connected..")
             .setSmallIcon(R.drawable.icon)
+            .setOngoing(true)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     }
 
@@ -164,7 +163,7 @@ class NotificationService : LifecycleService() {
 
             while (true) {
                 fetchNotifications()
-                delay(POLLING_INTERVAL_MS)
+                delay(POLLING_INTERVAL)
             }
         }
     }
@@ -184,6 +183,7 @@ class NotificationService : LifecycleService() {
                     // Find any new notifications not in the current list
                     val existingIds = currentState.notifications.map { it.id }.toSet()
                     result.notifications.filter { !existingIds.contains(it.id) }
+//                    result.notifications
                 }
 
                 else -> result.notifications

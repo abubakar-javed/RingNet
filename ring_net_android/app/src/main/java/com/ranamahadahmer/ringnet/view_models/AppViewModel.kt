@@ -190,36 +190,6 @@ class AppViewModel(
     }
 
 
-//    fun changeNotificationReadStatus(notification: NotificationInfo) {
-//        viewModelScope.launch {
-//            // Add to modified set
-//            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
-//
-//            try {
-//                _readUserNotificationService.readNotification(
-//                    token = "Bearer ${authViewModel.token.value}",
-//                    notificationId = notification.id
-//                )
-//
-//                val updatedNotifications =
-//                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
-//                        if (it == notification) it.copy(status = "Read") else it
-//                    }
-//                _userNotifications.value =
-//                    (_userNotifications.value as UserNotificationResponse.Success).copy(
-//                        notifications = updatedNotifications
-//                    )
-//
-//
-//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
-//            } catch (e: Exception) {
-//                // Handle error
-//                showSnackbar("Failed to update notification status")
-//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
-//            }
-//        }
-//    }
-
     fun deleteNotification(notification: NotificationInfo) {
         viewModelScope.launch {
             // Add to modified set
