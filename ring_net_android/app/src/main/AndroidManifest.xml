@@ -36,7 +36,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-
+    
 
     <application
         android:allowBackup="true"
@@ -70,13 +70,18 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- Add the BroadcastReceiver -->
+
         <receiver
-            android:name=".services.BootReceiver"
+            android:name=".receivers.BootReceiver"
+            android:directBootAware="true"
             android:enabled="true"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!--                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />-->
+                <!--                <action android:name="android.intent.action.REBOOT" />-->
+
+                <!--                <category android:name="android.intent.category.DEFAULT" />-->
             </intent-filter>
         </receiver>
     </application>

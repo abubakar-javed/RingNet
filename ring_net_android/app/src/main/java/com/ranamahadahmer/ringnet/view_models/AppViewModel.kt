@@ -190,36 +190,6 @@ class AppViewModel(
     }
 
 
-//    fun changeNotificationReadStatus(notification: NotificationInfo) {
-//        viewModelScope.launch {
-//            // Add to modified set
-//            _modifiedNotifications.value = _modifiedNotifications.value + notification.id
-//
-//            try {
-//                _readUserNotificationService.readNotification(
-//                    token = "Bearer ${authViewModel.token.value}",
-//                    notificationId = notification.id
-//                )
-//
-//                val updatedNotifications =
-//                    (_userNotifications.value as UserNotificationResponse.Success).notifications.map {
-//                        if (it == notification) it.copy(status = "Read") else it
-//                    }
-//                _userNotifications.value =
-//                    (_userNotifications.value as UserNotificationResponse.Success).copy(
-//                        notifications = updatedNotifications
-//                    )
-//
-//
-//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
-//            } catch (e: Exception) {
-//                // Handle error
-//                showSnackbar("Failed to update notification status")
-//                _modifiedNotifications.value = _modifiedNotifications.value - notification.id
-//            }
-//        }
-//    }
-
     fun deleteNotification(notification: NotificationInfo) {
         viewModelScope.launch {
             // Add to modified set
@@ -354,50 +324,59 @@ class AppViewModel(
 
         locationMonitoringJob = viewModelScope.launch {
             while (true) {
-                getLocation()
-                if (_currentLocation.value == null) {
-                    delay(
-                        TimeUnit.SECONDS.toMillis(
-                            1
-                        )
-                    )
-                    continue
-                }
-                viewModelScope.launch {
-                    val response = withContext(Dispatchers.IO) {
-                        _updateLocationService.updateLocation(
-                            token = "Bearer ${authViewModel.token.value}",
-                            location = LocationUpdateRequest(
-                                location = LocationCoordinates(
-                                    latitude = _currentLocation.value!!.latitude,
-                                    longitude = _currentLocation.value!!.longitude
-                                )
-                            )
-                        )
-                    }
-                    if (response.message == "Location updated successfully") {
-                        println("Location Updated successfully")
-                    } else {
-                        println("Failed to update location: ${response.message}")
+                try {
+                    getLocation()
+                    if (_currentLocation.value == null) {
                         delay(
                             TimeUnit.SECONDS.toMillis(
-                                2
+                                1
                             )
                         )
-                        return@launch
+                        continue
                     }
-                }
-                loadData()
-                _locationDetails.value = getLocationDetails(
-                    context,
-                    _currentLocation.value!!.latitude,
-                    _currentLocation.value!!.longitude
-                )
-                delay(
-                    TimeUnit.MINUTES.toMillis(
-                        5
+                    viewModelScope.launch {
+                        val response = withContext(Dispatchers.IO) {
+                            _updateLocationService.updateLocation(
+                                token = "Bearer ${authViewModel.token.value}",
+                                location = LocationUpdateRequest(
+                                    location = LocationCoordinates(
+                                        latitude = _currentLocation.value!!.latitude,
+                                        longitude = _currentLocation.value!!.longitude
+                                    )
+                                )
+                            )
+                        }
+                        if (response.message == "Location updated successfully") {
+                            println("Location Updated successfully")
+                        } else {
+                            println("Failed to update location: ${response.message}")
+                            delay(
+                                TimeUnit.SECONDS.toMillis(
+                                    2
+                                )
+                            )
+                            return@launch
+                        }
+                    }
+                    loadData()
+                    _locationDetails.value = getLocationDetails(
+                        context,
+                        _currentLocation.value!!.latitude,
+                        _currentLocation.value!!.longitude
                     )
-                )
+                    delay(
+                        TimeUnit.MINUTES.toMillis(
+                            5
+                        )
+                    )
+                } catch (e: Exception) {
+                    println("Error updating location: ${e.message}")
+                    delay(
+                        TimeUnit.MINUTES.toMillis(
+                            5
+                        )
+                    )
+                }
             }
         }
     }
