@@ -40,13 +40,22 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build \
-          --build-arg NODE_ENV=${{ secrets.NODE_ENV }} \
-          --build-arg PORT=${{ secrets.PORT }} \
-          --build-arg MONGODB_URI=${{ secrets.MONGODB_URI }} \
-          --build-arg SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
+          --build-arg JWT_SECRET=${{ secrets.JWT_SECRET }} \
           --build-arg GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
           --build-arg GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
           --build-arg ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} \
+          --build-arg DEPLOY_BACKEND_URL=${{ secrets.DEPLOY_BACKEND_URL }} \
+          --build-arg DEPLOY_FRONTEND_URL=${{ secrets.DEPLOY_FRONTEND_URL }} \
+          --build-arg MONGO_URI=${{ secrets.MONGO_URI }} \
+          --build-arg GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+          --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} \
+          --build-arg NASA_JWT_TOKEN=${{ secrets.NASA_JWT_TOKEN }} \
+          --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          --build-arg NODE_ENV=${{ secrets.NODE_ENV }} \
+          --build-arg PORT=${{ secrets.PORT }} \
+          --build-arg SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
+          --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
