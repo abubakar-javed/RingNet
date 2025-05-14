@@ -15,9 +15,9 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://ajavedbese21seecs:abub
 
 const connectDB = async () => {
   try {
-    // console.log("weather key",process.env.OPENWEATHER_API_KEY);
+    // console.log("weather key",process..env.OPENWEATHER_API_KEY);
     // console.log('Attempting to connect to MongoDB...');
-    // console.log('Using connection string:', process.env.MONGO_URI);
+    // console.log('Using connection string:', process..env.MONGO_URI);
     
     await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000, // Reduce the timeout to 5 seconds

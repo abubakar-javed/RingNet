@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const dotenv = require("dotenv");
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config(); // Load environment variables from ..env file
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // Must be 256 bits (32 characters) or 64 hex characters
 const IV_LENGTH = 16; // For AES, this is always 16
