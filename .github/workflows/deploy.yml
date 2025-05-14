@@ -1,19 +1,15 @@
 name: Deploy Backend to Amazon ECS
-
 on:
   push:
     branches: [ "main" ]
     paths:
       - 'backend/**'
-
 env:
   AWS_REGION: eu-north-1
   ECR_REPOSITORY: ringnet-backend
   ECS_SERVICE: ringnet-service
   ECS_CLUSTER: ringnet-cluster
   CONTAINER_NAME: ringnet-backend
-  AWS_ACCESS_KEY_ID: AKIAT4GVRYE26M7JC2AY
-  AWS_SECRET_ACCESS_KEY: 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
 
 jobs:
   deploy:
@@ -22,47 +18,39 @@ jobs:
     defaults:
       run:
         working-directory: ./backend
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-
+      
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
-
+        
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-
+      
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
-        NODE_ENV: ${{ secrets.NODE_ENV }}
-        PORT: ${{ secrets.PORT }}
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
       run: |
         docker build \
-          --build-arg NODE_ENV=${NODE_ENV} \
-          --build-arg PORT=${PORT} \
-          --build-arg MONGODB_URI=${MONGODB_URI} \
-          --build-arg SESSION_SECRET=${SESSION_SECRET} \
-          --build-arg GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \
-          --build-arg GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET} \
-          --build-arg ENCRYPTION_KEY=${ENCRYPTION_KEY} \
+          --build-arg NODE_ENV=${{ secrets.NODE_ENV }} \
+          --build-arg PORT=${{ secrets.PORT }} \
+          --build-arg MONGODB_URI=${{ secrets.MONGODB_URI }} \
+          --build-arg SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
+          --build-arg GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+          --build-arg GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+          --build-arg ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
+        
     - name: Update task definition with environment variables
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -78,7 +66,7 @@ jobs:
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
-
+          
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
