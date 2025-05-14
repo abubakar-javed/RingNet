@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object BackendApi {
     val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("https://ring-net.vercel.app/api/")
+        .baseUrl("https://ring-net-backend.vercel.app/api/")
         .addConverterFactory(GsonConverterFactory.create())
         .client(
             OkHttpClient.Builder()
