@@ -68,13 +68,22 @@ jobs:
         container-name: ${{ env.CONTAINER_NAME }}
         image: ${{ steps.build-image.outputs.image }}
         environment-variables: |
-          NODE_ENV=${{ secrets.NODE_ENV }}
-          PORT=${{ secrets.PORT }}
-          MONGODB_URI=${{ secrets.MONGODB_URI }}
-          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
+            DEPLOY_BACKEND_URL=${{ secrets.DEPLOY_BACKEND_URL }}
+            DEPLOY_FRONTEND_URL=${{ secrets.DEPLOY_FRONTEND_URL }}
+            MONGO_URI=${{ secrets.MONGO_URI }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}
+            NASA_JWT_TOKEN=${{ secrets.NASA_JWT_TOKEN }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            NODE_ENV=${{ secrets.NODE_ENV }}
+            PORT=${{ secrets.PORT }}
+            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
           
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
