@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/.env node
 
 /**
  * Script to fetch historical data for the past 5 years

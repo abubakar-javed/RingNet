@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/.env node
 
 const app = require("../app");
 const debug = require("debug")("my-express-backend:server");

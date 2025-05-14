@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/.env node
 
 const express = require("express");
 require("dotenv").config();
@@ -44,7 +44,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Session setup
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || "your_secret", // Custom env variable
+        secret: process.env.SESSION_SECRET || "your_secret", // Custom .env variable
         resave: false,
         saveUninitialized: false,
         cookie: { secure: process.env.NODE_ENV === "production" },
