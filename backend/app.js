@@ -15,6 +15,7 @@ const http = require("http");
 const debug = require("debug")("my-express-backend:server");
 const config = require("config");
 
+
 // Import routes
 const authRoutes = require("./routes/auth");
 const earthquakeRoutes = require("./routes/earthquakeRoutes");
