@@ -1,4 +1,3 @@
-
 {
   "family": "ringnet-backend",
   "executionRoleArn": "arn:aws:iam::266735829301:role/ecsTaskExecutionRole",
