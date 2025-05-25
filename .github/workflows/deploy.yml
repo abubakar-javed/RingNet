@@ -1,100 +1,100 @@
-name: Deploy Backend to Amazon ECS
-on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'backend/**'
-env:
-  AWS_REGION: eu-north-1
-  ECR_REPOSITORY: ringnet-backend
-  ECS_SERVICE: ringnet-service
-  ECS_CLUSTER: ringnet-cluster
-  CONTAINER_NAME: ringnet-backend
+# name: Deploy Backend to Amazon ECS
+# on:
+#   push:
+#     branches: [ "main" ]
+#     paths:
+#       - 'backend/**'
+# env:
+#   AWS_REGION: eu-north-1
+#   ECR_REPOSITORY: ringnet-backend
+#   ECS_SERVICE: ringnet-service
+#   ECS_CLUSTER: ringnet-cluster
+#   CONTAINER_NAME: ringnet-backend
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
     
-    defaults:
-      run:
-        working-directory: ./backend
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+#     defaults:
+#       run:
+#         working-directory: ./backend
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
       
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+#     - name: Configure AWS credentials
+#       uses: aws-actions/configure-aws-credentials@v2
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: ${{ env.AWS_REGION }}
         
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-      # NEW
-    - name: Print IAM Role ID (Safely)
-      run: |
-        echo "Verifying IAM Role Identity..."
-        aws sts get-caller-identity
-      # NEW
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build \
-          --build-arg JWT_SECRET=${{ secrets.JWT_SECRET }} \
-          --build-arg GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-          --build-arg GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-          --build-arg ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} \
-          --build-arg DEPLOY_BACKEND_URL=${{ secrets.DEPLOY_BACKEND_URL }} \
-          --build-arg DEPLOY_FRONTEND_URL=${{ secrets.DEPLOY_FRONTEND_URL }} \
-          --build-arg MONGO_URI=${{ secrets.MONGO_URI }} \
-          --build-arg GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-          --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} \
-          --build-arg NASA_JWT_TOKEN=${{ secrets.NASA_JWT_TOKEN }} \
-          --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-          --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-          --build-arg NODE_ENV=${{ secrets.NODE_ENV }} \
-          --build-arg PORT=${{ secrets.PORT }} \
-          --build-arg SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
-          --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+#     - name: Login to Amazon ECR
+#       id: login-ecr
+#       uses: aws-actions/amazon-ecr-login@v1
+#       # NEW
+#     - name: Print IAM Role ID (Safely)
+#       run: |
+#         echo "Verifying IAM Role Identity..."
+#         aws sts get-caller-identity
+#       # NEW
+#     - name: Build, tag, and push image to Amazon ECR
+#       id: build-image
+#       env:
+#         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#         IMAGE_TAG: ${{ github.sha }}
+#       run: |
+#         docker build \
+#           --build-arg JWT_SECRET=${{ secrets.JWT_SECRET }} \
+#           --build-arg GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+#           --build-arg GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+#           --build-arg ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }} \
+#           --build-arg DEPLOY_BACKEND_URL=${{ secrets.DEPLOY_BACKEND_URL }} \
+#           --build-arg DEPLOY_FRONTEND_URL=${{ secrets.DEPLOY_FRONTEND_URL }} \
+#           --build-arg MONGO_URI=${{ secrets.MONGO_URI }} \
+#           --build-arg GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+#           --build-arg OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} \
+#           --build-arg NASA_JWT_TOKEN=${{ secrets.NASA_JWT_TOKEN }} \
+#           --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+#           --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+#           --build-arg NODE_ENV=${{ secrets.NODE_ENV }} \
+#           --build-arg PORT=${{ secrets.PORT }} \
+#           --build-arg SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
+#           --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
+#           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
         
-    - name: Update task definition with environment variables
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: backend/task-definition.json
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
-        environment-variables: |
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
-            DEPLOY_BACKEND_URL=${{ secrets.DEPLOY_BACKEND_URL }}
-            DEPLOY_FRONTEND_URL=${{ secrets.DEPLOY_FRONTEND_URL }}
-            MONGO_URI=${{ secrets.MONGO_URI }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}
-            NASA_JWT_TOKEN=${{ secrets.NASA_JWT_TOKEN }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            NODE_ENV=${{ secrets.NODE_ENV }}
-            PORT=${{ secrets.PORT }}
-            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-            AWS_REGION=${{ secrets.AWS_REGION }}
+#     - name: Update task definition with environment variables
+#       id: task-def
+#       uses: aws-actions/amazon-ecs-render-task-definition@v1
+#       with:
+#         task-definition: backend/task-definition.json
+#         container-name: ${{ env.CONTAINER_NAME }}
+#         image: ${{ steps.build-image.outputs.image }}
+#         environment-variables: |
+#           JWT_SECRET=${{ secrets.JWT_SECRET }}
+#             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+#             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+#             ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
+#             DEPLOY_BACKEND_URL=${{ secrets.DEPLOY_BACKEND_URL }}
+#             DEPLOY_FRONTEND_URL=${{ secrets.DEPLOY_FRONTEND_URL }}
+#             MONGO_URI=${{ secrets.MONGO_URI }}
+#             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+#             OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }}
+#             NASA_JWT_TOKEN=${{ secrets.NASA_JWT_TOKEN }}
+#             AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+#             AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#             NODE_ENV=${{ secrets.NODE_ENV }}
+#             PORT=${{ secrets.PORT }}
+#             SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+#             AWS_REGION=${{ secrets.AWS_REGION }}
           
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
-        wait-for-minutes: 3
+#     - name: Deploy Amazon ECS task definition
+#       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#       with:
+#         task-definition: ${{ steps.task-def.outputs.task-definition }}
+#         service: ${{ env.ECS_SERVICE }}
+#         cluster: ${{ env.ECS_CLUSTER }}
+#         wait-for-service-stability: true
+#         wait-for-minutes: 3
